@@ -40,12 +40,12 @@ class TestSupportedModelsAliases:
         assert "pro" in provider.MODEL_CAPABILITIES["gemini-3.1-pro-preview"].dynamic_aliases
         assert "flash-2.0" in provider.MODEL_CAPABILITIES["gemini-2.0-flash"].aliases
         assert "flash2" in provider.MODEL_CAPABILITIES["gemini-2.0-flash"].aliases
-        # Bare flash-lite/flashlite stay on gemini-2.0-flash-lite; gemini-3.1-flash-lite carries
-        # "gemini-flash-lite-latest" plus dynamic_aliases entries for "flash-lite"/"flashlite".
+        # Bare flash-lite/flashlite stay on gemini-2.0-flash-lite; the newest gemini-3.5-flash-lite
+        # carries "gemini-flash-lite-latest" plus dynamic_aliases entries for "flash-lite"/"flashlite".
         assert "flash-lite" in provider.MODEL_CAPABILITIES["gemini-2.0-flash-lite"].aliases
         assert "flashlite" in provider.MODEL_CAPABILITIES["gemini-2.0-flash-lite"].aliases
-        assert "gemini-flash-lite-latest" in provider.MODEL_CAPABILITIES["gemini-3.1-flash-lite"].aliases
-        assert "flash-lite" in provider.MODEL_CAPABILITIES["gemini-3.1-flash-lite"].dynamic_aliases
+        assert "gemini-flash-lite-latest" in provider.MODEL_CAPABILITIES["gemini-3.5-flash-lite"].aliases
+        assert "flash-lite" in provider.MODEL_CAPABILITIES["gemini-3.5-flash-lite"].dynamic_aliases
 
         # Test alias resolution (default: upstream targets)
         assert provider._resolve_model_name("flash3.7") == "gemini-3.7-flash"
@@ -72,7 +72,7 @@ class TestSupportedModelsAliases:
             # Bare aliases now point at the newest models instead of the upstream targets.
             assert registry.alias_map["flash"] == "gemini-3.7-flash"
             assert registry.alias_map["pro"] == "gemini-3.1-pro-preview"
-            assert registry.alias_map["flash-lite"] == "gemini-3.1-flash-lite"
+            assert registry.alias_map["flash-lite"] == "gemini-3.5-flash-lite"
             assert registry.resolve("flash").model_name == "gemini-3.7-flash"
             assert registry.resolve("pro").model_name == "gemini-3.1-pro-preview"
 
