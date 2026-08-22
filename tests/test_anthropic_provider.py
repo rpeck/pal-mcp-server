@@ -44,6 +44,14 @@ class TestAnthropicCatalog:
         assert p.get_preferred_model(ToolModelCategory.BALANCED, allowed) == "claude-opus-5"
         assert p.get_preferred_model(ToolModelCategory.FAST_RESPONSE, allowed) == "claude-haiku-4-5-20251001"
 
+    def test_preferred_model_handles_unknown_allowed(self):
+        # allowed_models with no canonical entries must not raise (regression: KeyError on
+        # capability_map[m] in the EXTENDED_REASONING filter). It falls through to a best-effort
+        # return like the sibling gemini provider — the point is that it does not crash.
+        p = _provider()
+        result = p.get_preferred_model(ToolModelCategory.EXTENDED_REASONING, ["nonexistent-model"])
+        assert result == "nonexistent-model"
+
 
 def _fake_response(text="hello", input_tokens=10, output_tokens=5):
     block = SimpleNamespace(type="text", text=text)
@@ -90,3 +98,12 @@ class TestAnthropicGenerateContent:
         p.generate_content(prompt="hi", model_name="haiku", thinking_mode="minimal")
         kwargs = client.messages.create.call_args.kwargs
         assert kwargs["max_tokens"] == 64000  # haiku's advertised ceiling
+
+    def test_thinking_budget_preserves_output_headroom(self):
+        # A caller asking for a small visible output while requesting high thinking must still get
+        # its output room on top of the thinking budget (Anthropic counts thinking against max_tokens).
+        p, client = self._provider_with_mock()
+        p.generate_content(prompt="hi", model_name="opus", max_output_tokens=2000, thinking_mode="high")
+        kwargs = client.messages.create.call_args.kwargs
+        budget = kwargs["thinking"]["budget_tokens"]
+        assert kwargs["max_tokens"] - budget >= 2000

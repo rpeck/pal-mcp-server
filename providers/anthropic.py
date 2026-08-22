@@ -114,14 +114,21 @@ class AnthropicModelProvider(RegistryBackedProviderMixin, ModelProvider):
             max_thinking = model_config.max_thinking_tokens if model_config else 0
             budget = int(max_thinking * fraction)
             if budget >= _MIN_THINKING_BUDGET:
-                # Guarantee room for the response after the thinking budget.
-                if budget >= max_tokens:
-                    max_tokens = min(capabilities.max_output_tokens or (budget + 4096), budget + 4096)
-                if budget < max_tokens:
+                # Anthropic counts thinking tokens against max_tokens, so the visible response needs
+                # its own headroom ON TOP of the budget. Reserve the caller's requested output (or a
+                # default) and grow max_tokens to fit both, clamped to the model's ceiling. Guarding
+                # only against budget >= max_tokens would still starve output when a caller passes a
+                # max_output_tokens just above the budget.
+                output_headroom = max_output_tokens or capabilities.max_output_tokens or 4096
+                ceiling = capabilities.max_output_tokens or (budget + output_headroom)
+                max_tokens = min(budget + output_headroom, ceiling)
+                if max_tokens - budget >= _MIN_THINKING_BUDGET:
                     thinking_config = {"type": "enabled", "budget_tokens": budget}
                     effective_temperature = 1.0  # required by the API when thinking is on
                 else:
+                    # Can't fit both a real budget and visible output; drop thinking, restore cap.
                     budget = 0
+                    max_tokens = max_output_tokens or capabilities.max_output_tokens or 4096
 
         request_kwargs: dict[str, object] = {
             "model": resolved_model_name,
@@ -267,7 +274,9 @@ class AnthropicModelProvider(RegistryBackedProviderMixin, ModelProvider):
             return min(allowed_models, key=sort_key)
 
         if category == ToolModelCategory.EXTENDED_REASONING:
-            thinking = [m for m in allowed_models if capability_map[m].supports_extended_thinking]
+            thinking = [
+                m for m in allowed_models if m in capability_map and capability_map[m].supports_extended_thinking
+            ]
             if thinking:
                 return best(thinking)
 
