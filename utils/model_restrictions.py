@@ -11,6 +11,7 @@ Two complementary mechanisms are supported per provider:
 Allow-lists (``*_ALLOWED_MODELS``) — if set, ONLY the listed models are usable:
 - OPENAI_ALLOWED_MODELS: Comma-separated list of allowed OpenAI models
 - GOOGLE_ALLOWED_MODELS: Comma-separated list of allowed Gemini models
+- ANTHROPIC_ALLOWED_MODELS: Comma-separated list of allowed Anthropic (Claude) models
 - XAI_ALLOWED_MODELS: Comma-separated list of allowed X.AI GROK models
 - OPENROUTER_ALLOWED_MODELS: Comma-separated list of allowed OpenRouter models
 - DIAL_ALLOWED_MODELS: Comma-separated list of allowed DIAL models
@@ -61,6 +62,7 @@ class ModelRestrictionService:
     ENV_VARS = {
         ProviderType.OPENAI: "OPENAI_ALLOWED_MODELS",
         ProviderType.GOOGLE: "GOOGLE_ALLOWED_MODELS",
+        ProviderType.ANTHROPIC: "ANTHROPIC_ALLOWED_MODELS",
         ProviderType.XAI: "XAI_ALLOWED_MODELS",
         ProviderType.OPENROUTER: "OPENROUTER_ALLOWED_MODELS",
         ProviderType.DIAL: "DIAL_ALLOWED_MODELS",
@@ -70,6 +72,7 @@ class ModelRestrictionService:
     DISALLOWED_ENV_VARS = {
         ProviderType.OPENAI: "OPENAI_DISALLOWED_MODELS",
         ProviderType.GOOGLE: "GOOGLE_DISALLOWED_MODELS",
+        ProviderType.ANTHROPIC: "ANTHROPIC_DISALLOWED_MODELS",
         ProviderType.XAI: "XAI_DISALLOWED_MODELS",
         ProviderType.OPENROUTER: "OPENROUTER_DISALLOWED_MODELS",
         ProviderType.DIAL: "DIAL_DISALLOWED_MODELS",

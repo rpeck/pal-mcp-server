@@ -38,6 +38,7 @@ class ModelProviderRegistry:
     PROVIDER_PRIORITY_ORDER = [
         ProviderType.GOOGLE,  # Direct Gemini access
         ProviderType.OPENAI,  # Direct OpenAI access
+        ProviderType.ANTHROPIC,  # Direct Anthropic (Claude) access
         ProviderType.AZURE,  # Azure-hosted OpenAI deployments
         ProviderType.XAI,  # Direct X.AI GROK access
         ProviderType.DIAL,  # DIAL unified API access
@@ -334,6 +335,7 @@ class ModelProviderRegistry:
         key_mapping = {
             ProviderType.GOOGLE: "GEMINI_API_KEY",
             ProviderType.OPENAI: "OPENAI_API_KEY",
+            ProviderType.ANTHROPIC: "ANTHROPIC_API_KEY",
             ProviderType.AZURE: "AZURE_OPENAI_API_KEY",
             ProviderType.XAI: "XAI_API_KEY",
             ProviderType.OPENROUTER: "OPENROUTER_API_KEY",
