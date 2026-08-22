@@ -158,14 +158,14 @@
       ]
     },
     {
-      "model_name": "gemini-3.5-flash",
-      "friendly_name": "Gemini 3.5 Flash",
+      "model_name": "gemini-3.7-flash",
+      "friendly_name": "Gemini 3.7 Flash",
       "aliases": [
-        "flash3.5",
+        "flash3.7",
         "gemini-flash-latest"
       ],
-      "intelligence_score": 14,
-      "description": "Newest fast model (1M context) - quick analysis, rapid iterations, supports thinking.",
+      "intelligence_score": 16,
+      "description": "Newest fast model (1M context) - near-frontier benchmarks (GPQA-Diamond ~94.8), rapid iterations, supports thinking.",
       "context_window": 1048576,
       "max_output_tokens": 65536,
       "supports_extended_thinking": true,
@@ -180,6 +180,26 @@
       "dynamic_aliases": [
         "flash"
       ]
+    },
+    {
+      "model_name": "gemini-3.5-flash",
+      "friendly_name": "Gemini 3.5 Flash",
+      "aliases": [
+        "flash3.5"
+      ],
+      "intelligence_score": 14,
+      "description": "Fast model (1M context) - quick analysis, rapid iterations, supports thinking.",
+      "context_window": 1048576,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "max_image_size_mb": 20.0,
+      "max_thinking_tokens": 24576
     },
     {
       "model_name": "gemini-3.1-flash-lite",

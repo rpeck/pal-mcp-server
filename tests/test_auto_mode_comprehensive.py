@@ -81,8 +81,8 @@ class TestAutoModeComprehensive:
                 },
                 {
                     "EXTENDED_REASONING": "gemini-3.1-pro-preview",  # Highest-score Pro thinking model
-                    "FAST_RESPONSE": "gemini-3.5-flash",  # Flash for speed
-                    "BALANCED": "gemini-3.5-flash",  # Flash as balanced
+                    "FAST_RESPONSE": "gemini-3.7-flash",  # Flash for speed
+                    "BALANCED": "gemini-3.7-flash",  # Flash as balanced
                 },
             ),
             # Only OpenAI API available
@@ -123,8 +123,8 @@ class TestAutoModeComprehensive:
                 },
                 {
                     "EXTENDED_REASONING": "gemini-3.1-pro-preview",  # Highest-score Pro thinking model comes first
-                    "FAST_RESPONSE": "gemini-3.5-flash",  # Prefer flash for speed
-                    "BALANCED": "gemini-3.5-flash",  # Prefer flash for balanced
+                    "FAST_RESPONSE": "gemini-3.7-flash",  # Prefer flash for speed
+                    "BALANCED": "gemini-3.7-flash",  # Prefer flash for balanced
                 },
             ),
             # All native APIs available - Google still comes first
@@ -137,8 +137,8 @@ class TestAutoModeComprehensive:
                 },
                 {
                     "EXTENDED_REASONING": "gemini-3.1-pro-preview",  # Highest-score Pro thinking model comes first
-                    "FAST_RESPONSE": "gemini-3.5-flash",  # Prefer flash for speed
-                    "BALANCED": "gemini-3.5-flash",  # Prefer flash for balanced
+                    "FAST_RESPONSE": "gemini-3.7-flash",  # Prefer flash for speed
+                    "BALANCED": "gemini-3.7-flash",  # Prefer flash for balanced
                 },
             ),
         ],

@@ -60,11 +60,11 @@ class TestAutoModeProviderSelection:
 
             # Should select appropriate Gemini models. NOTE: with DYNAMIC_MODEL_SELECTION unset, Gemini
             # selection still uses upstream's reverse-alphabetical algorithm; it is pool-driven, so the
-            # newest-numbered model in the catalogue wins by default (gemini-3.5-flash, gemini-3.1-pro-preview)
+            # newest-numbered model in the catalogue wins by default (gemini-3.7-flash, gemini-3.1-pro-preview)
             # the same way upstream's algorithm advances whenever newer models are added.
             assert extended_reasoning in ["gemini-3.1-pro-preview", "gemini-3-pro-preview", "gemini-2.5-pro", "pro"]
-            assert fast_response in ["gemini-3.5-flash", "flash"]
-            assert balanced in ["gemini-3.5-flash", "flash"]
+            assert fast_response in ["gemini-3.7-flash", "flash"]
+            assert balanced in ["gemini-3.7-flash", "flash"]
 
         finally:
             # Restore original environment
@@ -145,7 +145,7 @@ class TestAutoModeProviderSelection:
             assert extended_reasoning == "gemini-3.1-pro-preview"  # Highest-score Gemini Pro thinking model
 
             # Should prefer Gemini for fast response
-            assert fast_response == "gemini-3.5-flash"  # Gemini has higher priority now
+            assert fast_response == "gemini-3.7-flash"  # Gemini has higher priority now
 
         finally:
             # Restore original environment

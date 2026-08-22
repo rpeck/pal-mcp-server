@@ -580,9 +580,24 @@
       "intelligence_score": 19
     },
     {
-      "model_name": "google/gemini-3.5-flash",
+      "model_name": "google/gemini-3.7-flash",
       "aliases": [
         "or-gemini-flash"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": false,
+      "supports_json_mode": false,
+      "supports_function_calling": false,
+      "supports_images": true,
+      "max_image_size_mb": 5.0,
+      "description": "Gemini 3.7 Flash via OpenRouter (backup route).",
+      "intelligence_score": 14
+    },
+    {
+      "model_name": "google/gemini-3.5-flash",
+      "aliases": [
+        "or-gemini-flash-3.5"
       ],
       "context_window": 1048576,
       "max_output_tokens": 65536,
