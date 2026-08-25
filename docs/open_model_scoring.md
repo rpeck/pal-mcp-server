@@ -75,3 +75,17 @@ near-frontier open flagship, 11–13 solid mid, 8–10 small/older. Scores refle
 
 _Sources: huggingface.co model cards; Artificial Analysis Intelligence Index; LMArena; OpenRouter
 `/api/v1/models` (served context + capability params)._
+
+## Addendum — Ox Alpha (LiveBench-sourced, 2026-08)
+
+`stealth/ox-alpha` is an **anonymous stealth model** on OpenRouter (appeared 2026-08-20; free ~1-week
+preview; provider undisclosed, community fingerprinting suspects Z.ai/GLM). It has **no Artificial
+Analysis or BenchLM coverage**, so unlike every other entry it is scored from **LiveBench**:
+the LiveBench-2026-06-25 snapshot lists `ox-alpha-max` at **Overall 69.2** (Reasoning 76.6, Coding 75.8,
+Math 77.5, Data 75.8, Language 66.1, Agentic Coding 52.6, Instruction Following 60.3).
+
+Assigned `intelligence_score` = **15** — held one notch below the confirmed open flagships
+(GLM-5.3/Kimi-K3/Qwen3.8-Max = 17, DeepSeek-V4-Pro = 16) because (a) the number comes from **LiveBench,
+not the AA Index** the rest of the catalog is anchored to (different methodology — 69.2 is not directly
+comparable to the AA-derived scores), and (b) it is an **unverified stealth preview** with weak
+agentic/IF sub-scores. **Provisional** — revisit if the model de-cloaks or AA/BenchLM later list it.
