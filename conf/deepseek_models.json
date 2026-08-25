@@ -1,0 +1,74 @@
+{
+  "_README": {
+    "description": "Model metadata for DeepSeek's first-party API (native provider, DEEPSEEK_API_KEY).",
+    "usage": "Exposed directly through the native DeepSeek provider (api.deepseek.com, OpenAI-compatible). These models are also reachable via OpenRouter (deepseek/... IDs); with a DeepSeek key set the native provider wins by priority so bare aliases route direct. Scores are pinned to the OpenRouter mirrors.",
+    "field_notes": "Matches providers/shared/model_capabilities.py."
+  },
+  "models": [
+    {
+      "model_name": "deepseek-v4-pro",
+      "friendly_name": "DeepSeek V4 Pro",
+      "aliases": ["deepseek", "deepseek-v4", "deepseek-v4-pro"],
+      "intelligence_score": 16,
+      "description": "DeepSeek V4 Pro (1M context) - flagship MoE reasoning model. Direct API; score pinned to the OpenRouter mirror.",
+      "context_window": 1048576,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": false,
+      "supports_temperature": true
+    },
+    {
+      "model_name": "deepseek-v4-flash",
+      "friendly_name": "DeepSeek V4 Flash",
+      "aliases": ["deepseek-flash", "deepseek-v4-flash"],
+      "intelligence_score": 14,
+      "description": "DeepSeek V4 Flash (1M context) - fast, low-cost MoE (13B active). Direct API.",
+      "context_window": 1048576,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": false,
+      "supports_temperature": true
+    },
+    {
+      "model_name": "deepseek-reasoner",
+      "friendly_name": "DeepSeek Reasoner (R1)",
+      "aliases": ["reasoner", "deepseek-r1"],
+      "intelligence_score": 15,
+      "description": "DeepSeek Reasoner = R1 reasoning model. Direct API; score pinned to the OpenRouter deepseek-r1 mirror.",
+      "context_window": 131072,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": false,
+      "supports_temperature": true
+    },
+    {
+      "model_name": "deepseek-v4-flash-vision-exp",
+      "friendly_name": "DeepSeek V4 Flash Vision (Exp)",
+      "aliases": ["deepseek-vision", "deepseek-v4-flash-vision"],
+      "intelligence_score": 13,
+      "description": "DeepSeek V4 Flash Vision (experimental, 2026-08) - V4 Flash 0731 plus image understanding. Experimental checkpoint scored below stable Flash.",
+      "context_window": 1048576,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "max_image_size_mb": 20.0
+    }
+  ]
+}

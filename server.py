@@ -470,6 +470,36 @@ def configure_providers():
         has_native_apis = True
         logger.info("X.AI API key found - GROK models available")
 
+    # Native OpenAI-compatible open-model providers (direct APIs). Each stays dormant unless its key
+    # is set, so this is zero behavior change for anyone who doesn't configure one.
+    from providers.deepseek import DeepSeekModelProvider
+    from providers.minimax import MiniMaxModelProvider
+    from providers.mistral import MistralModelProvider
+    from providers.moonshot import MoonshotModelProvider
+    from providers.nvidia import NvidiaModelProvider
+    from providers.perplexity import PerplexityModelProvider
+    from providers.qwen import QwenModelProvider
+    from providers.zai import ZaiModelProvider
+
+    native_oai_vendors = [
+        ("DEEPSEEK_API_KEY", "DeepSeek", ProviderType.DEEPSEEK, DeepSeekModelProvider),
+        ("DASHSCOPE_API_KEY", "Qwen (DashScope)", ProviderType.QWEN, QwenModelProvider),
+        ("ZAI_API_KEY", "Z.ai (GLM)", ProviderType.ZAI, ZaiModelProvider),
+        ("MOONSHOT_API_KEY", "Moonshot (Kimi)", ProviderType.MOONSHOT, MoonshotModelProvider),
+        ("MINIMAX_API_KEY", "MiniMax", ProviderType.MINIMAX, MiniMaxModelProvider),
+        ("MISTRAL_API_KEY", "Mistral", ProviderType.MISTRAL, MistralModelProvider),
+        ("NVIDIA_API_KEY", "NVIDIA (Nemotron)", ProviderType.NVIDIA, NvidiaModelProvider),
+        ("PERPLEXITY_API_KEY", "Perplexity", ProviderType.PERPLEXITY, PerplexityModelProvider),
+    ]
+    present_native_vendors = []
+    for env_var, label, ptype, provider_cls in native_oai_vendors:
+        vendor_key = get_env(env_var)
+        if vendor_key and vendor_key != f"your_{env_var.lower()}_here":
+            valid_providers.append(label)
+            has_native_apis = True
+            present_native_vendors.append((ptype, provider_cls))
+            logger.info("%s found - %s models available", env_var, label)
+
     # Check for DIAL API key
     dial_key = get_env("DIAL_API_KEY")
     if dial_key and dial_key != "your_dial_api_key_here":
@@ -532,6 +562,10 @@ def configure_providers():
             ModelProviderRegistry.register_provider(ProviderType.XAI, XAIModelProvider)
             registered_providers.append(ProviderType.XAI.value)
             logger.debug(f"Registered provider: {ProviderType.XAI.value}")
+        for ptype, provider_cls in present_native_vendors:
+            ModelProviderRegistry.register_provider(ptype, provider_cls)
+            registered_providers.append(ptype.value)
+            logger.debug(f"Registered provider: {ptype.value}")
         if dial_key and dial_key != "your_dial_api_key_here":
             ModelProviderRegistry.register_provider(ProviderType.DIAL, DIALModelProvider)
             registered_providers.append(ProviderType.DIAL.value)

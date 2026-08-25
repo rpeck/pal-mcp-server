@@ -41,6 +41,14 @@ class ModelProviderRegistry:
         ProviderType.ANTHROPIC,  # Direct Anthropic (Claude) access
         ProviderType.AZURE,  # Azure-hosted OpenAI deployments
         ProviderType.XAI,  # Direct X.AI GROK access
+        ProviderType.DEEPSEEK,  # Direct DeepSeek access
+        ProviderType.QWEN,  # Direct Alibaba Qwen (DashScope) access
+        ProviderType.ZAI,  # Direct Zhipu GLM (Z.ai) access
+        ProviderType.MOONSHOT,  # Direct Moonshot Kimi access
+        ProviderType.MINIMAX,  # Direct MiniMax access
+        ProviderType.MISTRAL,  # Direct Mistral access
+        ProviderType.NVIDIA,  # Direct NVIDIA (Nemotron) access
+        ProviderType.PERPLEXITY,  # Direct Perplexity access
         ProviderType.DIAL,  # DIAL unified API access
         ProviderType.CUSTOM,  # Local/self-hosted models
         ProviderType.OPENROUTER,  # Catch-all for cloud models
@@ -338,6 +346,14 @@ class ModelProviderRegistry:
             ProviderType.ANTHROPIC: "ANTHROPIC_API_KEY",
             ProviderType.AZURE: "AZURE_OPENAI_API_KEY",
             ProviderType.XAI: "XAI_API_KEY",
+            ProviderType.DEEPSEEK: "DEEPSEEK_API_KEY",
+            ProviderType.QWEN: "DASHSCOPE_API_KEY",
+            ProviderType.ZAI: "ZAI_API_KEY",
+            ProviderType.MOONSHOT: "MOONSHOT_API_KEY",
+            ProviderType.MINIMAX: "MINIMAX_API_KEY",
+            ProviderType.MISTRAL: "MISTRAL_API_KEY",
+            ProviderType.NVIDIA: "NVIDIA_API_KEY",
+            ProviderType.PERPLEXITY: "PERPLEXITY_API_KEY",
             ProviderType.OPENROUTER: "OPENROUTER_API_KEY",
             ProviderType.CUSTOM: "CUSTOM_API_KEY",  # Can be empty for providers that don't need auth
             ProviderType.DIAL: "DIAL_API_KEY",

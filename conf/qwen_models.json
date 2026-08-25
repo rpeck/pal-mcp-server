@@ -1,0 +1,40 @@
+{
+  "_README": {
+    "description": "Alibaba Qwen via DashScope OpenAI-compatible API (native provider, DASHSCOPE_API_KEY).",
+    "usage": "Base URL https://dashscope-intl.aliyuncs.com/compatible-mode/v1. Qwen-Max is closed/API-first, so this direct route reaches models not practically self-hostable. Scores pinned to the qwen/* OpenRouter mirrors. Model IDs verified against DashScope docs 2026-08; re-check /models if a call 404s."
+  },
+  "models": [
+    {
+      "model_name": "qwen3.8-max",
+      "friendly_name": "Qwen3.8 Max",
+      "aliases": ["qwen", "qwen-max", "qwen3-max"],
+      "intelligence_score": 17,
+      "description": "Alibaba Qwen3.8 Max - flagship (1T+ params, closed/API-first). Direct DashScope API.",
+      "context_window": 262144,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": false,
+      "supports_temperature": true
+    },
+    {
+      "model_name": "qwen-flash",
+      "friendly_name": "Qwen Flash",
+      "aliases": ["qwen3-flash"],
+      "intelligence_score": 13,
+      "description": "Alibaba Qwen Flash - fast, low-cost tier. Direct DashScope API.",
+      "context_window": 1000000,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": false,
+      "supports_temperature": true
+    }
+  ]
+}
