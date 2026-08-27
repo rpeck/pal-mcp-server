@@ -1,4 +1,4 @@
-mcp>=1.0.0
+mcp>=1.0.0,<2  # mcp 2.x removed Server.list_tools; the server + 7 upstream tests target the 1.x API. Unpinned CI pulled 2.1.1 and failed at collection.
 google-genai>=1.19.0
 openai>=1.55.2  # Minimum version for httpx 0.28.0 compatibility
 anthropic>=0.40.0  # Native Anthropic (Claude) Messages API provider
