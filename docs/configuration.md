@@ -37,6 +37,21 @@ OPENAI_API_KEY=your_openai_api_key_here
 # X.AI GROK API
 XAI_API_KEY=your_xai_api_key_here
 # Get from: https://console.x.ai/
+
+# Anthropic (Claude) direct API - native provider (dormant unless set)
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+
+# Native direct-API providers for open-model creators (all OpenAI-compatible; each dormant unless
+# set, and ranks ahead of OpenRouter when its key is present).
+DEEPSEEK_API_KEY=your_deepseek_api_key_here        # DeepSeek - api.deepseek.com
+DASHSCOPE_API_KEY=your_dashscope_api_key_here      # Alibaba Qwen - dashscope-intl.aliyuncs.com
+ZAI_API_KEY=your_zai_api_key_here                  # Zhipu GLM - api.z.ai
+MOONSHOT_API_KEY=your_moonshot_api_key_here        # Moonshot Kimi - api.moonshot.ai
+MINIMAX_API_KEY=your_minimax_api_key_here          # MiniMax - api.minimax.io
+MISTRAL_API_KEY=your_mistral_api_key_here          # Mistral - api.mistral.ai
+NVIDIA_API_KEY=your_nvidia_api_key_here            # NVIDIA Nemotron - integrate.api.nvidia.com
+PERPLEXITY_API_KEY=your_perplexity_api_key_here    # Perplexity Sonar - api.perplexity.ai
+# Each also honors <PROVIDER>_ALLOWED_MODELS / _DISALLOWED_MODELS / _MODELS_CONFIG_PATH.
 ```
 
 **Option 2: OpenRouter (Access multiple models through one API)**
