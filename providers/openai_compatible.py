@@ -609,6 +609,11 @@ class OpenAICompatibleProvider(ModelProvider):
                     continue  # Skip unsupported parameters for reasoning models
                 completion_params[key] = value
 
+        # Provider hook: inject sealed, provider-specific request-body params (e.g. the OpenRouter Fusion
+        # panel). This runs AFTER the caller-kwargs whitelist above, so only trusted, provider-derived
+        # config can reach the body — a caller-supplied ``plugins``/``extra_body`` is already dropped.
+        self._augment_completion_params(completion_params, resolved_model)
+
         # Check if this model needs the Responses API endpoint
         # Prefer capability metadata; fall back to static map when capabilities unavailable
         use_responses_api = False
@@ -700,6 +705,15 @@ class OpenAICompatibleProvider(ModelProvider):
             # Log warning but don't fail
             logging.warning(f"Parameter validation limited for {model_name}: {e}")
 
+    def _augment_completion_params(self, completion_params: dict, resolved_model: str) -> None:
+        """Hook for subclasses to inject sealed, provider-specific request-body params.
+
+        Default is a no-op. Subclasses (e.g. OpenRouter, for the Fusion meta-router) override this to add
+        body params such as ``extra_body`` from trusted provider config only.
+        """
+
+        return None
+
     def _extract_usage(self, response) -> dict[str, int]:
         """Extract token usage from OpenAI response.
 
@@ -716,6 +730,10 @@ class OpenAICompatibleProvider(ModelProvider):
             usage["input_tokens"] = getattr(response.usage, "prompt_tokens", 0) or 0
             usage["output_tokens"] = getattr(response.usage, "completion_tokens", 0) or 0
             usage["total_tokens"] = getattr(response.usage, "total_tokens", 0) or 0
+            # OpenRouter reports a per-call dollar cost; surface it so spend is auditable (cost seal).
+            cost = getattr(response.usage, "cost", None)
+            if cost is not None:
+                usage["cost"] = cost
 
         return usage
 

@@ -21,19 +21,20 @@
       "supports_temperature": true
     },
     {
-      "model_name": "qwen-flash",
-      "friendly_name": "Qwen Flash",
-      "aliases": ["qwen3-flash"],
-      "intelligence_score": 13,
-      "description": "Alibaba Qwen Flash - fast, low-cost tier. Direct DashScope API.",
+      "model_name": "qwen3.8-flash",
+      "friendly_name": "Qwen3.8 Flash",
+      "aliases": ["qwen-flash", "qwen3-flash"],
+      "intelligence_score": 16,
+      "description": "Alibaba Qwen3.8 Flash - production serving of the Flash-Next architecture (hosted SKU 'qwen3.8-flash'; 1M context, text+image+video). Score pinned to the family's Artificial Analysis Intelligence Index 56 (AA-56 -> 16, matching the gemini-3.7-flash precedent); note AA scored the open-weight Flash-Next checkpoint, and the hosted checkpoint differs slightly. Direct DashScope API.",
       "context_window": 1000000,
-      "max_output_tokens": 65536,
+      "max_output_tokens": 131072,
       "supports_extended_thinking": true,
       "supports_system_prompts": true,
       "supports_streaming": true,
       "supports_function_calling": true,
       "supports_json_mode": true,
-      "supports_images": false,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
       "supports_temperature": true
     }
   ]

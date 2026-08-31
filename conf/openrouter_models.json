@@ -750,6 +750,23 @@
       "intelligence_score": 17
     },
     {
+      "model_name": "qwen/qwen3.8-flash",
+      "aliases": [
+        "qwen-flash",
+        "qwen3-flash",
+        "qwen3.8-flash"
+      ],
+      "context_window": 1000000,
+      "max_output_tokens": 131072,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "description": "Alibaba Qwen3.8 Flash via OpenRouter - production serving of the Flash-Next architecture (1M context, text+image+video). Score pinned to the family's Artificial Analysis Intelligence Index 56 (AA-56 -> 16); AA scored the open-weight Flash-Next checkpoint, hosted checkpoint differs slightly. Pinned to the native qwen3.8-flash entry.",
+      "intelligence_score": 16
+    },
+    {
       "model_name": "qwen/qwen3.7-max",
       "aliases": [
         "qwen3.7-max"
@@ -767,8 +784,7 @@
     {
       "model_name": "qwen/qwen3.6-flash",
       "aliases": [
-        "qwen-flash",
-        "qwen3-flash"
+        "qwen3.6-flash"
       ],
       "context_window": 1000000,
       "max_output_tokens": 65536,
@@ -779,6 +795,61 @@
       "max_image_size_mb": 20.0,
       "description": "Alibaba Qwen3.6 Flash via OpenRouter - fast multimodal, low-cost.",
       "intelligence_score": 13
+    },
+    {
+      "model_name": "openrouter/fusion",
+      "aliases": [
+        "fusion"
+      ],
+      "context_window": 1000000,
+      "max_output_tokens": 131072,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": false,
+      "supports_images": false,
+      "auto_selectable": false,
+      "description": "OpenRouter Fusion Router - a meta-router (LLM council behind one slug): a panel of up to 8 models answers in parallel, an analyst compares them, and a synthesis model writes the final answer. Costs ~4-5x a single completion at the default 3-model panel (dynamic pricing). NEVER auto-selected (auto_selectable false); use only when explicitly named. Provisional score 17 (meta-router, not Artificial-Analysis-calibrated).",
+      "intelligence_score": 17
+    },
+    {
+      "model_name": "openrouter/fusion-quality",
+      "aliases": [
+        "fusion-quality"
+      ],
+      "context_window": 1000000,
+      "max_output_tokens": 131072,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": false,
+      "supports_images": false,
+      "auto_selectable": false,
+      "fusion": {
+        "analysis_models": [
+          "~anthropic/claude-opus-latest",
+          "~openai/gpt-latest",
+          "~google/gemini-pro-latest"
+        ]
+      },
+      "description": "OpenRouter Fusion Router - Quality preset SKU. A meta-router whose panel is pinned to a frontier trio (Claude Opus + GPT + Gemini Pro); an analyst compares them and a synthesis model writes the answer. Highest quality, highest cost (~4-5x a single completion, dynamic pricing). NEVER auto-selected (auto_selectable false); use only when explicitly named. Provisional score 17 (meta-router, not Artificial-Analysis-calibrated).",
+      "intelligence_score": 17
+    },
+    {
+      "model_name": "openrouter/fusion-fast",
+      "aliases": [
+        "fusion-fast"
+      ],
+      "context_window": 1000000,
+      "max_output_tokens": 131072,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": false,
+      "supports_images": false,
+      "auto_selectable": false,
+      "fusion": {
+        "preset": "general-fast"
+      },
+      "description": "OpenRouter Fusion Router - Fast preset SKU. The same meta-router pipeline on the vendor 'general-fast' panel, tuned for low-latency agentic turns and lower cost than the Quality SKU (still several times a single completion). NEVER auto-selected (auto_selectable false); use only when explicitly named. Provisional score 16 (meta-router, not Artificial-Analysis-calibrated).",
+      "intelligence_score": 16
     },
     {
       "model_name": "moonshotai/kimi-k3",

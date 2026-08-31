@@ -35,6 +35,7 @@ SCORE_PINS = [
     ("deepseek_models.json", "deepseek-v4-flash", "deepseek/deepseek-v4-flash"),
     ("deepseek_models.json", "deepseek-reasoner", "deepseek/deepseek-r1-0528"),
     ("qwen_models.json", "qwen3.8-max", "qwen/qwen3.8-max"),
+    ("qwen_models.json", "qwen3.8-flash", "qwen/qwen3.8-flash"),
     ("zai_models.json", "glm-5.3", "z-ai/glm-5.3"),
     ("zai_models.json", "glm-5.3-flash", "z-ai/glm-5.3-flash"),
     ("moonshot_models.json", "kimi-k3", "moonshotai/kimi-k3"),
@@ -111,6 +112,22 @@ def test_vision_flags_explicit():
     orm = {m["model_name"]: m for m in json.loads((CONF / "openrouter_models.json").read_text())["models"]}
     assert orm["deepseek/deepseek-v4-flash-vision-exp"]["supports_images"] is True
     assert orm["stealth/ox-alpha"]["supports_images"] is True
+
+
+def test_qwen38_flash_present_both_routes():
+    # Production Qwen3.8 Flash: multimodal on both routes, and the bare "qwen-flash" alias now points
+    # at it (newest production Flash), the same convention as glm-flash -> glm-5.3-flash.
+    native = _models("qwen_models.json")
+    assert "qwen3.8-flash" in native, "qwen3.8-flash missing from qwen_models.json"
+    assert native["qwen3.8-flash"]["supports_images"] is True
+    assert "qwen-flash" in native["qwen3.8-flash"]["aliases"]
+
+    orm = {m["model_name"]: m for m in json.loads((CONF / "openrouter_models.json").read_text())["models"]}
+    assert "qwen/qwen3.8-flash" in orm, "qwen/qwen3.8-flash missing from openrouter_models.json"
+    assert orm["qwen/qwen3.8-flash"]["supports_images"] is True
+    assert "qwen-flash" in orm["qwen/qwen3.8-flash"]["aliases"]
+    # The bare alias must not still hang off the older 3.6 mirror (duplicate-alias collision).
+    assert "qwen-flash" not in orm["qwen/qwen3.6-flash"]["aliases"]
 
 
 def test_ox_alpha_livebench_score():

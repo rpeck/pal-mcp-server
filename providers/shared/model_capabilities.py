@@ -61,6 +61,9 @@ class ModelCapabilities:
     allow_code_generation: bool = (
         False  # Enables structured code generation in chat tool for substantial implementations
     )
+    auto_selectable: bool = (
+        True  # When False, the model is callable by explicit name but excluded from auto-mode candidates
+    )
 
     # Additional attributes
     max_image_size_mb: float = 0.0
