@@ -845,6 +845,22 @@
       "intelligence_score": 17
     },
     {
+      "model_name": "z-ai/glm-5.3-flash",
+      "aliases": [
+        "glm-flash",
+        "glm-5.3-flash"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 131072,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "description": "Zhipu GLM-5.3 Flash via OpenRouter - native multimodal MoE (320B/18B, 1M context, AA Intelligence Index 57); flash sibling of GLM-5.3 at ~7.5x lower cost.",
+      "intelligence_score": 16
+    },
+    {
       "model_name": "z-ai/glm-5.1",
       "aliases": [
         "glm-5.1"
@@ -862,7 +878,6 @@
     {
       "model_name": "z-ai/glm-4.7-flash",
       "aliases": [
-        "glm-flash",
         "glm-4.7-flash"
       ],
       "context_window": 202752,

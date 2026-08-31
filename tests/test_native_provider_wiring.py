@@ -36,6 +36,7 @@ SCORE_PINS = [
     ("deepseek_models.json", "deepseek-reasoner", "deepseek/deepseek-r1-0528"),
     ("qwen_models.json", "qwen3.8-max", "qwen/qwen3.8-max"),
     ("zai_models.json", "glm-5.3", "z-ai/glm-5.3"),
+    ("zai_models.json", "glm-5.3-flash", "z-ai/glm-5.3-flash"),
     ("moonshot_models.json", "kimi-k3", "moonshotai/kimi-k3"),
     ("minimax_models.json", "MiniMax-M3", "minimax/minimax-m3"),
 ]

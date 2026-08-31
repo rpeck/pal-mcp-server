@@ -21,6 +21,23 @@
       "supports_temperature": true
     },
     {
+      "model_name": "glm-5.3-flash",
+      "friendly_name": "GLM-5.3 Flash",
+      "aliases": ["glm-flash", "glm-5.3-flash"],
+      "intelligence_score": 16,
+      "description": "Zhipu GLM-5.3 Flash - native multimodal MoE (320B/18B, 1M context, AA Intelligence Index 57). Flash sibling of GLM-5.3, direct Z.ai API.",
+      "context_window": 1048576,
+      "max_output_tokens": 131072,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "max_image_size_mb": 20.0
+    },
+    {
       "model_name": "glm-4.6",
       "friendly_name": "GLM-4.6",
       "aliases": ["glm-4.6"],
