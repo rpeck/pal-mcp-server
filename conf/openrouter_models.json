@@ -979,9 +979,26 @@
       "intelligence_score": 16
     },
     {
-      "model_name": "anthropic/claude-fable-5",
+      "model_name": "anthropic/claude-fable-5.1",
       "aliases": [
         "fable",
+        "fable-5.1",
+        "claude-fable-5.1"
+      ],
+      "context_window": 1000000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "allow_code_generation": true,
+      "description": "Anthropic Claude Fable 5.1 via OpenRouter - tops the AA Intelligence Index at 66 (max effort), ahead of Opus 5 (63) and Fable 5 (62). Premium pricing ($10/$50).",
+      "intelligence_score": 20
+    },
+    {
+      "model_name": "anthropic/claude-fable-5",
+      "aliases": [
         "fable-5",
         "claude-fable-5"
       ],
@@ -993,7 +1010,7 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "allow_code_generation": true,
-      "description": "Anthropic Claude Fable 5 via OpenRouter - frontier model (1M context, AA Intelligence Index 62, second only to Opus 5). Premium pricing ($10/$50).",
+      "description": "Anthropic Claude Fable 5 via OpenRouter - frontier model (1M context, AA Intelligence Index 62, superseded by Fable 5.1). Premium pricing ($10/$50).",
       "intelligence_score": 20
     },
     {

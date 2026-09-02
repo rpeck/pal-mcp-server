@@ -48,14 +48,35 @@
       "allow_code_generation": true
     },
     {
+      "model_name": "claude-fable-5-1",
+      "friendly_name": "Claude Fable 5.1",
+      "aliases": [
+        "fable",
+        "fable-5.1"
+      ],
+      "intelligence_score": 20,
+      "description": "Anthropic Mythos-class model (1M context) - tops the Artificial Analysis Intelligence Index at 66 (max effort), ahead of Opus 5 (63) and Fable 5 (62); autonomous long-horizon coding and knowledge work. Premium pricing ($10/$50).",
+      "context_window": 1000000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "max_image_size_mb": 20.0,
+      "max_thinking_tokens": 32768,
+      "allow_code_generation": true
+    },
+    {
       "model_name": "claude-fable-5",
       "friendly_name": "Claude Fable 5",
       "aliases": [
-        "fable",
         "fable-5"
       ],
       "intelligence_score": 20,
-      "description": "Anthropic Mythos-class model (1M context) - AA Intelligence Index 62, second only to Opus 5; autonomous long-horizon knowledge work and coding. Premium pricing ($10/$50).",
+      "description": "Anthropic Mythos-class model (1M context) - AA Intelligence Index 62, superseded by Fable 5.1; autonomous long-horizon knowledge work and coding. Premium pricing ($10/$50).",
       "context_window": 1000000,
       "max_output_tokens": 128000,
       "supports_extended_thinking": true,

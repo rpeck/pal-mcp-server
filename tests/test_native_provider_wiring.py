@@ -40,6 +40,7 @@ SCORE_PINS = [
     ("zai_models.json", "glm-5.3-flash", "z-ai/glm-5.3-flash"),
     ("moonshot_models.json", "kimi-k3", "moonshotai/kimi-k3"),
     ("minimax_models.json", "MiniMax-M3", "minimax/minimax-m3"),
+    ("anthropic_models.json", "claude-fable-5-1", "anthropic/claude-fable-5.1"),
 ]
 
 
@@ -128,6 +129,31 @@ def test_qwen38_flash_present_both_routes():
     assert "qwen-flash" in orm["qwen/qwen3.8-flash"]["aliases"]
     # The bare alias must not still hang off the older 3.6 mirror (duplicate-alias collision).
     assert "qwen-flash" not in orm["qwen/qwen3.6-flash"]["aliases"]
+
+
+def test_fable_5_1_present_both_routes():
+    # Claude Fable 5.1 (tops the AA Intelligence Index at 66): native claude-fable-5-1 + OpenRouter mirror,
+    # score 20, and the bare "fable" alias now points at 5.1 (newest-wins).
+    a = _models("anthropic_models.json")
+    assert a["claude-fable-5-1"]["intelligence_score"] == 20
+    assert "fable" in a["claude-fable-5-1"]["aliases"]
+    assert "fable" not in a["claude-fable-5"]["aliases"], "bare 'fable' must move off Fable 5"
+
+    orm = {m["model_name"]: m for m in json.loads((CONF / "openrouter_models.json").read_text())["models"]}
+    assert "anthropic/claude-fable-5.1" in orm
+    assert orm["anthropic/claude-fable-5.1"]["intelligence_score"] == 20
+    assert "fable" in orm["anthropic/claude-fable-5.1"]["aliases"]
+    assert "fable" not in orm["anthropic/claude-fable-5"]["aliases"]
+
+
+def test_qwen38_max_0902_native_present():
+    # Production Qwen3.8-Max-0902 snapshot on DashScope (no OpenRouter mirror yet); the bare "qwen-max"
+    # alias now points at it. Score held at the base Max tier (17) since no distinct AA Index exists.
+    q = _models("qwen_models.json")
+    assert "qwen3.8-max-0902" in q, "qwen3.8-max-0902 missing from qwen_models.json"
+    assert q["qwen3.8-max-0902"]["intelligence_score"] == 17
+    assert "qwen-max" in q["qwen3.8-max-0902"]["aliases"]
+    assert "qwen-max" not in q["qwen3.8-max"]["aliases"], "bare 'qwen-max' must move off base Max"
 
 
 def test_ox_alpha_livebench_score():

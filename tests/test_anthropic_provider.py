@@ -20,6 +20,7 @@ class TestAnthropicCatalog:
         caps = _provider().get_all_model_capabilities()
         assert caps["claude-opus-5"].intelligence_score == 20
         assert caps["claude-fable-5"].intelligence_score == 20
+        assert caps["claude-fable-5-1"].intelligence_score == 20
         assert caps["claude-sonnet-5"].intelligence_score == 18
         assert caps["claude-haiku-4-5-20251001"].intelligence_score == 12
         assert caps["claude-opus-5"].context_window == 1_000_000
@@ -29,7 +30,10 @@ class TestAnthropicCatalog:
     def test_alias_resolution(self):
         p = _provider()
         assert p._resolve_model_name("opus") == "claude-opus-5"
-        assert p._resolve_model_name("fable") == "claude-fable-5"
+        # Bare "fable" now points at the newest Fable (5.1); "fable-5" still addresses Fable 5.
+        assert p._resolve_model_name("fable") == "claude-fable-5-1"
+        assert p._resolve_model_name("fable-5.1") == "claude-fable-5-1"
+        assert p._resolve_model_name("fable-5") == "claude-fable-5"
         assert p._resolve_model_name("sonnet") == "claude-sonnet-5"
         assert p._resolve_model_name("haiku") == "claude-haiku-4-5-20251001"
         assert p._resolve_model_name("claude-haiku-4.5") == "claude-haiku-4-5-20251001"
