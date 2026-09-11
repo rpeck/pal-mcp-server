@@ -41,6 +41,10 @@ SCORE_PINS = [
     ("moonshot_models.json", "kimi-k3", "moonshotai/kimi-k3"),
     ("minimax_models.json", "MiniMax-M3", "minimax/minimax-m3"),
     ("anthropic_models.json", "claude-fable-5-1", "anthropic/claude-fable-5.1"),
+    ("deepseek_models.json", "deepseek-v4.1-flash", "deepseek/deepseek-v4.1-flash"),
+    ("qwen_models.json", "qwen3.8-max-0902", "qwen/qwen3.8-max-0902"),
+    ("openai_models.json", "gpt-6-astra", "openai/gpt-6-astra"),
+    ("openai_models.json", "gpt-6-astra-pro", "openai/gpt-6-astra-pro"),
 ]
 
 
@@ -132,7 +136,7 @@ def test_qwen38_flash_present_both_routes():
 
 
 def test_fable_5_1_present_both_routes():
-    # Claude Fable 5.1 (tops the AA Intelligence Index at 66): native claude-fable-5-1 + OpenRouter mirror,
+    # Claude Fable 5.1 (tops the current AA Index at 53): native claude-fable-5-1 + OpenRouter mirror,
     # score 20, and the bare "fable" alias now points at 5.1 (newest-wins).
     a = _models("anthropic_models.json")
     assert a["claude-fable-5-1"]["intelligence_score"] == 20
@@ -158,17 +162,17 @@ def test_qwen38_max_0902_native_present():
 
 def test_ox_alpha_livebench_score():
     orm = {m["model_name"]: m for m in json.loads((CONF / "openrouter_models.json").read_text())["models"]}
-    assert orm["stealth/ox-alpha"]["intelligence_score"] == 15  # LiveBench-derived, documented in docs/
+    assert orm["stealth/ox-alpha"]["intelligence_score"] == 12  # LiveBench-derived, documented in docs/
 
 
 def test_local_r1_distills_present_and_scored():
     custom = _models("custom_models.json")
     expected = {
-        "deepseek-r1:1.5b": 8,
-        "deepseek-r1:7b": 9,
-        "deepseek-r1:8b": 10,
-        "deepseek-r1:14b": 11,
-        "deepseek-r1:32b": 12,
+        "deepseek-r1:1.5b": 6,
+        "deepseek-r1:7b": 7,
+        "deepseek-r1:8b": 8,
+        "deepseek-r1:14b": 9,
+        "deepseek-r1:32b": 10,
     }
     for name, score in expected.items():
         assert name in custom, f"local distill {name} missing"
@@ -208,3 +212,73 @@ def test_every_native_provider_has_a_deferred_live_test():
     covered = {ptype for ptype, *_ in LIVE_VENDORS}
     expected = {ptype for ptype, *_ in NATIVE_VENDORS}
     assert covered == expected, f"native providers without a deferred live test: {expected - covered}"
+
+
+# --------------------------------------------------------------------------------------------------
+# 2026-09 re-anchor: scores mapped to the current Artificial Analysis Intelligence Index (v4.1.1),
+# plus the models added in that pass.
+# --------------------------------------------------------------------------------------------------
+
+
+def _orm():
+    return {m["model_name"]: m for m in json.loads((CONF / "openrouter_models.json").read_text())["models"]}
+
+
+def test_gpt6_astra_present_both_routes():
+    # OpenAI GPT-6 Astra ties the top of the current AA Index at 53 (max effort) -> score 20.
+    native = _models("openai_models.json")
+    for name in ("gpt-6-astra", "gpt-6-astra-pro"):
+        assert name in native, f"{name} missing from openai_models.json"
+        assert native[name]["intelligence_score"] == 20
+    assert "astra" in native["gpt-6-astra"]["aliases"]
+
+    orm = _orm()
+    for name in ("openai/gpt-6-astra", "openai/gpt-6-astra-pro"):
+        assert name in orm, f"{name} missing from openrouter_models.json"
+        assert orm[name]["intelligence_score"] == 20
+
+
+def test_deepseek_v41_flash_supersedes_retired_models():
+    # V4.1 Flash (AA 40) replaces V4 Flash and V4 Flash Vision Exp, which DeepSeek retired, so the
+    # bare "deepseek" / "deepseek-flash" aliases move to it on both routes.
+    ds = _models("deepseek_models.json")
+    assert ds["deepseek-v4.1-flash"]["intelligence_score"] == 15
+    assert ds["deepseek-v4.1-flash"]["supports_images"] is True
+    assert "deepseek" in ds["deepseek-v4.1-flash"]["aliases"]
+    assert "deepseek-flash" in ds["deepseek-v4.1-flash"]["aliases"]
+    assert "deepseek" not in ds["deepseek-v4-pro"]["aliases"]
+    assert "deepseek-flash" not in ds["deepseek-v4-flash"]["aliases"]
+    # The retired entries must say so, so nobody treats them as current.
+    assert "RETIRED" in ds["deepseek-v4-flash"]["description"]
+    assert "RETIRED" in ds["deepseek-v4-flash-vision-exp"]["description"]
+    assert "DEPRECATED" in ds["deepseek-v4-pro"]["description"]
+
+    orm = _orm()
+    assert orm["deepseek/deepseek-v4.1-flash"]["intelligence_score"] == 15
+    assert "deepseek" in orm["deepseek/deepseek-v4.1-flash"]["aliases"]
+
+
+def test_qwen38_max_0902_openrouter_mirror():
+    # The 0902 snapshot reached OpenRouter, so the mirror exists and is score-pinned to the native entry.
+    orm = _orm()
+    assert "qwen/qwen3.8-max-0902" in orm
+    assert orm["qwen/qwen3.8-max-0902"]["intelligence_score"] == 17
+    assert "qwen-max" in orm["qwen/qwen3.8-max-0902"]["aliases"]
+    assert "qwen-max" not in orm["qwen/qwen3.8-max"]["aliases"]
+
+
+def test_reanchor_top_of_catalog():
+    # The re-anchor must leave a single coherent top: Fable 5.1 and GPT-6 Astra at 20, Opus 5 at 19,
+    # and no legacy model left above them.
+    a = _models("anthropic_models.json")
+    o = _models("openai_models.json")
+    assert a["claude-fable-5-1"]["intelligence_score"] == 20
+    assert o["gpt-6-astra"]["intelligence_score"] == 20
+    assert a["claude-opus-5"]["intelligence_score"] == 19
+    assert o["gpt-5.6-sol"]["intelligence_score"] == 18
+    # No model anywhere may exceed the top of the scale.
+    import glob
+
+    for path in glob.glob(str(CONF / "*_models.json")):
+        for m in json.loads(open(path).read()).get("models", []):
+            assert 1 <= m["intelligence_score"] <= 20, f"{m['model_name']} out of range in {path}"

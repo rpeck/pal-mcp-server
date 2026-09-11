@@ -19,7 +19,7 @@
       "temperature_constraint": "Type of temperature constraint: 'fixed', 'range', 'discrete', or omit for default range",
       "default_reasoning_effort": "Default reasoning effort level for models that support it",
       "description": "Human-readable description of the model",
-      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering",
+      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering. Anchored to the Artificial Analysis Intelligence Index (v4.1.1, 2026-09-11).",
       "allow_code_generation": "Whether this model can generate fully working code for your AI tool to use right away. Only true for a model more capable than the AI model / CLI you're currently using."
     }
   },
@@ -32,8 +32,8 @@
         "opus-5",
         "claude-opus"
       ],
-      "intelligence_score": 20,
-      "description": "Anthropic flagship (1M context) - top of the Artificial Analysis Intelligence Index (63); deep reasoning, architecture, agentic coding.",
+      "intelligence_score": 19,
+      "description": "Anthropic flagship (1M context) - near the top of the Artificial Analysis Intelligence Index (51); deep reasoning, architecture, agentic coding.",
       "context_window": 1000000,
       "max_output_tokens": 128000,
       "supports_extended_thinking": true,
@@ -55,7 +55,7 @@
         "fable-5.1"
       ],
       "intelligence_score": 20,
-      "description": "Anthropic Mythos-class model (1M context) - tops the Artificial Analysis Intelligence Index at 66 (max effort), ahead of Opus 5 (63) and Fable 5 (62); autonomous long-horizon coding and knowledge work. Premium pricing ($10/$50).",
+      "description": "Anthropic Mythos-class model (1M context) - tops the Artificial Analysis Intelligence Index at 53 (max effort), ahead of Opus 5 (51) and Fable 5 (50); autonomous long-horizon coding and knowledge work. Premium pricing ($10/$50).",
       "context_window": 1000000,
       "max_output_tokens": 128000,
       "supports_extended_thinking": true,
@@ -75,8 +75,8 @@
       "aliases": [
         "fable-5"
       ],
-      "intelligence_score": 20,
-      "description": "Anthropic Mythos-class model (1M context) - AA Intelligence Index 62, superseded by Fable 5.1; autonomous long-horizon knowledge work and coding. Premium pricing ($10/$50).",
+      "intelligence_score": 19,
+      "description": "Anthropic Mythos-class model (1M context) - AA Intelligence Index 50, superseded by Fable 5.1; autonomous long-horizon knowledge work and coding. Premium pricing ($10/$50).",
       "context_window": 1000000,
       "max_output_tokens": 128000,
       "supports_extended_thinking": true,
@@ -98,7 +98,7 @@
         "sonnet-5",
         "claude-sonnet"
       ],
-      "intelligence_score": 18,
+      "intelligence_score": 15,
       "description": "Most capable Sonnet tier (1M context) - near-Opus intelligence for coding and agentic work at Sonnet cost; adaptive thinking.",
       "context_window": 1000000,
       "max_output_tokens": 128000,
@@ -122,7 +122,7 @@
         "claude-haiku-4.5",
         "claude-haiku-4-5"
       ],
-      "intelligence_score": 12,
+      "intelligence_score": 10,
       "description": "Fast, low-cost Claude tier (200K context) - quick analysis and high-volume work; supports thinking.",
       "context_window": 200000,
       "max_output_tokens": 64000,

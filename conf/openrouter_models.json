@@ -19,7 +19,7 @@
       "use_openai_response_api": "Set to true when the model must use the /responses endpoint (reasoning models like GPT-5.2 Pro). Leave false/omit for standard chat completions.",
       "default_reasoning_effort": "Default reasoning effort level for models that support it (e.g., 'low', 'medium', 'high'). Omit if not applicable.",
       "description": "Human-readable description of the model",
-      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering",
+      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering. Anchored to the Artificial Analysis Intelligence Index (v4.1.1, 2026-09-11).",
       "allow_code_generation": "Whether this model can generate and suggest fully working code - complete with functions, files, and detailed implementation instructions - for your AI tool to use right away. Only set this to 'true' for a model more capable than the AI model / CLI you're currently using."
     }
   },
@@ -39,7 +39,7 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "description": "Claude Opus 4.5 - Anthropic's frontier reasoning model for complex software engineering and agentic workflows",
-      "intelligence_score": 18
+      "intelligence_score": 15
     },
     {
       "model_name": "anthropic/claude-sonnet-4.5",
@@ -55,7 +55,7 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "description": "Claude Sonnet 4.5 - High-performance model with exceptional reasoning and efficiency",
-      "intelligence_score": 12
+      "intelligence_score": 10
     },
     {
       "model_name": "anthropic/claude-opus-4.1",
@@ -70,7 +70,7 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "description": "Claude Opus 4.1 - Last generation flagship model with strong coding and reasoning",
-      "intelligence_score": 14
+      "intelligence_score": 12
     },
     {
       "model_name": "anthropic/claude-sonnet-4.1",
@@ -85,7 +85,7 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "description": "Claude Sonnet 4.1 - Last generation high-performance model with exceptional reasoning and efficiency",
-      "intelligence_score": 10
+      "intelligence_score": 8
     },
     {
       "model_name": "anthropic/claude-3.5-haiku",
@@ -120,7 +120,7 @@
       "max_image_size_mb": 20.0,
       "allow_code_generation": true,
       "description": "Google's Gemini 3.0 Pro via OpenRouter with vision",
-      "intelligence_score": 18
+      "intelligence_score": 15
     },
     {
       "model_name": "google/gemini-2.5-pro",
@@ -137,7 +137,7 @@
       "max_image_size_mb": 20.0,
       "allow_code_generation": true,
       "description": "Google's Gemini 2.5 Pro via OpenRouter with vision",
-      "intelligence_score": 18
+      "intelligence_score": 15
     },
     {
       "model_name": "google/gemini-2.5-flash",
@@ -153,7 +153,7 @@
       "supports_images": true,
       "max_image_size_mb": 15.0,
       "description": "Google's Gemini 2.5 Flash via OpenRouter with vision",
-      "intelligence_score": 10
+      "intelligence_score": 8
     },
     {
       "model_name": "mistralai/mistral-large-2411",
@@ -169,7 +169,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "Mistral's largest model (text-only)",
-      "intelligence_score": 11
+      "intelligence_score": 9
     },
     {
       "model_name": "meta-llama/llama-3-70b",
@@ -194,7 +194,6 @@
       "model_name": "deepseek/deepseek-r1-0528",
       "aliases": [
         "deepseek-r1",
-        "deepseek",
         "r1",
         "deepseek-thinking"
       ],
@@ -206,7 +205,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "DeepSeek R1 with thinking mode - advanced reasoning capabilities (text-only)",
-      "intelligence_score": 15
+      "intelligence_score": 12
     },
     {
       "model_name": "perplexity/llama-3-sonar-large-32k-online",
@@ -240,7 +239,7 @@
       "supports_temperature": false,
       "temperature_constraint": "fixed",
       "description": "OpenAI's o3 model - well-rounded and powerful across domains with vision",
-      "intelligence_score": 14
+      "intelligence_score": 12
     },
     {
       "model_name": "openai/o3-mini",
@@ -258,7 +257,7 @@
       "supports_temperature": false,
       "temperature_constraint": "fixed",
       "description": "OpenAI's o3-mini model - balanced performance and speed with vision",
-      "intelligence_score": 12
+      "intelligence_score": 10
     },
     {
       "model_name": "openai/o3-mini-high",
@@ -276,7 +275,7 @@
       "supports_temperature": false,
       "temperature_constraint": "fixed",
       "description": "OpenAI's o3-mini with high reasoning effort - optimized for complex problems with vision",
-      "intelligence_score": 13
+      "intelligence_score": 11
     },
     {
       "model_name": "openai/o3-pro",
@@ -293,7 +292,7 @@
       "supports_temperature": false,
       "temperature_constraint": "fixed",
       "description": "OpenAI's o3-pro model - professional-grade reasoning and analysis with vision",
-      "intelligence_score": 15
+      "intelligence_score": 12
     },
     {
       "model_name": "openai/o4-mini",
@@ -311,7 +310,7 @@
       "supports_temperature": false,
       "temperature_constraint": "fixed",
       "description": "OpenAI's o4-mini model - optimized for shorter contexts with rapid reasoning and vision",
-      "intelligence_score": 11
+      "intelligence_score": 9
     },
     {
       "model_name": "openai/gpt-5",
@@ -328,7 +327,7 @@
       "supports_temperature": true,
       "temperature_constraint": "range",
       "description": "GPT-5 (400K context, 128K output) - Advanced model with reasoning support",
-      "intelligence_score": 16
+      "intelligence_score": 13
     },
     {
       "model_name": "openai/gpt-5.2-pro",
@@ -349,7 +348,7 @@
       "default_reasoning_effort": "high",
       "allow_code_generation": true,
       "description": "GPT-5.2 Pro - Advanced reasoning model with highest quality responses (text+image input, text output only)",
-      "intelligence_score": 18
+      "intelligence_score": 15
     },
     {
       "model_name": "openai/gpt-5-codex",
@@ -365,7 +364,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "GPT-5-Codex is a specialized version of GPT-5 optimized for software engineering and coding workflows",
-      "intelligence_score": 17
+      "intelligence_score": 14
     },
     {
       "model_name": "openai/gpt-5-mini",
@@ -382,7 +381,7 @@
       "supports_temperature": true,
       "temperature_constraint": "fixed",
       "description": "GPT-5-mini (400K context, 128K output) - Efficient variant with reasoning support",
-      "intelligence_score": 10
+      "intelligence_score": 8
     },
     {
       "model_name": "openai/gpt-5-nano",
@@ -420,7 +419,7 @@
       "default_reasoning_effort": "medium",
       "allow_code_generation": true,
       "description": "GPT-5.2 (400K context, 128K output) - Flagship reasoning model with configurable thinking effort and vision support",
-      "intelligence_score": 18
+      "intelligence_score": 15
     },
     {
       "model_name": "openai/gpt-5.1-codex",
@@ -444,7 +443,7 @@
       "default_reasoning_effort": "high",
       "allow_code_generation": true,
       "description": "GPT-5.1 Codex (400K context, 128K output) - Agentic coding specialization available through the Responses API",
-      "intelligence_score": 19
+      "intelligence_score": 16
     },
     {
       "model_name": "openai/gpt-5.1-codex-mini",
@@ -465,7 +464,7 @@
       "temperature_constraint": "fixed",
       "allow_code_generation": true,
       "description": "GPT-5.1 Codex mini (400K context, 128K output) - Cost-efficient Codex variant with streaming support",
-      "intelligence_score": 16
+      "intelligence_score": 13
     },
     {
       "model_name": "x-ai/grok-4",
@@ -484,7 +483,7 @@
       "supports_temperature": true,
       "temperature_constraint": "range",
       "description": "xAI's Grok 4 via OpenRouter with vision and advanced reasoning",
-      "intelligence_score": 15
+      "intelligence_score": 12
     },
     {
       "model_name": "x-ai/grok-4.1-fast",
@@ -502,7 +501,7 @@
       "supports_temperature": true,
       "temperature_constraint": "range",
       "description": "xAI's Grok 4.1 Fast Reasoning via OpenRouter (2M context) with vision and advanced reasoning",
-      "intelligence_score": 15
+      "intelligence_score": 12
     },
     {
       "model_name": "openai/gpt-5.5",
@@ -517,7 +516,7 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "description": "GPT-5.5 via OpenRouter (backup route).",
-      "intelligence_score": 20
+      "intelligence_score": 17
     },
     {
       "model_name": "openai/gpt-5.6-sol",
@@ -532,6 +531,38 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "description": "GPT-5.6 Sol via OpenRouter (backup route).",
+      "intelligence_score": 18
+    },
+    {
+      "model_name": "openai/gpt-6-astra",
+      "aliases": [
+        "or-gpt6-astra"
+      ],
+      "context_window": 1050000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": false,
+      "supports_json_mode": false,
+      "supports_function_calling": false,
+      "supports_images": true,
+      "max_image_size_mb": 5.0,
+      "allow_code_generation": true,
+      "description": "GPT-6 Astra via OpenRouter (backup route) - ties the top of the AA Intelligence Index at 53 (max effort).",
+      "intelligence_score": 20
+    },
+    {
+      "model_name": "openai/gpt-6-astra-pro",
+      "aliases": [
+        "or-gpt6-astra-pro"
+      ],
+      "context_window": 1050000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": false,
+      "supports_json_mode": false,
+      "supports_function_calling": false,
+      "supports_images": true,
+      "max_image_size_mb": 5.0,
+      "allow_code_generation": true,
+      "description": "GPT-6 Astra Pro via OpenRouter (backup route) - extended-reasoning tier of the GPT-6 Astra family.",
       "intelligence_score": 20
     },
     {
@@ -547,7 +578,7 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "description": "GPT-5.6 Terra via OpenRouter (backup route).",
-      "intelligence_score": 19
+      "intelligence_score": 16
     },
     {
       "model_name": "openai/gpt-5.6-luna",
@@ -562,7 +593,7 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "description": "GPT-5.6 Luna via OpenRouter (backup route).",
-      "intelligence_score": 17
+      "intelligence_score": 15
     },
     {
       "model_name": "openai/gpt-5.4",
@@ -577,7 +608,7 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "description": "GPT-5.4 via OpenRouter (backup route).",
-      "intelligence_score": 19
+      "intelligence_score": 16
     },
     {
       "model_name": "google/gemini-3.7-flash",
@@ -592,7 +623,7 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "description": "Gemini 3.7 Flash via OpenRouter (backup route).",
-      "intelligence_score": 14
+      "intelligence_score": 15
     },
     {
       "model_name": "google/gemini-3.5-flash",
@@ -607,7 +638,7 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "description": "Gemini 3.5 Flash via OpenRouter (backup route).",
-      "intelligence_score": 12
+      "intelligence_score": 13
     },
     {
       "model_name": "google/gemini-3.1-pro-preview",
@@ -622,7 +653,7 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "description": "Gemini 3.1 Pro Preview via OpenRouter (backup route).",
-      "intelligence_score": 19
+      "intelligence_score": 16
     },
     {
       "model_name": "google/gemini-3.1-flash-lite",
@@ -652,7 +683,7 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "description": "GPT-5.5 Pro via OpenRouter.",
-      "intelligence_score": 20
+      "intelligence_score": 17
     },
     {
       "model_name": "openai/gpt-5.4-pro",
@@ -667,7 +698,24 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "description": "GPT-5.4 Pro via OpenRouter.",
-      "intelligence_score": 19
+      "intelligence_score": 16
+    },
+    {
+      "model_name": "deepseek/deepseek-v4.1-flash",
+      "aliases": [
+        "deepseek",
+        "deepseek-flash",
+        "deepseek-v4.1-flash"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "description": "DeepSeek V4.1 Flash via OpenRouter (2026-09-10) - 763B params with native image understanding, 1M context, AA Intelligence Index 40 (max effort). Supersedes V4 Flash and V4 Flash Vision Exp.",
+      "intelligence_score": 15
     },
     {
       "model_name": "deepseek/deepseek-v4-pro",
@@ -683,13 +731,12 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "DeepSeek V4 Pro via OpenRouter - flagship reasoning model (1M context).",
-      "intelligence_score": 16
+      "intelligence_score": 12
     },
     {
       "model_name": "deepseek/deepseek-v4-flash",
       "aliases": [
-        "deepseek-v4-flash",
-        "deepseek-flash"
+        "deepseek-v4-flash"
       ],
       "context_window": 1048576,
       "max_output_tokens": 131072,
@@ -699,7 +746,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "DeepSeek V4 Flash via OpenRouter - fast, low-cost reasoning (1M context).",
-      "intelligence_score": 14
+      "intelligence_score": 13
     },
     {
       "model_name": "deepseek/deepseek-v4-flash-vision-exp",
@@ -729,14 +776,29 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "description": "Ox Alpha (anonymous stealth model) via OpenRouter - 1M context reasoning+vision, free ~1-week preview from 2026-08-20. Scored from LiveBench 2026-06-25 (Overall 69.2); no AA/BenchLM coverage; provisional/stealth, revisit when it de-cloaks.",
-      "intelligence_score": 15
+      "intelligence_score": 12
+    },
+    {
+      "model_name": "qwen/qwen3.8-max-0902",
+      "aliases": [
+        "qwen-max",
+        "qwen3-max",
+        "qwen3.8-max-0902"
+      ],
+      "context_window": 1000000,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "description": "Alibaba Qwen3.8 Max 0902 via OpenRouter (2026-09-01 snapshot) - post-trained for coding and agent work; #1 on Code Arena WebDev (1691). Artificial Analysis has not listed this snapshot; score pinned to the native qwen3.8-max-0902 entry and provisional.",
+      "intelligence_score": 17
     },
     {
       "model_name": "qwen/qwen3.8-max",
       "aliases": [
         "qwen",
-        "qwen-max",
-        "qwen3-max",
         "qwen3.8-max"
       ],
       "context_window": 1000000,
@@ -746,8 +808,8 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Alibaba Qwen3.8 Max via OpenRouter - flagship multimodal reasoning (1M context, AA Intelligence Index 58).",
-      "intelligence_score": 17
+      "description": "Alibaba Qwen3.8 Max via OpenRouter - flagship multimodal reasoning (1M context, AA Intelligence Index 40).",
+      "intelligence_score": 15
     },
     {
       "model_name": "qwen/qwen3.8-flash",
@@ -763,8 +825,8 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Alibaba Qwen3.8 Flash via OpenRouter - production serving of the Flash-Next architecture (1M context, text+image+video). Score pinned to the family's Artificial Analysis Intelligence Index 56 (AA-56 -> 16); AA scored the open-weight Flash-Next checkpoint, hosted checkpoint differs slightly. Pinned to the native qwen3.8-flash entry.",
-      "intelligence_score": 16
+      "description": "Alibaba Qwen3.8 Flash via OpenRouter - production serving of the Flash-Next architecture (1M context, text+image+video). Score pinned to the family's Artificial Analysis Intelligence Index 40; AA scored the open-weight Flash-Next checkpoint, hosted checkpoint differs slightly. Pinned to the native qwen3.8-flash entry.",
+      "intelligence_score": 15
     },
     {
       "model_name": "qwen/qwen3.7-max",
@@ -779,7 +841,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "Alibaba Qwen3.7 Max via OpenRouter - prior flagship (1M context).",
-      "intelligence_score": 16
+      "intelligence_score": 13
     },
     {
       "model_name": "qwen/qwen3.6-flash",
@@ -794,7 +856,7 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "description": "Alibaba Qwen3.6 Flash via OpenRouter - fast multimodal, low-cost.",
-      "intelligence_score": 13
+      "intelligence_score": 11
     },
     {
       "model_name": "openrouter/fusion",
@@ -808,8 +870,8 @@
       "supports_function_calling": false,
       "supports_images": false,
       "auto_selectable": false,
-      "description": "OpenRouter Fusion Router - a meta-router (LLM council behind one slug): a panel of up to 8 models answers in parallel, an analyst compares them, and a synthesis model writes the final answer. Costs ~4-5x a single completion at the default 3-model panel (dynamic pricing). NEVER auto-selected (auto_selectable false); use only when explicitly named. Provisional score 17 (meta-router, not Artificial-Analysis-calibrated).",
-      "intelligence_score": 17
+      "description": "OpenRouter Fusion Router - a meta-router (LLM council behind one slug): a panel of up to 8 models answers in parallel, an analyst compares them, and a synthesis model writes the final answer. Costs ~4-5x a single completion at the default 3-model panel (dynamic pricing). NEVER auto-selected (auto_selectable false); use only when explicitly named. Provisional score 14 (meta-router, not Artificial-Analysis-calibrated).",
+      "intelligence_score": 14
     },
     {
       "model_name": "openrouter/fusion-quality",
@@ -830,8 +892,8 @@
           "~google/gemini-pro-latest"
         ]
       },
-      "description": "OpenRouter Fusion Router - Quality preset SKU. A meta-router whose panel is pinned to a frontier trio (Claude Opus + GPT + Gemini Pro); an analyst compares them and a synthesis model writes the answer. Highest quality, highest cost (~4-5x a single completion, dynamic pricing). NEVER auto-selected (auto_selectable false); use only when explicitly named. Provisional score 17 (meta-router, not Artificial-Analysis-calibrated).",
-      "intelligence_score": 17
+      "description": "OpenRouter Fusion Router - Quality preset SKU. A meta-router whose panel is pinned to a frontier trio (Claude Opus + GPT + Gemini Pro); an analyst compares them and a synthesis model writes the answer. Highest quality, highest cost (~4-5x a single completion, dynamic pricing). NEVER auto-selected (auto_selectable false); use only when explicitly named. Provisional score 14 (meta-router, not Artificial-Analysis-calibrated).",
+      "intelligence_score": 14
     },
     {
       "model_name": "openrouter/fusion-fast",
@@ -848,8 +910,8 @@
       "fusion": {
         "preset": "general-fast"
       },
-      "description": "OpenRouter Fusion Router - Fast preset SKU. The same meta-router pipeline on the vendor 'general-fast' panel, tuned for low-latency agentic turns and lower cost than the Quality SKU (still several times a single completion). NEVER auto-selected (auto_selectable false); use only when explicitly named. Provisional score 16 (meta-router, not Artificial-Analysis-calibrated).",
-      "intelligence_score": 16
+      "description": "OpenRouter Fusion Router - Fast preset SKU. The same meta-router pipeline on the vendor 'general-fast' panel, tuned for low-latency agentic turns and lower cost than the Quality SKU (still several times a single completion). NEVER auto-selected (auto_selectable false); use only when explicitly named. Provisional score 13 (meta-router, not Artificial-Analysis-calibrated).",
+      "intelligence_score": 13
     },
     {
       "model_name": "moonshotai/kimi-k3",
@@ -864,7 +926,7 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Moonshot Kimi K3 via OpenRouter - flagship agentic multimodal model (1M context, AA Intelligence Index 60, top open-weights tier).",
+      "description": "Moonshot Kimi K3 via OpenRouter - flagship agentic multimodal model (1M context, AA Intelligence Index 44, top open-weights tier).",
       "intelligence_score": 17
     },
     {
@@ -881,7 +943,7 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "description": "Moonshot Kimi K2.6 via OpenRouter - prior flagship agentic multimodal model.",
-      "intelligence_score": 16
+      "intelligence_score": 13
     },
     {
       "model_name": "moonshotai/kimi-k2.5",
@@ -896,7 +958,7 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "description": "Moonshot Kimi K2.5 via OpenRouter - lower-cost K2 tier.",
-      "intelligence_score": 14
+      "intelligence_score": 12
     },
     {
       "model_name": "z-ai/glm-5.3",
@@ -912,7 +974,7 @@
       "supports_function_calling": true,
       "supports_images": false,
       "max_image_size_mb": 0.0,
-      "description": "Zhipu GLM-5.3 via OpenRouter - flagship reasoning model (1M context, AA Intelligence Index 60, top open-weights tier; reasoning always on).",
+      "description": "Zhipu GLM-5.3 via OpenRouter - flagship reasoning model (1M context, AA Intelligence Index 45, top open-weights tier; reasoning always on).",
       "intelligence_score": 17
     },
     {
@@ -928,7 +990,7 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Zhipu GLM-5.3 Flash via OpenRouter - native multimodal MoE (320B/18B, 1M context, AA Intelligence Index 57); flash sibling of GLM-5.3 at ~7.5x lower cost.",
+      "description": "Zhipu GLM-5.3 Flash via OpenRouter - native multimodal MoE (320B/18B, 1M context, AA Intelligence Index 42); flash sibling of GLM-5.3 at ~7.5x lower cost.",
       "intelligence_score": 16
     },
     {
@@ -944,7 +1006,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "Zhipu GLM-5.1 via OpenRouter - prior flagship reasoning model.",
-      "intelligence_score": 16
+      "intelligence_score": 13
     },
     {
       "model_name": "z-ai/glm-4.7-flash",
@@ -959,7 +1021,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "Zhipu GLM-4.7 Flash via OpenRouter - fast, very low-cost reasoning.",
-      "intelligence_score": 12
+      "intelligence_score": 10
     },
     {
       "model_name": "meta/muse-spark-1.2",
@@ -975,8 +1037,8 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Meta Muse Spark 1.2 via OpenRouter - agentic reasoning model (1M context, AA Intelligence Index 57).",
-      "intelligence_score": 16
+      "description": "Meta Muse Spark 1.2 via OpenRouter - agentic reasoning model (1M context); not listed on the current AA Intelligence Index.",
+      "intelligence_score": 13
     },
     {
       "model_name": "anthropic/claude-fable-5.1",
@@ -993,7 +1055,7 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "allow_code_generation": true,
-      "description": "Anthropic Claude Fable 5.1 via OpenRouter - tops the AA Intelligence Index at 66 (max effort), ahead of Opus 5 (63) and Fable 5 (62). Premium pricing ($10/$50).",
+      "description": "Anthropic Claude Fable 5.1 via OpenRouter - tops the AA Intelligence Index at 53 (max effort), ahead of Opus 5 (51) and Fable 5 (50). Premium pricing ($10/$50).",
       "intelligence_score": 20
     },
     {
@@ -1010,8 +1072,8 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "allow_code_generation": true,
-      "description": "Anthropic Claude Fable 5 via OpenRouter - frontier model (1M context, AA Intelligence Index 62, superseded by Fable 5.1). Premium pricing ($10/$50).",
-      "intelligence_score": 20
+      "description": "Anthropic Claude Fable 5 via OpenRouter - frontier model (1M context, AA Intelligence Index 50, superseded by Fable 5.1). Premium pricing ($10/$50).",
+      "intelligence_score": 19
     },
     {
       "model_name": "minimax/minimax-m3",
@@ -1027,7 +1089,7 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "description": "MiniMax M3 via OpenRouter - flagship multimodal reasoning (1M context).",
-      "intelligence_score": 15
+      "intelligence_score": 12
     },
     {
       "model_name": "minimax/minimax-m2.5",
@@ -1042,7 +1104,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "MiniMax M2.5 via OpenRouter - lower-cost tier.",
-      "intelligence_score": 13
+      "intelligence_score": 11
     },
     {
       "model_name": "google/gemma-4-31b-it",
@@ -1059,7 +1121,7 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "description": "Google Gemma 4 31B via OpenRouter - flagship open model (multimodal).",
-      "intelligence_score": 12
+      "intelligence_score": 10
     },
     {
       "model_name": "google/gemma-4-26b-a4b-it",
@@ -1075,7 +1137,7 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "description": "Google Gemma 4 26B-A4B via OpenRouter - efficient MoE, low-cost.",
-      "intelligence_score": 11
+      "intelligence_score": 9
     },
     {
       "model_name": "mistralai/mistral-large-2512",
@@ -1091,7 +1153,7 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "description": "Mistral Large 3 (2512) via OpenRouter - flagship (multimodal).",
-      "intelligence_score": 12
+      "intelligence_score": 10
     },
     {
       "model_name": "mistralai/mistral-small-2603",
@@ -1107,7 +1169,7 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "description": "Mistral Small (2603) via OpenRouter - fast, low-cost reasoning.",
-      "intelligence_score": 11
+      "intelligence_score": 9
     },
     {
       "model_name": "xiaomi/mimo-v2.5-pro",
@@ -1124,7 +1186,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "Xiaomi MiMo v2.5 Pro via OpenRouter - flagship reasoning (1M context).",
-      "intelligence_score": 15
+      "intelligence_score": 12
     },
     {
       "model_name": "xiaomi/mimo-v2.5",
@@ -1139,7 +1201,7 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "description": "Xiaomi MiMo v2.5 via OpenRouter - low-cost multimodal reasoning.",
-      "intelligence_score": 13
+      "intelligence_score": 11
     },
     {
       "model_name": "openai/gpt-oss-120b",
@@ -1155,7 +1217,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "OpenAI gpt-oss-120b via OpenRouter - open-weight flagship (reasoning).",
-      "intelligence_score": 13
+      "intelligence_score": 11
     },
     {
       "model_name": "openai/gpt-oss-20b",
@@ -1171,7 +1233,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "OpenAI gpt-oss-20b via OpenRouter - small open-weight (reasoning).",
-      "intelligence_score": 11
+      "intelligence_score": 9
     },
     {
       "model_name": "meta-llama/llama-4-maverick",
@@ -1187,7 +1249,7 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "description": "Meta Llama 4 Maverick via OpenRouter - flagship MoE (multimodal).",
-      "intelligence_score": 12
+      "intelligence_score": 10
     },
     {
       "model_name": "meta-llama/llama-4-scout",
@@ -1202,7 +1264,7 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "description": "Meta Llama 4 Scout via OpenRouter - efficient long-context (multimodal).",
-      "intelligence_score": 10
+      "intelligence_score": 3
     },
     {
       "model_name": "nvidia/nemotron-3-super-120b-a12b",
@@ -1218,7 +1280,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "NVIDIA Nemotron-3 Super 120B via OpenRouter - flagship reasoning.",
-      "intelligence_score": 12
+      "intelligence_score": 10
     },
     {
       "model_name": "nvidia/nemotron-3-nano-30b-a3b",
@@ -1233,7 +1295,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "NVIDIA Nemotron-3 Nano 30B via OpenRouter - small, low-cost reasoning.",
-      "intelligence_score": 10
+      "intelligence_score": 8
     }
   ]
 }

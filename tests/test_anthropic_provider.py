@@ -18,11 +18,11 @@ class TestAnthropicCatalog:
 
     def test_models_and_scores(self):
         caps = _provider().get_all_model_capabilities()
-        assert caps["claude-opus-5"].intelligence_score == 20
-        assert caps["claude-fable-5"].intelligence_score == 20
+        assert caps["claude-opus-5"].intelligence_score == 19
+        assert caps["claude-fable-5"].intelligence_score == 19
         assert caps["claude-fable-5-1"].intelligence_score == 20
-        assert caps["claude-sonnet-5"].intelligence_score == 18
-        assert caps["claude-haiku-4-5-20251001"].intelligence_score == 12
+        assert caps["claude-sonnet-5"].intelligence_score == 15
+        assert caps["claude-haiku-4-5-20251001"].intelligence_score == 10
         assert caps["claude-opus-5"].context_window == 1_000_000
         assert caps["claude-opus-5"].supports_extended_thinking
         assert caps["claude-opus-5"].allow_code_generation
@@ -44,8 +44,8 @@ class TestAnthropicCatalog:
         p = _provider()
         allowed = list(p.get_all_model_capabilities())
         # Highest raw score wins even though effective rank saturates at 100 for opus/fable/sonnet.
-        assert p.get_preferred_model(ToolModelCategory.EXTENDED_REASONING, allowed) == "claude-opus-5"
-        assert p.get_preferred_model(ToolModelCategory.BALANCED, allowed) == "claude-opus-5"
+        assert p.get_preferred_model(ToolModelCategory.EXTENDED_REASONING, allowed) == "claude-fable-5-1"
+        assert p.get_preferred_model(ToolModelCategory.BALANCED, allowed) == "claude-fable-5-1"
         assert p.get_preferred_model(ToolModelCategory.FAST_RESPONSE, allowed) == "claude-haiku-4-5-20251001"
 
     def test_preferred_model_handles_unknown_allowed(self):

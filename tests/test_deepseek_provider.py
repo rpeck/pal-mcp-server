@@ -17,10 +17,11 @@ class TestDeepSeekCatalog:
 
     def test_models_and_scores(self):
         caps = _provider().get_all_model_capabilities()
-        # Scores pinned to the OpenRouter mirrors (v4-pro 16 / v4-flash 14 / r1 15).
-        assert caps["deepseek-v4-pro"].intelligence_score == 16
-        assert caps["deepseek-v4-flash"].intelligence_score == 14
-        assert caps["deepseek-reasoner"].intelligence_score == 15
+        # Scores pinned to the OpenRouter mirrors, anchored to the current AA Index.
+        assert caps["deepseek-v4.1-flash"].intelligence_score == 15
+        assert caps["deepseek-v4-pro"].intelligence_score == 12
+        assert caps["deepseek-v4-flash"].intelligence_score == 13
+        assert caps["deepseek-reasoner"].intelligence_score == 12
         # Experimental vision model scored below stable flash, and multimodal-capable.
         assert caps["deepseek-v4-flash-vision-exp"].intelligence_score == 13
         assert caps["deepseek-v4-flash-vision-exp"].supports_images is True
@@ -29,7 +30,7 @@ class TestDeepSeekCatalog:
 
     def test_alias_resolution(self):
         p = _provider()
-        assert p._resolve_model_name("deepseek") == "deepseek-v4-pro"
+        assert p._resolve_model_name("deepseek") == "deepseek-v4.1-flash"
         assert p._resolve_model_name("reasoner") == "deepseek-reasoner"
         assert p._resolve_model_name("deepseek-r1") == "deepseek-reasoner"
-        assert p._resolve_model_name("DEEPSEEK") == "deepseek-v4-pro"  # case-insensitive
+        assert p._resolve_model_name("DEEPSEEK") == "deepseek-v4.1-flash"  # case-insensitive

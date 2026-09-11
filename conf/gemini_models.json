@@ -20,7 +20,7 @@
       "use_openai_response_api": "Set to true when the model must use the /responses endpoint (reasoning models like GPT-5.2 Pro). Leave false/omit for standard chat completions.",
       "default_reasoning_effort": "Default reasoning effort level for models that support it (e.g., 'low', 'medium', 'high'). Omit if not applicable.",
       "description": "Human-readable description of the model",
-      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering",
+      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering. Anchored to the Artificial Analysis Intelligence Index (v4.1.1, 2026-09-11).",
       "allow_code_generation": "Whether this model can generate and suggest fully working code - complete with functions, files, and detailed implementation instructions - for your AI tool to use right away. Only set this to 'true' for a model more capable than the AI model / CLI you're currently using."
     }
   },
@@ -33,7 +33,7 @@
         "gemini3",
         "gemini-pro"
       ],
-      "intelligence_score": 18,
+      "intelligence_score": 15,
       "description": "Deep reasoning + thinking mode (1M context) - Complex problems, architecture, deep analysis",
       "context_window": 1048576,
       "max_output_tokens": 65536,
@@ -54,7 +54,7 @@
       "aliases": [
         "gemini-pro-2.5"
       ],
-      "intelligence_score": 15,
+      "intelligence_score": 12,
       "description": "Older Model. 1M context - Complex problems, architecture, deep analysis",
       "context_window": 1048576,
       "max_output_tokens": 65536,
@@ -116,7 +116,7 @@
         "flash",
         "flash2.5"
       ],
-      "intelligence_score": 10,
+      "intelligence_score": 8,
       "description": "Ultra-fast (1M context) - Quick analysis, simple queries, rapid iterations",
       "context_window": 1048576,
       "max_output_tokens": 65536,
@@ -137,7 +137,7 @@
         "gemini-3.1-pro",
         "gemini-pro-latest"
       ],
-      "intelligence_score": 19,
+      "intelligence_score": 16,
       "description": "Deep reasoning + thinking (1M context) - complex problems, architecture, deep analysis.",
       "context_window": 1048576,
       "max_output_tokens": 65536,
@@ -164,8 +164,8 @@
         "flash3.7",
         "gemini-flash-latest"
       ],
-      "intelligence_score": 16,
-      "description": "Newest fast model (1M context) - near-frontier benchmarks (GPQA-Diamond ~94.8, AA Intelligence Index 56), rapid iterations, supports thinking. Developer free tier.",
+      "intelligence_score": 15,
+      "description": "Newest fast model (1M context) - near-frontier benchmarks (GPQA-Diamond ~94.8, AA Intelligence Index 40), rapid iterations, supports thinking. Developer free tier.",
       "context_window": 1048576,
       "max_output_tokens": 65536,
       "supports_extended_thinking": true,
@@ -187,8 +187,8 @@
       "aliases": [
         "flash3.6"
       ],
-      "intelligence_score": 15,
-      "description": "Fast model (1M context) - AA Intelligence Index 52, faster/cheaper than 3.5 Flash, supports thinking. Developer free tier.",
+      "intelligence_score": 13,
+      "description": "Fast model (1M context) - AA Intelligence Index 34, faster/cheaper than 3.5 Flash, supports thinking. Developer free tier.",
       "context_window": 1048576,
       "max_output_tokens": 65536,
       "supports_extended_thinking": true,
@@ -207,7 +207,7 @@
       "aliases": [
         "flash3.5"
       ],
-      "intelligence_score": 14,
+      "intelligence_score": 13,
       "description": "Fast model (1M context) - quick analysis, rapid iterations, supports thinking. Developer free tier.",
       "context_window": 1048576,
       "max_output_tokens": 65536,
@@ -228,8 +228,8 @@
         "flashlite3.5",
         "gemini-flash-lite-latest"
       ],
-      "intelligence_score": 11,
-      "description": "Newest cost-efficient model (1M context) - fastest measured, AA Intelligence Index 37 (well above lite median), supports thinking. Developer free tier.",
+      "intelligence_score": 9,
+      "description": "Newest cost-efficient model (1M context) - fastest measured, AA Intelligence Index 23 (well above lite median), supports thinking. Developer free tier.",
       "context_window": 1048576,
       "max_output_tokens": 65536,
       "supports_extended_thinking": true,
@@ -273,7 +273,7 @@
         "flash3",
         "gemini-3-flash"
       ],
-      "intelligence_score": 11,
+      "intelligence_score": 9,
       "description": "Gemini 3 Flash preview (1M context) - fast model with thinking.",
       "context_window": 1048576,
       "max_output_tokens": 65536,

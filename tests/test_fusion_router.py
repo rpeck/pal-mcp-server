@@ -42,7 +42,7 @@ def test_fusion_entries_present_and_tagged():
     for name in FUSION_MODELS:
         assert name in models, f"{name} missing from openrouter_models.json"
         entry = models[name]
-        assert entry["intelligence_score"] == 17, f"{name}: provisional meta-router score must be 17"
+        assert entry["intelligence_score"] == 14, f"{name}: provisional meta-router score must be 14"
         assert entry.get("auto_selectable") is False, f"{name}: must be opted out of auto-selection"
         assert "meta-router" in entry.get("description", "").lower(), f"{name}: description must tag it a meta-router"
 

@@ -8,7 +8,7 @@
       "model_name": "MiniMax-M3",
       "friendly_name": "MiniMax M3",
       "aliases": ["minimax", "minimax-m3"],
-      "intelligence_score": 15,
+      "intelligence_score": 12,
       "description": "MiniMax M3 - multimodal MoE (428B, 1M context) for coding and long-running agents. Direct MiniMax API.",
       "context_window": 1000000,
       "max_output_tokens": 65536,

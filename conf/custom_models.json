@@ -17,7 +17,7 @@
       "supports_temperature": "Whether the model accepts temperature parameter in API calls (set to false for O3/O4 reasoning models)",
       "temperature_constraint": "Type of temperature constraint: 'fixed' (fixed value), 'range' (continuous range), 'discrete' (specific values), or omit for default range",
       "description": "Human-readable description of the model",
-      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering"
+      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering. Anchored to the Artificial Analysis Intelligence Index (v4.1.1, 2026-09-11)."
     }
   },
   "models": [
@@ -48,7 +48,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "Local DeepSeek-R1 distill (1.5B, Qwen-based) via Ollama/LM Studio - fits most laptops.",
-      "intelligence_score": 8
+      "intelligence_score": 6
     },
     {
       "model_name": "deepseek-r1:7b",
@@ -61,7 +61,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "Local DeepSeek-R1 distill (7B, Qwen-based) via Ollama/LM Studio - comfortable on mid-range GPUs.",
-      "intelligence_score": 9
+      "intelligence_score": 7
     },
     {
       "model_name": "deepseek-r1:8b",
@@ -74,7 +74,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "Local DeepSeek-R1 distill (8B, Llama-based) via Ollama/LM Studio.",
-      "intelligence_score": 10
+      "intelligence_score": 8
     },
     {
       "model_name": "deepseek-r1:14b",
@@ -87,7 +87,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "Local DeepSeek-R1 distill (14B, Qwen-based) via Ollama/LM Studio - strong reasoning on a 16GB+ GPU.",
-      "intelligence_score": 11
+      "intelligence_score": 9
     },
     {
       "model_name": "deepseek-r1:32b",
@@ -100,7 +100,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "Local DeepSeek-R1 distill (32B, Qwen-based) via Ollama/LM Studio - needs a 24GB+ GPU. Largest local tier (70B intentionally excluded).",
-      "intelligence_score": 12
+      "intelligence_score": 10
     }
   ]
 }
