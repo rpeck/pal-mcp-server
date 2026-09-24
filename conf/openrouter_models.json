@@ -611,6 +611,22 @@
       "intelligence_score": 16
     },
     {
+      "model_name": "google/gemini-3.8-flash",
+      "aliases": [
+        "gemini-3.8-flash",
+        "flash3.8"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "description": "Google Gemini 3.8 Flash via OpenRouter - AA Intelligence Index 41 (high), one step above 3.7 Flash; text, image, audio and video input.",
+      "intelligence_score": 16
+    },
+    {
       "model_name": "google/gemini-3.7-flash",
       "aliases": [
         "or-gemini-flash"
@@ -844,6 +860,21 @@
       "intelligence_score": 13
     },
     {
+      "model_name": "qwen/qwen3.8-27b",
+      "aliases": [
+        "qwen3.8-27b"
+      ],
+      "context_window": 1000000,
+      "max_output_tokens": 131072,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "description": "Alibaba Qwen3.8 27B via OpenRouter - dense open-weight tier (1M context, AA Intelligence Index 34).",
+      "intelligence_score": 13
+    },
+    {
       "model_name": "qwen/qwen3.6-flash",
       "aliases": [
         "qwen3.6-flash"
@@ -928,6 +959,21 @@
       "max_image_size_mb": 20.0,
       "description": "Moonshot Kimi K3 via OpenRouter - flagship agentic multimodal model (1M context, AA Intelligence Index 44, top open-weights tier).",
       "intelligence_score": 17
+    },
+    {
+      "model_name": "moonshotai/kimi-k2.7-code",
+      "aliases": [
+        "kimi-k2.7-code"
+      ],
+      "context_window": 262144,
+      "max_output_tokens": 235929,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "description": "Moonshot Kimi K2.7 Code via OpenRouter - coding-focused variant (256K context, AA Intelligence Index 26).",
+      "intelligence_score": 10
     },
     {
       "model_name": "moonshotai/kimi-k2.6",
@@ -1024,10 +1070,26 @@
       "intelligence_score": 10
     },
     {
+      "model_name": "meta/muse-spark-1.3",
+      "aliases": [
+        "muse-spark-1.3",
+        "muse-spark",
+        "muse"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 943718,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "allow_code_generation": true,
+      "description": "Meta Muse Spark 1.3 via OpenRouter - agentic reasoning model (1M context, AA Intelligence Index 48). Note: OpenRouter gates this model behind an 18+ age attestation on the account; without it the call returns 403 (an account setting, not a bad slug).",
+      "intelligence_score": 18
+    },
+    {
       "model_name": "meta/muse-spark-1.2",
       "aliases": [
-        "muse",
-        "muse-spark",
         "muse-spark-1.2"
       ],
       "context_window": 1048576,
@@ -1172,10 +1234,25 @@
       "intelligence_score": 9
     },
     {
+      "model_name": "xiaomi/mimo-v2.6-pro",
+      "aliases": [
+        "mimo-v2.6-pro",
+        "mimo",
+        "mimo-pro"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 131072,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "description": "Xiaomi MiMo-V2.6-Pro via OpenRouter - multimodal reasoning (1M context, AA Intelligence Index 46).",
+      "intelligence_score": 18
+    },
+    {
       "model_name": "xiaomi/mimo-v2.5-pro",
       "aliases": [
-        "mimo",
-        "mimo-pro",
         "mimo-v2.5-pro"
       ],
       "context_window": 1048576,
@@ -1265,6 +1342,21 @@
       "max_image_size_mb": 20.0,
       "description": "Meta Llama 4 Scout via OpenRouter - efficient long-context (multimodal).",
       "intelligence_score": 3
+    },
+    {
+      "model_name": "nvidia/nemotron-3-ultra-550b-a55b",
+      "aliases": [
+        "nemotron-3-ultra"
+      ],
+      "context_window": 262144,
+      "max_output_tokens": 182520,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": false,
+      "max_image_size_mb": 0.0,
+      "description": "NVIDIA Nemotron 3 Ultra via OpenRouter - largest Nemotron 3 tier (256K context, AA Intelligence Index 23).",
+      "intelligence_score": 9
     },
     {
       "model_name": "nvidia/nemotron-3-super-120b-a12b",

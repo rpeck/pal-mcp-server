@@ -158,14 +158,14 @@
       ]
     },
     {
-      "model_name": "gemini-3.7-flash",
-      "friendly_name": "Gemini 3.7 Flash",
+      "model_name": "gemini-3.8-flash",
+      "friendly_name": "Gemini 3.8 Flash",
       "aliases": [
-        "flash3.7",
+        "flash3.8",
         "gemini-flash-latest"
       ],
-      "intelligence_score": 15,
-      "description": "Newest fast model (1M context) - near-frontier benchmarks (GPQA-Diamond ~94.8, AA Intelligence Index 40), rapid iterations, supports thinking. Developer free tier.",
+      "intelligence_score": 16,
+      "description": "Newest fast model (1M context) - AA Intelligence Index 41 (high), one step above 3.7 Flash; accepts text, image, audio and video. Supports thinking. Developer free tier.",
       "context_window": 1048576,
       "max_output_tokens": 65536,
       "supports_extended_thinking": true,
@@ -180,6 +180,26 @@
       "dynamic_aliases": [
         "flash"
       ]
+    },
+    {
+      "model_name": "gemini-3.7-flash",
+      "friendly_name": "Gemini 3.7 Flash",
+      "aliases": [
+        "flash3.7"
+      ],
+      "intelligence_score": 15,
+      "description": "Newest fast model (1M context) - near-frontier benchmarks (GPQA-Diamond ~94.8, AA Intelligence Index 40), rapid iterations, supports thinking. Developer free tier.",
+      "context_window": 1048576,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "max_image_size_mb": 20.0,
+      "max_thinking_tokens": 24576
     },
     {
       "model_name": "gemini-3.6-flash",

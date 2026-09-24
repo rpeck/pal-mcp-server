@@ -282,3 +282,34 @@ def test_reanchor_top_of_catalog():
     for path in glob.glob(str(CONF / "*_models.json")):
         for m in json.loads(open(path).read()).get("models", []):
             assert 1 <= m["intelligence_score"] <= 20, f"{m['model_name']} out of range in {path}"
+
+
+def test_gemini_38_flash_and_family_refresh():
+    # 2026-09-24 refresh. Gemini 3.8 Flash (AA 41) is the newest Flash, so it takes both the
+    # "gemini-flash-latest" alias and the gated dynamic "flash" alias from 3.7.
+    g = _models("gemini_models.json")
+    assert g["gemini-3.8-flash"]["intelligence_score"] == 16
+    assert "gemini-flash-latest" in g["gemini-3.8-flash"]["aliases"]
+    assert "flash" in g["gemini-3.8-flash"]["dynamic_aliases"]
+    assert "gemini-flash-latest" not in g["gemini-3.7-flash"]["aliases"]
+    assert "dynamic_aliases" not in g["gemini-3.7-flash"]
+
+    # Newest entry per open-weight family, each scored from the current AA Index.
+    orm = _orm()
+    expected = {
+        "google/gemini-3.8-flash": 16,
+        "meta/muse-spark-1.3": 18,
+        "xiaomi/mimo-v2.6-pro": 18,
+        "qwen/qwen3.8-27b": 13,
+        "moonshotai/kimi-k2.7-code": 10,
+        "nvidia/nemotron-3-ultra-550b-a55b": 9,
+    }
+    for name, score in expected.items():
+        assert name in orm, f"{name} missing from openrouter_models.json"
+        assert orm[name]["intelligence_score"] == score, f"{name}: expected {score}"
+
+    # Bare family aliases follow newest-wins off the superseded entries.
+    assert "muse" in orm["meta/muse-spark-1.3"]["aliases"]
+    assert "muse" not in orm["meta/muse-spark-1.2"]["aliases"]
+    assert "mimo" in orm["xiaomi/mimo-v2.6-pro"]["aliases"]
+    assert "mimo" not in orm["xiaomi/mimo-v2.5-pro"]["aliases"]
