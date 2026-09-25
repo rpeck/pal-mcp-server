@@ -216,7 +216,7 @@ def test_every_native_provider_has_a_deferred_live_test():
 
 
 # --------------------------------------------------------------------------------------------------
-# 2026-09 re-anchor: scores mapped to the current Artificial Analysis Intelligence Index (v4.1.1),
+# 2026-09 re-anchor: scores mapped to the Artificial Analysis Intelligence Index v4.3 (2026-09-11),
 # plus the models added in that pass.
 # --------------------------------------------------------------------------------------------------
 

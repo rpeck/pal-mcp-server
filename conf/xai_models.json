@@ -20,7 +20,7 @@
       "use_openai_response_api": "Set to true when the model must use the /responses endpoint (reasoning models like GPT-5.2 Pro). Leave false/omit for standard chat completions.",
       "default_reasoning_effort": "Default reasoning effort level for models that support it (e.g., 'low', 'medium', 'high'). Omit if not applicable.",
       "description": "Human-readable description of the model",
-      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering. Anchored to the Artificial Analysis Intelligence Index (v4.1.1, 2026-09-11); re-verified against v4.3.2 on 2026-09-24 with the reference scores unchanged."
+      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering. Anchored to the Artificial Analysis Intelligence Index v4.3 as listed on 2026-09-11 (v4.2 and v4.3 rescaled the Index on 2026-09-04 and 2026-09-07); re-verified against v4.3.2 on 2026-09-24 with the reference scores unchanged."
     }
   },
   "models": [

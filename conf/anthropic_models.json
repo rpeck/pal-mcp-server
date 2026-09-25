@@ -19,7 +19,7 @@
       "temperature_constraint": "Type of temperature constraint: 'fixed', 'range', 'discrete', or omit for default range",
       "default_reasoning_effort": "Default reasoning effort level for models that support it",
       "description": "Human-readable description of the model",
-      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering. Anchored to the Artificial Analysis Intelligence Index (v4.1.1, 2026-09-11); re-verified against v4.3.2 on 2026-09-24 with the reference scores unchanged.",
+      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering. Anchored to the Artificial Analysis Intelligence Index v4.3 as listed on 2026-09-11 (v4.2 and v4.3 rescaled the Index on 2026-09-04 and 2026-09-07); re-verified against v4.3.2 on 2026-09-24 with the reference scores unchanged.",
       "allow_code_generation": "Whether this model can generate fully working code for your AI tool to use right away. Only true for a model more capable than the AI model / CLI you're currently using."
     }
   },
