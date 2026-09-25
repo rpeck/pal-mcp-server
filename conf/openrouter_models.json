@@ -1019,7 +1019,7 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Zhipu GLM-5.3 Flash via OpenRouter - native multimodal MoE (320B/18B, 1M context, AA Intelligence Index 42); flash sibling of GLM-5.3 at ~7.5x lower cost.",
+      "description": "Zhipu GLM-5.3 Flash via OpenRouter - native multimodal MoE (320B/18B, 1M context, AA Intelligence Index 42); flash sibling of GLM-5.3 at about a seventh of its output price and a thirtieth of its input price (OpenRouter, 2026-09-24).",
       "intelligence_score": 16
     },
     {
