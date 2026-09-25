@@ -778,21 +778,6 @@
       "intelligence_score": 13
     },
     {
-      "model_name": "stealth/ox-alpha",
-      "aliases": [
-        "ox-alpha"
-      ],
-      "context_window": 1048576,
-      "max_output_tokens": 131072,
-      "supports_extended_thinking": true,
-      "supports_json_mode": true,
-      "supports_function_calling": true,
-      "supports_images": true,
-      "max_image_size_mb": 20.0,
-      "description": "Ox Alpha (anonymous stealth model) via OpenRouter - 1M context reasoning+vision, free ~1-week preview from 2026-08-20. Scored from LiveBench 2026-06-25 (Overall 69.2); no AA/BenchLM coverage; provisional/stealth, revisit when it de-cloaks.",
-      "intelligence_score": 12
-    },
-    {
       "model_name": "qwen/qwen3.8-max-0902",
       "aliases": [
         "qwen-max",

@@ -117,7 +117,6 @@ def test_vision_flags_explicit():
     assert ds["deepseek-v4-pro"]["supports_images"] is False  # non-vision must NOT claim images
     orm = {m["model_name"]: m for m in json.loads((CONF / "openrouter_models.json").read_text())["models"]}
     assert orm["deepseek/deepseek-v4-flash-vision-exp"]["supports_images"] is True
-    assert orm["stealth/ox-alpha"]["supports_images"] is True
 
 
 def test_qwen38_flash_present_both_routes():
@@ -159,11 +158,6 @@ def test_qwen38_max_0902_native_present():
     assert q["qwen3.8-max-0902"]["intelligence_score"] == 17
     assert "qwen-max" in q["qwen3.8-max-0902"]["aliases"]
     assert "qwen-max" not in q["qwen3.8-max"]["aliases"], "bare 'qwen-max' must move off base Max"
-
-
-def test_ox_alpha_livebench_score():
-    orm = {m["model_name"]: m for m in json.loads((CONF / "openrouter_models.json").read_text())["models"]}
-    assert orm["stealth/ox-alpha"]["intelligence_score"] == 12  # LiveBench-derived, documented in docs/
 
 
 def test_local_r1_distills_present_and_scored():
