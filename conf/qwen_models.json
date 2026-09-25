@@ -9,7 +9,7 @@
       "friendly_name": "Qwen3.8 Max 0902",
       "aliases": ["qwen-max", "qwen3-max", "qwen3.8-max-2026-09-02"],
       "intelligence_score": 17,
-      "description": "Alibaba Qwen3.8 Max 0902 (2026-09-01 snapshot) - post-trained for coding and agent work; #1 on Code Arena WebDev (1691), narrowly over Claude Opus 5 Max. Artificial Analysis has not listed this snapshot on its own leaderboard; a single third-party reading puts it near 47, so the score sits above base Max (40) and is provisional. Native multimodal, 1M context. Direct DashScope API.",
+      "description": "Alibaba Qwen3.8 Max 0902 (2026-09-01 snapshot) - post-trained for coding and agent work; #1 on Code Arena WebDev (1691), narrowly over Claude Opus 5 Max. Artificial Analysis Index v4.3 lists this snapshot at 45 (checked 2026-09-24), which maps to 17, above base Max (40). Native multimodal, 1M context. Direct DashScope API.",
       "context_window": 1000000,
       "max_output_tokens": 65536,
       "supports_extended_thinking": true,

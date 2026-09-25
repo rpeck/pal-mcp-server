@@ -806,7 +806,7 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Alibaba Qwen3.8 Max 0902 via OpenRouter (2026-09-01 snapshot) - post-trained for coding and agent work; #1 on Code Arena WebDev (1691). Artificial Analysis has not listed this snapshot; score pinned to the native qwen3.8-max-0902 entry and provisional.",
+      "description": "Alibaba Qwen3.8 Max 0902 via OpenRouter (2026-09-01 snapshot) - post-trained for coding and agent work; #1 on Code Arena WebDev (1691). Artificial Analysis Index v4.3 lists this snapshot at 45 (checked 2026-09-24); score pinned to the native qwen3.8-max-0902 entry.",
       "intelligence_score": 17
     },
     {
