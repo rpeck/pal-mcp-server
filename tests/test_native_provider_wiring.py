@@ -45,6 +45,7 @@ SCORE_PINS = [
     ("qwen_models.json", "qwen3.8-max-0902", "qwen/qwen3.8-max-0902"),
     ("openai_models.json", "gpt-6-astra", "openai/gpt-6-astra"),
     ("openai_models.json", "gpt-6-astra-pro", "openai/gpt-6-astra-pro"),
+    ("anthropic_models.json", "claude-opus-5-5", "anthropic/claude-opus-5.5"),
 ]
 
 
@@ -313,3 +314,38 @@ def test_gemini_38_flash_and_family_refresh():
     assert "muse" not in orm["meta/muse-spark-1.2"]["aliases"]
     assert "mimo" in orm["xiaomi/mimo-v2.6-pro"]["aliases"]
     assert "mimo" not in orm["xiaomi/mimo-v2.5-pro"]["aliases"]
+
+
+def test_mimo_v26_series_complete():
+    # Xiaomi announced the MiMo-V2.6 series (2026-09-22) as three models, not one. All three are
+    # MIT-weight, 1M context and omnimodal. Pro is AA-scored at 46; the other two are provisional.
+    orm = _orm()
+    expected = {
+        "xiaomi/mimo-v2.6-pro": 18,  # AA Index 46, measured
+        "xiaomi/mimo-v2.6-flash": 17,  # provisional: within 4 points of Pro, one tier below
+        "xiaomi/mimo-v2.6-pro-ultraspeed": 18,  # provisional: vendor-claimed parity with Pro
+    }
+    for name, score in expected.items():
+        assert name in orm, f"{name} missing from openrouter_models.json"
+        assert orm[name]["intelligence_score"] == score, f"{name}: expected {score}"
+        assert orm[name]["supports_images"] is True, f"{name}: omnimodal, must accept images"
+    # The two unmeasured entries must say so, so nobody mistakes them for AA-anchored scores.
+    for name in ("xiaomi/mimo-v2.6-flash", "xiaomi/mimo-v2.6-pro-ultraspeed"):
+        assert "PROVISIONAL" in orm[name]["description"], f"{name}: must be tagged PROVISIONAL"
+    # Bare family aliases stay on the flagship.
+    assert "mimo" in orm["xiaomi/mimo-v2.6-pro"]["aliases"]
+
+
+def test_claude_opus_55_both_routes():
+    # Claude Opus 5.5 (2026-09-22) scores 58 at max effort, above Fable 5.1 and GPT-6 Astra (53).
+    # The 1-20 scale tops out at 20, so all three share the top score.
+    a = _models("anthropic_models.json")
+    assert a["claude-opus-5-5"]["intelligence_score"] == 20
+    assert "opus" in a["claude-opus-5-5"]["aliases"]
+    assert "opus" not in a["claude-opus-5"]["aliases"], "bare 'opus' must move off Opus 5"
+
+    orm = _orm()
+    assert orm["anthropic/claude-opus-5.5"]["intelligence_score"] == 20
+    assert "opus" in orm["anthropic/claude-opus-5.5"]["aliases"]
+    # On the OpenRouter route the bare alias used to hang off the legacy Opus 4.5.
+    assert "opus" not in orm["anthropic/claude-opus-4.5"]["aliases"]

@@ -18,6 +18,7 @@ class TestAnthropicCatalog:
 
     def test_models_and_scores(self):
         caps = _provider().get_all_model_capabilities()
+        assert caps["claude-opus-5-5"].intelligence_score == 20
         assert caps["claude-opus-5"].intelligence_score == 19
         assert caps["claude-fable-5"].intelligence_score == 19
         assert caps["claude-fable-5-1"].intelligence_score == 20
@@ -29,7 +30,10 @@ class TestAnthropicCatalog:
 
     def test_alias_resolution(self):
         p = _provider()
-        assert p._resolve_model_name("opus") == "claude-opus-5"
+        # Bare "opus" points at the newest Opus (5.5); "opus-5" still addresses Opus 5.
+        assert p._resolve_model_name("opus") == "claude-opus-5-5"
+        assert p._resolve_model_name("opus-5.5") == "claude-opus-5-5"
+        assert p._resolve_model_name("opus-5") == "claude-opus-5"
         # Bare "fable" now points at the newest Fable (5.1); "fable-5" still addresses Fable 5.
         assert p._resolve_model_name("fable") == "claude-fable-5-1"
         assert p._resolve_model_name("fable-5.1") == "claude-fable-5-1"
@@ -38,14 +42,16 @@ class TestAnthropicCatalog:
         assert p._resolve_model_name("haiku") == "claude-haiku-4-5-20251001"
         assert p._resolve_model_name("claude-haiku-4.5") == "claude-haiku-4-5-20251001"
         # Case-insensitive
-        assert p._resolve_model_name("OPUS") == "claude-opus-5"
+        assert p._resolve_model_name("OPUS") == "claude-opus-5-5"
 
     def test_preferred_model_by_category(self):
         p = _provider()
         allowed = list(p.get_all_model_capabilities())
-        # Highest raw score wins even though effective rank saturates at 100 for opus/fable/sonnet.
-        assert p.get_preferred_model(ToolModelCategory.EXTENDED_REASONING, allowed) == "claude-fable-5-1"
-        assert p.get_preferred_model(ToolModelCategory.BALANCED, allowed) == "claude-fable-5-1"
+        # Opus 5.5 (AA 58) and Fable 5.1 (AA 53) both sit at the top of the 1-20 scale. With equal
+        # scores and equal capability rank, the provider breaks the tie by name, which selects Opus 5.5.
+        # That matches the AA ordering, but it is a tie-break, not a score difference.
+        assert p.get_preferred_model(ToolModelCategory.EXTENDED_REASONING, allowed) == "claude-opus-5-5"
+        assert p.get_preferred_model(ToolModelCategory.BALANCED, allowed) == "claude-opus-5-5"
         assert p.get_preferred_model(ToolModelCategory.FAST_RESPONSE, allowed) == "claude-haiku-4-5-20251001"
 
     def test_preferred_model_handles_unknown_allowed(self):
@@ -80,7 +86,7 @@ class TestAnthropicGenerateContent:
         assert resp.usage["total_tokens"] == 15
         assert resp.provider == ProviderType.ANTHROPIC
         kwargs = client.messages.create.call_args.kwargs
-        assert kwargs["model"] == "claude-opus-5"
+        assert kwargs["model"] == "claude-opus-5-5"
         assert kwargs["max_tokens"] > 0
         assert kwargs["system"] == "sys"
         # Thinking on -> temperature forced to 1.0, budget >= Anthropic floor
