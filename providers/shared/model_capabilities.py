@@ -36,6 +36,9 @@ class ModelCapabilities:
     model_name: str
     friendly_name: str
     intelligence_score: int = 10  # Human-curated 1–20 score reflecting general capability
+    # Raw Artificial Analysis Intelligence Index value behind intelligence_score, when measured. The 1-20
+    # scale tops out at 20, so several frontier models share it; providers use this only to order a tie.
+    aa_index: Optional[float] = None
     description: str = ""
     aliases: list[str] = field(default_factory=list)
     # Aliases that only take effect when DYNAMIC_MODEL_SELECTION is enabled. They override the

@@ -25,6 +25,29 @@
   },
   "models": [
     {
+      "model_name": "grok-4.7",
+      "friendly_name": "X.AI (Grok 4.7)",
+      "aliases": [
+        "grok-4.7",
+        "grok4.7"
+      ],
+      "intelligence_score": 18,
+      "description": "Grok 4.7 (released 2026-09-21, 500K context) - xAI flagship for coding, agentic tasks and knowledge work, succeeding Grok 4.6; AA Intelligence Index 46 (xhigh). $2/$6 per M.",
+      "context_window": 500000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "max_image_size_mb": 20.0,
+      "dynamic_aliases": [
+        "grok"
+      ]
+    },
+    {
       "model_name": "grok-4",
       "friendly_name": "X.AI (Grok 4)",
       "aliases": [

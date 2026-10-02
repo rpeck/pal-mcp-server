@@ -46,6 +46,10 @@ SCORE_PINS = [
     ("openai_models.json", "gpt-6-astra", "openai/gpt-6-astra"),
     ("openai_models.json", "gpt-6-astra-pro", "openai/gpt-6-astra-pro"),
     ("anthropic_models.json", "claude-opus-5-5", "anthropic/claude-opus-5.5"),
+    ("anthropic_models.json", "claude-sonnet-5-5", "anthropic/claude-sonnet-5.5"),
+    ("openai_models.json", "gpt-6.1-sol", "openai/gpt-6.1-sol"),
+    ("openai_models.json", "gpt-6-luna", "openai/gpt-6-luna"),
+    ("xai_models.json", "grok-4.7", "x-ai/grok-4.7"),
 ]
 
 
@@ -91,6 +95,7 @@ def test_cross_route_score_pinning(conf, native_model, or_model):
     assert (
         native[native_model]["intelligence_score"] == or_scores[or_model]
     ), f"score drift: {native_model} != {or_model}"
+    assert native[native_model].get("aa_index") == _orm()[or_model].get("aa_index"), f"aa_index drift: {native_model}"
 
 
 @pytest.mark.parametrize("ptype,env_var,conf", NATIVE_VENDORS)
@@ -343,3 +348,30 @@ def test_claude_opus_55_both_routes():
     assert "opus" in orm["anthropic/claude-opus-5.5"]["aliases"]
     # On the OpenRouter route the bare alias used to hang off the legacy Opus 4.5.
     assert "opus" not in orm["anthropic/claude-opus-4.5"]["aliases"]
+
+
+def test_late_september_releases():
+    # Sonnet 5.5 (AA 56), GPT-6.1 Sol (52), Grok 4.7 (46), GPT-6 Luna (37) and Command A+ (13),
+    # scored on the v4.3 ladder. Fork-owned bare aliases move directly; the upstream-owned "grok"
+    # and OpenRouter "sonnet" aliases move only under DYNAMIC_MODEL_SELECTION.
+    a = _models("anthropic_models.json")
+    assert a["claude-sonnet-5-5"]["intelligence_score"] == 20
+    assert "sonnet" in a["claude-sonnet-5-5"]["aliases"]
+    assert "sonnet" not in a["claude-sonnet-5"]["aliases"]
+
+    o = _models("openai_models.json")
+    assert o["gpt-6.1-sol"]["intelligence_score"] == 20
+    assert o["gpt-6-luna"]["intelligence_score"] == 14
+    assert "sol" in o["gpt-6.1-sol"]["aliases"] and "sol" not in o["gpt-5.6-sol"]["aliases"]
+    assert "luna" in o["gpt-6-luna"]["aliases"] and "luna" not in o["gpt-5.6-luna"]["aliases"]
+
+    x = _models("xai_models.json")
+    assert x["grok-4.7"]["intelligence_score"] == 18
+    assert x["grok-4.7"]["dynamic_aliases"] == ["grok"]
+    assert "grok" in x["grok-4"]["aliases"], "default 'grok' target stays upstream's grok-4"
+
+    orm = _orm()
+    assert orm["anthropic/claude-sonnet-5.5"]["dynamic_aliases"] == ["sonnet"]
+    assert "sonnet" in orm["anthropic/claude-sonnet-4.5"]["aliases"]
+    assert orm["x-ai/grok-4.7"]["dynamic_aliases"] == ["grok"]
+    assert orm["cohere/command-a-plus"]["intelligence_score"] == 6

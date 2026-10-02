@@ -22,6 +22,7 @@ class TestAnthropicCatalog:
         assert caps["claude-opus-5"].intelligence_score == 19
         assert caps["claude-fable-5"].intelligence_score == 19
         assert caps["claude-fable-5-1"].intelligence_score == 20
+        assert caps["claude-sonnet-5-5"].intelligence_score == 20
         assert caps["claude-sonnet-5"].intelligence_score == 15
         assert caps["claude-haiku-4-5-20251001"].intelligence_score == 10
         assert caps["claude-opus-5"].context_window == 1_000_000
@@ -38,7 +39,9 @@ class TestAnthropicCatalog:
         assert p._resolve_model_name("fable") == "claude-fable-5-1"
         assert p._resolve_model_name("fable-5.1") == "claude-fable-5-1"
         assert p._resolve_model_name("fable-5") == "claude-fable-5"
-        assert p._resolve_model_name("sonnet") == "claude-sonnet-5"
+        # Bare "sonnet" points at the newest Sonnet (5.5); "sonnet-5" still addresses Sonnet 5.
+        assert p._resolve_model_name("sonnet") == "claude-sonnet-5-5"
+        assert p._resolve_model_name("sonnet-5") == "claude-sonnet-5"
         assert p._resolve_model_name("haiku") == "claude-haiku-4-5-20251001"
         assert p._resolve_model_name("claude-haiku-4.5") == "claude-haiku-4-5-20251001"
         # Case-insensitive
@@ -47,12 +50,18 @@ class TestAnthropicCatalog:
     def test_preferred_model_by_category(self):
         p = _provider()
         allowed = list(p.get_all_model_capabilities())
-        # Opus 5.5 (AA 58) and Fable 5.1 (AA 53) both sit at the top of the 1-20 scale. With equal
-        # scores and equal capability rank, the provider breaks the tie by name, which selects Opus 5.5.
-        # That matches the AA ordering, but it is a tie-break, not a score difference.
+        # Opus 5.5 (AA 58), Sonnet 5.5 (AA 56) and Fable 5.1 (AA 53) all sit at 20, the top of the 1-20
+        # scale. The raw aa_index orders the tie, so Opus 5.5 wins on its Index value; without it, the
+        # name tie-break would pick Sonnet 5.5.
         assert p.get_preferred_model(ToolModelCategory.EXTENDED_REASONING, allowed) == "claude-opus-5-5"
         assert p.get_preferred_model(ToolModelCategory.BALANCED, allowed) == "claude-opus-5-5"
         assert p.get_preferred_model(ToolModelCategory.FAST_RESPONSE, allowed) == "claude-haiku-4-5-20251001"
+
+    def test_aa_index_orders_the_top_score_tie(self):
+        p = _provider()
+        top = ["claude-fable-5-1", "claude-sonnet-5-5", "claude-opus-5-5"]
+        assert p.get_preferred_model(ToolModelCategory.BALANCED, top) == "claude-opus-5-5"
+        assert p.get_preferred_model(ToolModelCategory.BALANCED, top[:2]) == "claude-sonnet-5-5"
 
     def test_preferred_model_handles_unknown_allowed(self):
         # allowed_models with no canonical entries must not raise (regression: KeyError on

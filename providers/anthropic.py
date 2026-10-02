@@ -252,14 +252,16 @@ class AnthropicModelProvider(RegistryBackedProviderMixin, ModelProvider):
         if canonical_allowed:
             allowed_models = canonical_allowed
 
-        def sort_key(model_name: str) -> tuple[int, int, str]:
+        def sort_key(model_name: str) -> tuple[int, float, int, str]:
             # Raw intelligence_score first: the effective capability rank saturates at 100 for
             # every model scoring >=18 (opus/fable/sonnet all cap out), so relying on it alone would
-            # let a lexical tie-break pick sonnet over the higher-scored opus/fable.
+            # let a lexical tie-break pick sonnet over the higher-scored opus/fable. The raw AA Index
+            # value then orders models that share the top score (the 1-20 scale saturates at 20).
             caps = capability_map.get(model_name)
             if not caps:
-                return (0, 0, model_name)
-            return (caps.intelligence_score, caps.get_effective_capability_rank(), model_name)
+                return (0, -1.0, 0, model_name)
+            aa_index = caps.aa_index if caps.aa_index is not None else -1.0
+            return (caps.intelligence_score, aa_index, caps.get_effective_capability_rank(), model_name)
 
         def best(candidates: list[str]) -> Optional[str]:
             if not candidates:

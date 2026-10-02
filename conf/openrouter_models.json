@@ -20,6 +20,7 @@
       "default_reasoning_effort": "Default reasoning effort level for models that support it (e.g., 'low', 'medium', 'high'). Omit if not applicable.",
       "description": "Human-readable description of the model",
       "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering. Anchored to the Artificial Analysis Intelligence Index v4.3 as listed on 2026-09-11 (v4.2 and v4.3 rescaled the Index on 2026-09-04 and 2026-09-07); re-verified against v4.3.2 on 2026-09-24 with the reference scores unchanged.",
+      "aa_index": "Optional raw Artificial Analysis Intelligence Index value (v4.3, max effort) behind intelligence_score. Used only to order models that share the same intelligence_score.",
       "allow_code_generation": "Whether this model can generate and suggest fully working code - complete with functions, files, and detailed implementation instructions - for your AI tool to use right away. Only set this to 'true' for a model more capable than the AI model / CLI you're currently using."
     }
   },
@@ -465,6 +466,27 @@
       "intelligence_score": 13
     },
     {
+      "model_name": "x-ai/grok-4.7",
+      "aliases": [
+        "grok-4.7",
+        "grok4.7"
+      ],
+      "context_window": 500000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "supports_temperature": true,
+      "temperature_constraint": "range",
+      "description": "Grok 4.7 via OpenRouter (released 2026-09-21) - xAI flagship for coding and agentic work; AA Intelligence Index 46 (xhigh). $2/$6 per M. With DYNAMIC_MODEL_SELECTION on, the bare grok alias points here.",
+      "intelligence_score": 18,
+      "dynamic_aliases": [
+        "grok"
+      ]
+    },
+    {
       "model_name": "x-ai/grok-4",
       "aliases": [
         "grok-4",
@@ -530,6 +552,38 @@
       "max_image_size_mb": 5.0,
       "description": "GPT-5.6 Sol via OpenRouter (backup route).",
       "intelligence_score": 18
+    },
+    {
+      "model_name": "openai/gpt-6.1-sol",
+      "aliases": [
+        "or-gpt6.1-sol"
+      ],
+      "context_window": 1050000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": false,
+      "supports_json_mode": false,
+      "supports_function_calling": false,
+      "supports_images": true,
+      "max_image_size_mb": 5.0,
+      "allow_code_generation": true,
+      "description": "GPT-6.1 Sol via OpenRouter (backup route) - AA Intelligence Index 52 (max effort). $2/$10 per M.",
+      "intelligence_score": 20
+    },
+    {
+      "model_name": "openai/gpt-6-luna",
+      "aliases": [
+        "or-gpt6-luna"
+      ],
+      "context_window": 1050000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": false,
+      "supports_json_mode": false,
+      "supports_function_calling": false,
+      "supports_images": true,
+      "max_image_size_mb": 5.0,
+      "allow_code_generation": true,
+      "description": "GPT-6 Luna via OpenRouter (backup route) - AA Intelligence Index 37 (max effort). $0.10/$0.50 per M.",
+      "intelligence_score": 14
     },
     {
       "model_name": "openai/gpt-6-astra",
@@ -1086,6 +1140,28 @@
       "intelligence_score": 13
     },
     {
+      "model_name": "anthropic/claude-sonnet-5.5",
+      "aliases": [
+        "claude-sonnet",
+        "sonnet-5.5",
+        "claude-sonnet-5.5"
+      ],
+      "context_window": 1000000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "allow_code_generation": true,
+      "description": "Anthropic Claude Sonnet 5.5 via OpenRouter (released 2026-09-28) - AA Intelligence Index 56 at max effort, above Fable 5.1 (53). $2/$10 per M. With DYNAMIC_MODEL_SELECTION on, the bare sonnet alias points here.",
+      "intelligence_score": 20,
+      "aa_index": 56,
+      "dynamic_aliases": [
+        "sonnet"
+      ]
+    },
+    {
       "model_name": "anthropic/claude-opus-5.5",
       "aliases": [
         "opus",
@@ -1102,7 +1178,8 @@
       "max_image_size_mb": 20.0,
       "allow_code_generation": true,
       "description": "Anthropic Claude Opus 5.5 via OpenRouter (released 2026-09-22) - AA Intelligence Index 58 at max effort, above Fable 5.1 (53). $4/$20 per M. The bare opus alias points here.",
-      "intelligence_score": 20
+      "intelligence_score": 20,
+      "aa_index": 58
     },
     {
       "model_name": "anthropic/claude-fable-5.1",
@@ -1120,7 +1197,8 @@
       "max_image_size_mb": 20.0,
       "allow_code_generation": true,
       "description": "Anthropic Claude Fable 5.1 via OpenRouter - tops the AA Intelligence Index at 53 (max effort), ahead of Opus 5 (51) and Fable 5 (50). Premium pricing ($10/$50).",
-      "intelligence_score": 20
+      "intelligence_score": 20,
+      "aa_index": 53
     },
     {
       "model_name": "anthropic/claude-fable-5",
@@ -1422,6 +1500,23 @@
       "max_image_size_mb": 0.0,
       "description": "NVIDIA Nemotron-3 Nano 30B via OpenRouter - small, low-cost reasoning.",
       "intelligence_score": 8
+    },
+    {
+      "model_name": "cohere/command-a-plus",
+      "aliases": [
+        "command-a-plus",
+        "command-a+"
+      ],
+      "context_window": 192000,
+      "max_output_tokens": 64000,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "allow_code_generation": true,
+      "description": "Cohere Command A+ via OpenRouter (released 2026-09-22) - enterprise agentic model, text and image input; AA Intelligence Index 13, scored 6 by interpolating between the 6 -> 3 and 21-23 -> 9 anchors. $0.30/$1.50 per M.",
+      "intelligence_score": 6
     }
   ]
 }
