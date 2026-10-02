@@ -375,3 +375,15 @@ def test_late_september_releases():
     assert "sonnet" in orm["anthropic/claude-sonnet-4.5"]["aliases"]
     assert orm["x-ai/grok-4.7"]["dynamic_aliases"] == ["grok"]
     assert orm["cohere/command-a-plus"]["intelligence_score"] == 6
+
+
+def test_gpt61_sol_pro_is_explicit_only():
+    # GPT-6.1 Sol Pro is GPT-6.1 Sol with reasoning.mode=pro: same per-token price, far more tokens per
+    # request. It must never be an auto-mode candidate, and its score stays pinned to the base model
+    # until Artificial Analysis lists the pro mode.
+    orm = _orm()
+    pro = orm["openai/gpt-6.1-sol-pro"]
+    assert pro["auto_selectable"] is False
+    assert pro["intelligence_score"] == orm["openai/gpt-6.1-sol"]["intelligence_score"]
+    assert "aa_index" not in pro, "no measured Index value for the pro mode yet"
+    assert "PROVISIONAL" in pro["description"]

@@ -571,6 +571,24 @@
       "aa_index": 52
     },
     {
+      "model_name": "openai/gpt-6.1-sol-pro",
+      "aliases": [
+        "or-gpt6.1-sol-pro",
+        "gpt-6.1-sol-pro"
+      ],
+      "context_window": 1050000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": false,
+      "supports_json_mode": false,
+      "supports_function_calling": false,
+      "supports_images": true,
+      "max_image_size_mb": 5.0,
+      "allow_code_generation": true,
+      "auto_selectable": false,
+      "description": "GPT-6.1 Sol Pro via OpenRouter - the same model as GPT-6.1 Sol, served with reasoning.mode=pro for harder tasks. Same per-token price ($2/$10 per M), but pro mode spends far more tokens per request. NEVER auto-selected (auto_selectable false); use only when explicitly named. PROVISIONAL score 20, pinned to GPT-6.1 Sol: Artificial Analysis has not listed the pro mode. Revisit when AA publishes.",
+      "intelligence_score": 20
+    },
+    {
       "model_name": "openai/gpt-6-luna",
       "aliases": [
         "or-gpt6-luna"
