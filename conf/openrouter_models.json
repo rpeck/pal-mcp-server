@@ -567,7 +567,8 @@
       "max_image_size_mb": 5.0,
       "allow_code_generation": true,
       "description": "GPT-6.1 Sol via OpenRouter (backup route) - AA Intelligence Index 52 (max effort). $2/$10 per M.",
-      "intelligence_score": 20
+      "intelligence_score": 20,
+      "aa_index": 52
     },
     {
       "model_name": "openai/gpt-6-luna",
@@ -599,7 +600,8 @@
       "max_image_size_mb": 5.0,
       "allow_code_generation": true,
       "description": "GPT-6 Astra via OpenRouter (backup route) - ties the top of the AA Intelligence Index at 53 (max effort).",
-      "intelligence_score": 20
+      "intelligence_score": 20,
+      "aa_index": 53
     },
     {
       "model_name": "openai/gpt-6-astra-pro",
