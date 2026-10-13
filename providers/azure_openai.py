@@ -274,6 +274,12 @@ class AzureOpenAIProvider(OpenAICompatibleProvider):
 
         return self._client
 
+    def _max_output_tokens_param(self, capabilities: ModelCapabilities | None) -> str:
+        """Azure's reasoning deployments (GPT-5.x, o-series) reject max_tokens, as on OpenAI."""
+        if capabilities is not None and capabilities.supports_extended_thinking:
+            return "max_completion_tokens"
+        return super()._max_output_tokens_param(capabilities)
+
     # ------------------------------------------------------------------
     # Request delegation
     # ------------------------------------------------------------------

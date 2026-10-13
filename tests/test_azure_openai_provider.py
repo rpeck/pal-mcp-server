@@ -143,3 +143,30 @@ def test_registry_configuration_merges_capabilities(dummy_azure_client, monkeypa
     # API call should use deployment defined in registry
     provider.generate_content("hello", "gpt-4o")
     assert dummy_azure_client["request_kwargs"]["model"] == "registry-deployment"
+
+
+def test_reasoning_deployment_sends_max_completion_tokens(dummy_azure_client):
+    # GPT-5.x deployments reject max_tokens with HTTP 400 ("Use 'max_completion_tokens' instead").
+    provider = AzureOpenAIProvider(
+        api_key="key",
+        azure_endpoint="https://example.openai.azure.com/",
+        deployments={"gpt-5.4": {"deployment": "gpt54", "supports_extended_thinking": True}},
+    )
+
+    provider.generate_content("hi", "gpt-5.4", max_output_tokens=20)
+
+    request = dummy_azure_client["request_kwargs"]
+    assert request["max_completion_tokens"] == 20
+    assert "max_tokens" not in request
+
+
+def test_non_reasoning_deployment_keeps_max_tokens(dummy_azure_client):
+    provider = AzureOpenAIProvider(
+        api_key="key", azure_endpoint="https://example.openai.azure.com/", deployments={"gpt-4o": "prod"}
+    )
+
+    provider.generate_content("hi", "gpt-4o", max_output_tokens=20)
+
+    request = dummy_azure_client["request_kwargs"]
+    assert request["max_tokens"] == 20
+    assert "max_completion_tokens" not in request
