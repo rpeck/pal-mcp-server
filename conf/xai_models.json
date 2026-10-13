@@ -20,7 +20,7 @@
       "use_openai_response_api": "Set to true when the model must use the /responses endpoint (reasoning models like GPT-5.2 Pro). Leave false/omit for standard chat completions.",
       "default_reasoning_effort": "Default reasoning effort level for models that support it (e.g., 'low', 'medium', 'high'). Omit if not applicable.",
       "description": "Human-readable description of the model",
-      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering. Anchored to the Artificial Analysis Intelligence Index v4.3 as listed on 2026-09-11 (v4.2 and v4.3 rescaled the Index on 2026-09-04 and 2026-09-07); re-verified against v4.3.2 on 2026-09-24 with the reference scores unchanged.",
+      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering. Since 2026-10-13 it is anchored to the Artificial Analysis Intelligence Index v4.3 at HIGH reasoning effort (aa_index_by_effort['high'], leaderboard read 2026-10-12/13) through the ladder in docs/model_ranking.md. Entries without aa_index_by_effort carry estimated scores. PAL tools default to thinking_mode medium, so a typical call can score a few Index points below the anchor.",
       "aa_index_by_effort": "Optional per-effort Artificial Analysis Intelligence Index values (v4.3 leaderboard, read 2026-10-12), keyed by effort (non-reasoning, low, medium, high, xhigh, max; 'default' for a model with a single row). Values AA marks as incomplete (*) are left out."
     }
   },
@@ -33,6 +33,7 @@
         "grok4.7"
       ],
       "intelligence_score": 18,
+      "aa_index": 46,
       "aa_index_by_effort": {
         "low": 42,
         "high": 46,
@@ -61,7 +62,7 @@
         "grok4",
         "grok-4"
       ],
-      "intelligence_score": 13,
+      "intelligence_score": 12,
       "description": "GROK-4 (256K context) - Frontier multimodal reasoning model with advanced capabilities",
       "context_window": 256000,
       "max_output_tokens": 256000,
@@ -84,7 +85,7 @@
         "grok-4.1-fast-reasoning-latest",
         "grok-4.1-fast"
       ],
-      "intelligence_score": 12,
+      "intelligence_score": 11,
       "description": "GROK-4.1 Fast Reasoning (2M context) - High-performance multimodal reasoning model with function calling",
       "context_window": 2000000,
       "max_output_tokens": 2000000,

@@ -37,23 +37,31 @@ of the work so you can enforce organisational preferences easily.
 
 The scores in this catalog come from the
 [Artificial Analysis (AA) Intelligence Index](https://artificialanalysis.ai/leaderboards/models)
-(v4.3). A model that AA measures gets its score from this ladder:
+(v4.3), **at `high` reasoning effort** (since 2026-10-13). A model that AA measures gets its score
+from its `high` value through this ladder:
 
-| AA Index | Score | | AA Index | Score |
-|---|---|---|---|---|
-| 52+ | 20 | | 36-37 | 14 |
-| 50-51 | 19 | | 33-35 | 13 |
-| 46-49 | 18 | | 30-32 | 12 |
-| 43-45 | 17 | | 27-29 | 11 |
-| 41-42 | 16 | | 24-26 | 10 |
-| 38-40 | 15 | | 21-23 | 9 |
+| AA Index | Score | | AA Index | Score | | AA Index | Score |
+|---|---|---|---|---|---|---|---|
+| 52+ | 20 | | 36-37 | 14 | | 18-20 | 8 |
+| 50-51 | 19 | | 33-35 | 13 | | 15-17 | 7 |
+| 46-49 | 18 | | 30-32 | 12 | | 12-14 | 6 |
+| 43-45 | 17 | | 27-29 | 11 | | 9-11 | 5 |
+| 41-42 | 16 | | 24-26 | 10 | | 7-8 | 4 |
+| 38-40 | 15 | | 21-23 | 9 | | 0-6 | 3 |
 
-- **Effort anchor:** today the score uses the model's AA value at its highest measured effort (usually
-  `max`). PAL tools default to `thinking_mode: medium`, so a typical call can score a few Index points
-  lower than the score suggests. A planned re-score anchors every score at `high` effort instead.
-- **Measured and estimated scores:** a model that AA does not list keeps a score that follows its
-  family and its order in the catalog. That score is an **estimate**, not an Index reading. When AA
-  publishes a value, the estimate is replaced.
+- **Effort anchor:** the score describes the model at `high` effort. PAL tools default to
+  `thinking_mode: medium`, so a typical call runs one level below the anchor and can score a few Index
+  points lower (Claude Sonnet 5.5: 47 at high, 41 at medium). Ask for `thinking_mode: high` to get the
+  scored behavior. For models that declare `effort_levels`, PAL sends the effort explicitly.
+- **No `high` row:** when AA lists one row only (no effort variants), that row is the anchor. When AA
+  has rows below and above `high` but not `high` itself, the anchor is a linear interpolation between
+  them. When AA has only rows above `high`, the anchor is an **estimate**: the nearest row above, minus
+  the median gap between that level and `high` across the models that AA measured at both levels. Each
+  interpolated or estimated entry says so in its description, with the rows it used and a range.
+- **Measured and estimated scores:** a model that AA does not list keeps an **estimated** score. The
+  re-score to the `high` anchor lowered each such score of 12 or more by 1, the median change across
+  the measured models with several effort levels; lower scores did not change. When AA publishes a
+  value, the estimate is replaced.
 - **Provisional scores:** a description that says PROVISIONAL marks a score that waits for an AA value,
   for example a "pro" reasoning-mode preset that AA has not measured.
 - **Record the source:** each conf description cites the AA value and the effort level behind the
@@ -66,7 +74,7 @@ Generate it again with `python scripts/generate_model_catalog.py` after you chan
 
 | Field | Meaning |
 |---|---|
-| `aa_index` | The raw AA Index value behind the score. When two models share a score, the Anthropic provider uses it as the second sort key (for example, Claude Opus 5.5 at 58 wins over Claude Sonnet 5.5 at 56, although both score 20). |
+| `aa_index` | The AA Index value at the `high` anchor behind the score (interpolated or estimated where AA has no `high` row). When two models share a score, the Anthropic provider uses it as the second sort key, so the model with the higher AA value wins the tie instead of the model whose name sorts last. |
 | `aa_index_by_effort` | The AA value at each effort level, for example `{"low": 42, "medium": 48, "high": 50, "xhigh": 51, "max": 52}`. `default` means AA lists a single row. Values that AA marks as incomplete (`*`) are left out. |
 | `effort_levels` | The reasoning-effort levels the route accepts. PAL sends the tool's `thinking_mode` as an explicit effort for these models (see [advanced usage](advanced-usage.md#thinking-modes-as-reasoning-effort)). |
 | `auto_selectable` | `false` keeps a model out of auto mode. Use it for presets that cost much more per request, such as the OpenRouter `-pro` reasoning-mode presets and the Fusion meta-routers. |
@@ -74,11 +82,10 @@ Generate it again with `python scripts/generate_model_catalog.py` after you chan
 
 ### Known gaps
 
-- A few measured scores are older than the current AA values, for example Gemini 3.1 Pro Preview
-  (score 16, AA 30) and MiniMax M3 (score 12, AA 29). The planned re-score at `high` effort corrects
-  them.
-- The ladder has no rungs below 21-23 yet. Small models with an AA value under 21 keep their earlier
-  scores until the re-score adds those rungs.
+- Scores for models that AA does not list are estimates. Older models (for example Claude Opus 5, GPT-5.6
+  Sol, Gemini 3.7 Flash) are no longer on the default AA leaderboard view, so their scores stay estimates.
+- AA's per-effort rows can change. Read them again before a catalog refresh, and run
+  `scripts/generate_model_catalog.py` after you change a conf file.
 
 ## How the rank is used
 

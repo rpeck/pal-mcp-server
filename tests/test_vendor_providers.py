@@ -13,17 +13,17 @@ from providers.zai import ZaiModelProvider
 
 # (provider class, expected ProviderType, expected base_url, a flagship model, its pinned score)
 VENDORS = [
-    (QwenModelProvider, ProviderType.QWEN, "https://dashscope-intl.aliyuncs.com/compatible-mode/v1", "qwen3.8-max", 15),
-    (ZaiModelProvider, ProviderType.ZAI, "https://api.z.ai/api/paas/v4", "glm-5.3", 17),
-    (MoonshotModelProvider, ProviderType.MOONSHOT, "https://api.moonshot.ai/v1", "kimi-k3", 17),
-    (MiniMaxModelProvider, ProviderType.MINIMAX, "https://api.minimax.io/v1", "MiniMax-M3", 12),
+    (QwenModelProvider, ProviderType.QWEN, "https://dashscope-intl.aliyuncs.com/compatible-mode/v1", "qwen3.8-max", 14),
+    (ZaiModelProvider, ProviderType.ZAI, "https://api.z.ai/api/paas/v4", "glm-5.3", 15),
+    (MoonshotModelProvider, ProviderType.MOONSHOT, "https://api.moonshot.ai/v1", "kimi-k3", 14),
+    (MiniMaxModelProvider, ProviderType.MINIMAX, "https://api.minimax.io/v1", "MiniMax-M3", 11),
     (MistralModelProvider, ProviderType.MISTRAL, "https://api.mistral.ai/v1", "mistral-large-latest", 10),
     (
         NvidiaModelProvider,
         ProviderType.NVIDIA,
         "https://integrate.api.nvidia.com/v1",
         "nvidia/nemotron-3-super-120b-a12b",
-        10,
+        6,
     ),
     (PerplexityModelProvider, ProviderType.PERPLEXITY, "https://api.perplexity.ai", "sonar-pro", 11),
 ]

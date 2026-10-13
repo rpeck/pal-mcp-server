@@ -148,13 +148,13 @@ def test_fable_5_1_present_both_routes():
     # Claude Fable 5.1 (tops the current AA Index at 53): native claude-fable-5-1 + OpenRouter mirror,
     # score 20, and the bare "fable" alias now points at 5.1 (newest-wins).
     a = _models("anthropic_models.json")
-    assert a["claude-fable-5-1"]["intelligence_score"] == 20
+    assert a["claude-fable-5-1"]["intelligence_score"] == 19
     assert "fable" in a["claude-fable-5-1"]["aliases"]
     assert "fable" not in a["claude-fable-5"]["aliases"], "bare 'fable' must move off Fable 5"
 
     orm = {m["model_name"]: m for m in json.loads((CONF / "openrouter_models.json").read_text())["models"]}
     assert "anthropic/claude-fable-5.1" in orm
-    assert orm["anthropic/claude-fable-5.1"]["intelligence_score"] == 20
+    assert orm["anthropic/claude-fable-5.1"]["intelligence_score"] == 19
     assert "fable" in orm["anthropic/claude-fable-5.1"]["aliases"]
     assert "fable" not in orm["anthropic/claude-fable-5"]["aliases"]
 
@@ -231,13 +231,13 @@ def _orm():
 def test_gpt6_astra_present_both_routes():
     # OpenAI GPT-6 Astra ties the top of the current AA Index at 53 (max effort) -> score 20.
     native = _models("openai_models.json")
-    assert native["gpt-6-astra"]["intelligence_score"] == 20
+    assert native["gpt-6-astra"]["intelligence_score"] == 19
     assert "astra" in native["gpt-6-astra"]["aliases"]
     # OpenAI's API has no gpt-6-astra-pro model ID: pro is reasoning.mode=pro on GPT-6 Astra.
     assert "gpt-6-astra-pro" not in native
 
     orm = _orm()
-    assert orm["openai/gpt-6-astra"]["intelligence_score"] == 20
+    assert orm["openai/gpt-6-astra"]["intelligence_score"] == 19
     # The OpenRouter -pro preset exists, but it spends far more tokens, so it is explicit-only.
     pro = orm["openai/gpt-6-astra-pro"]
     assert pro["auto_selectable"] is False
@@ -248,7 +248,7 @@ def test_deepseek_v41_flash_supersedes_retired_models():
     # V4.1 Flash (AA 40) replaces V4 Flash and V4 Flash Vision Exp, which DeepSeek retired, so the
     # bare "deepseek" / "deepseek-flash" aliases move to it on both routes.
     ds = _models("deepseek_models.json")
-    assert ds["deepseek-v4.1-flash"]["intelligence_score"] == 15
+    assert ds["deepseek-v4.1-flash"]["intelligence_score"] == 13
     assert ds["deepseek-v4.1-flash"]["supports_images"] is True
     assert "deepseek" in ds["deepseek-v4.1-flash"]["aliases"]
     assert "deepseek-flash" in ds["deepseek-v4.1-flash"]["aliases"]
@@ -260,7 +260,7 @@ def test_deepseek_v41_flash_supersedes_retired_models():
     assert "DEPRECATED" in ds["deepseek-v4-pro"]["description"]
 
     orm = _orm()
-    assert orm["deepseek/deepseek-v4.1-flash"]["intelligence_score"] == 15
+    assert orm["deepseek/deepseek-v4.1-flash"]["intelligence_score"] == 13
     assert "deepseek" in orm["deepseek/deepseek-v4.1-flash"]["aliases"]
 
 
@@ -278,10 +278,10 @@ def test_reanchor_top_of_catalog():
     # and no legacy model left above them.
     a = _models("anthropic_models.json")
     o = _models("openai_models.json")
-    assert a["claude-fable-5-1"]["intelligence_score"] == 20
-    assert o["gpt-6-astra"]["intelligence_score"] == 20
-    assert a["claude-opus-5"]["intelligence_score"] == 19
-    assert o["gpt-5.6-sol"]["intelligence_score"] == 18
+    assert a["claude-fable-5-1"]["intelligence_score"] == 19
+    assert o["gpt-6-astra"]["intelligence_score"] == 19
+    assert a["claude-opus-5"]["intelligence_score"] == 18
+    assert o["gpt-5.6-sol"]["intelligence_score"] == 17
     # No model anywhere may exceed the top of the scale.
     import glob
 
@@ -304,9 +304,9 @@ def test_gemini_38_flash_and_family_refresh():
     orm = _orm()
     expected = {
         "google/gemini-3.8-flash": 16,
-        "meta/muse-spark-1.3": 18,
+        "meta/muse-spark-1.3": 17,
         "xiaomi/mimo-v2.6-pro": 18,
-        "qwen/qwen3.8-27b": 13,
+        "qwen/qwen3.8-27b": 12,
         "moonshotai/kimi-k2.7-code": 10,
         "nvidia/nemotron-3-ultra-550b-a55b": 9,
     }
@@ -327,7 +327,7 @@ def test_mimo_v26_series_complete():
     orm = _orm()
     expected = {
         "xiaomi/mimo-v2.6-pro": 18,  # AA Index 46, measured
-        "xiaomi/mimo-v2.6-flash": 17,  # provisional: within 4 points of Pro, one tier below
+        "xiaomi/mimo-v2.6-flash": 15,  # provisional: within 4 points of Pro, one tier below
         "xiaomi/mimo-v2.6-pro-ultraspeed": 18,  # provisional: vendor-claimed parity with Pro
     }
     for name, score in expected.items():
@@ -361,13 +361,13 @@ def test_late_september_releases():
     # scored on the v4.3 ladder. Fork-owned bare aliases move directly; the upstream-owned "grok"
     # and OpenRouter "sonnet" aliases move only under DYNAMIC_MODEL_SELECTION.
     a = _models("anthropic_models.json")
-    assert a["claude-sonnet-5-5"]["intelligence_score"] == 20
+    assert a["claude-sonnet-5-5"]["intelligence_score"] == 18
     assert "sonnet" in a["claude-sonnet-5-5"]["aliases"]
     assert "sonnet" not in a["claude-sonnet-5"]["aliases"]
 
     o = _models("openai_models.json")
-    assert o["gpt-6.1-sol"]["intelligence_score"] == 20
-    assert o["gpt-6-luna"]["intelligence_score"] == 14
+    assert o["gpt-6.1-sol"]["intelligence_score"] == 19
+    assert o["gpt-6-luna"]["intelligence_score"] == 13
     assert "sol" in o["gpt-6.1-sol"]["aliases"] and "sol" not in o["gpt-5.6-sol"]["aliases"]
     assert "luna" in o["gpt-6-luna"]["aliases"] and "luna" not in o["gpt-5.6-luna"]["aliases"]
 
@@ -420,7 +420,7 @@ def test_aa_index_by_effort_well_formed():
 def test_october_releases():
     # Releases through 2026-10-13, scored on the max-effort ladder (Phase 3 re-scores at high).
     a = _models("anthropic_models.json")
-    assert a["claude-haiku-5-5"]["intelligence_score"] == 17  # AA 43 (max)
+    assert a["claude-haiku-5-5"]["intelligence_score"] == 15  # AA 43 (max)
     assert "haiku" in a["claude-haiku-5-5"]["aliases"]
     assert "haiku" not in a["claude-haiku-4-5-20251001"]["aliases"]
 
@@ -430,13 +430,13 @@ def test_october_releases():
 
     orm = _orm()
     expected = {
-        "anthropic/claude-haiku-5.5": 17,
+        "anthropic/claude-haiku-5.5": 15,
         "google/gemini-4-argon": 20,
-        "meta/muse-wonder": 20,
+        "meta/muse-wonder": 18,
         "mistralai/mistral-large-4-0": 15,
         "stepfun/step-5-preview": 17,
         "qwen/qwen3.8-2.4t-a95b": 15,
-        "openai/gpt-6-luna-pro": 14,
+        "openai/gpt-6-luna-pro": 13,
     }
     for name, score in expected.items():
         assert orm[name]["intelligence_score"] == score, name
@@ -461,3 +461,49 @@ def test_model_catalog_doc_is_current():
             if listed and f"`{m['model_name']}`" not in doc:
                 missing.append(f"{path.name}:{m['model_name']}")
     assert not missing, f"regenerate docs/model_catalog.md; missing: {missing}"
+
+
+# AA Index (at the high-effort anchor) -> intelligence_score. Mirrors the ladder in docs/model_ranking.md.
+AA_LADDER = [
+    (52, 20),
+    (50, 19),
+    (46, 18),
+    (43, 17),
+    (41, 16),
+    (38, 15),
+    (36, 14),
+    (33, 13),
+    (30, 12),
+    (27, 11),
+    (24, 10),
+    (21, 9),
+    (18, 8),
+    (15, 7),
+    (12, 6),
+    (9, 5),
+    (7, 4),
+    (0, 3),
+]
+
+
+def _ladder(value):
+    return next(score for floor, score in AA_LADDER if value >= floor)
+
+
+def test_measured_scores_follow_the_high_effort_ladder():
+    # Phase 3 of the effort-scoring plan: a measured model's score is ladder(AA at high), or ladder(the
+    # single AA row). Without a high row the value is interpolated or estimated, and the description
+    # must say so. aa_index records the anchor value in every case.
+    for path in sorted(CONF.glob("*_models.json")):
+        for m in json.loads(path.read_text()).get("models", []):
+            effort = m.get("aa_index_by_effort")
+            if not effort:
+                continue
+            name = f"{path.name}:{m['model_name']}"
+            anchor = effort.get("high", effort.get("default"))
+            if anchor is None:
+                desc = m["description"]
+                assert "interpolated" in desc or "ESTIMATE" in desc, f"{name}: anchor not documented"
+                anchor = m["aa_index"]
+            assert m.get("aa_index") is not None and abs(m["aa_index"] - anchor) < 1, f"{name}: aa_index != anchor"
+            assert m["intelligence_score"] == _ladder(anchor), f"{name}: score != ladder({anchor})"

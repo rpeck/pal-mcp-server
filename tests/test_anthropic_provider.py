@@ -1,5 +1,6 @@
 """Unit tests for the native Anthropic (Claude) provider."""
 
+import dataclasses
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -19,11 +20,11 @@ class TestAnthropicCatalog:
     def test_models_and_scores(self):
         caps = _provider().get_all_model_capabilities()
         assert caps["claude-opus-5-5"].intelligence_score == 20
-        assert caps["claude-opus-5"].intelligence_score == 19
-        assert caps["claude-fable-5"].intelligence_score == 19
-        assert caps["claude-fable-5-1"].intelligence_score == 20
-        assert caps["claude-sonnet-5-5"].intelligence_score == 20
-        assert caps["claude-sonnet-5"].intelligence_score == 15
+        assert caps["claude-opus-5"].intelligence_score == 18
+        assert caps["claude-fable-5"].intelligence_score == 18
+        assert caps["claude-fable-5-1"].intelligence_score == 19
+        assert caps["claude-sonnet-5-5"].intelligence_score == 18
+        assert caps["claude-sonnet-5"].intelligence_score == 14
         assert caps["claude-haiku-4-5-20251001"].intelligence_score == 10
         assert caps["claude-opus-5"].context_window == 1_000_000
         assert caps["claude-opus-5"].supports_extended_thinking
@@ -59,11 +60,25 @@ class TestAnthropicCatalog:
         assert p.get_preferred_model(ToolModelCategory.BALANCED, allowed) == "claude-opus-5-5"
         assert p.get_preferred_model(ToolModelCategory.FAST_RESPONSE, allowed) == "claude-haiku-5-5"
 
-    def test_aa_index_orders_the_top_score_tie(self):
+    def test_score_orders_the_top_models(self):
+        # At the high-effort anchor the top Claude models no longer tie: Opus 5.5 (AA 54) 20,
+        # Fable 5.1 (51) 19, Sonnet 5.5 (47) 18.
         p = _provider()
         top = ["claude-fable-5-1", "claude-sonnet-5-5", "claude-opus-5-5"]
         assert p.get_preferred_model(ToolModelCategory.BALANCED, top) == "claude-opus-5-5"
-        assert p.get_preferred_model(ToolModelCategory.BALANCED, top[:2]) == "claude-sonnet-5-5"
+        assert p.get_preferred_model(ToolModelCategory.BALANCED, top[:2]) == "claude-fable-5-1"
+
+    def test_aa_index_orders_a_score_tie(self, monkeypatch):
+        # Force a tie in which the name order and the AA order disagree: by name, haiku sorts after
+        # fable, but Fable 5.1 has the higher aa_index (51 vs 38), so it must win.
+        p = _provider()
+        caps = dict(p.get_all_model_capabilities())
+        for name in ("claude-fable-5-1", "claude-haiku-5-5"):
+            caps[name] = dataclasses.replace(caps[name], intelligence_score=19)
+        monkeypatch.setattr(p, "get_all_model_capabilities", lambda: caps)
+        assert p.get_preferred_model(ToolModelCategory.BALANCED, ["claude-haiku-5-5", "claude-fable-5-1"]) == (
+            "claude-fable-5-1"
+        )
 
     def test_preferred_model_handles_unknown_allowed(self):
         # allowed_models with no canonical entries must not raise (regression: KeyError on
