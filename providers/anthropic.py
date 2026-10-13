@@ -4,6 +4,9 @@ Native integration built on the official ``anthropic`` SDK / Messages API. Claud
 also reachable through OpenRouter (``anthropic/...`` IDs); this provider gives a direct route
 using an ``ANTHROPIC_API_KEY`` so bare aliases like ``opus``/``fable`` resolve to the first-party
 API when a key is configured (native providers take priority over OpenRouter).
+
+With ``ANTHROPIC_USE_ENTRA=true`` the provider instead calls Claude on Azure AI Foundry
+(``ANTHROPIC_FOUNDRY_BASE_URL``) with the caller's Entra ID token, and needs no API key.
 """
 
 import base64
@@ -13,8 +16,10 @@ from typing import TYPE_CHECKING, ClassVar, Optional
 if TYPE_CHECKING:
     from tools.models import ToolModelCategory
 
+from utils.env import get_env, get_env_bool
 from utils.image_utils import validate_image
 
+from .azure_entra import build_entra_token_provider, redact_auth_headers_in_logs
 from .base import ModelProvider
 from .registries.anthropic import AnthropicModelRegistry
 from .registry_provider_mixin import RegistryBackedProviderMixin
@@ -45,11 +50,25 @@ class AnthropicModelProvider(RegistryBackedProviderMixin, ModelProvider):
     }
 
     def __init__(self, api_key: str, **kwargs):
-        """Initialize the Anthropic provider with an API key and optional base URL."""
+        """Initialize the Anthropic provider with an API key and optional base URL.
+
+        Pass ``use_entra=True`` (or set ``ANTHROPIC_USE_ENTRA=true``) to call Claude on Azure AI Foundry
+        at ``foundry_base_url`` (default ``ANTHROPIC_FOUNDRY_BASE_URL``) with an Entra ID token instead.
+        """
         self._ensure_registry()
         super().__init__(api_key, **kwargs)
         self._client = None
         self._base_url = kwargs.get("base_url", None)
+        use_entra = kwargs.get("use_entra")
+        self._use_entra = get_env_bool("ANTHROPIC_USE_ENTRA") if use_entra is None else bool(use_entra)
+        self._foundry_base_url = None
+        if self._use_entra:
+            self._foundry_base_url = kwargs.get("foundry_base_url") or get_env("ANTHROPIC_FOUNDRY_BASE_URL")
+            if not self._foundry_base_url:
+                raise ValueError(
+                    "ANTHROPIC_USE_ENTRA=true requires ANTHROPIC_FOUNDRY_BASE_URL, "
+                    "e.g. https://<resource>.services.ai.azure.com/anthropic"
+                )
         self._invalidate_capability_cache()
 
     # ------------------------------------------------------------------
@@ -59,6 +78,10 @@ class AnthropicModelProvider(RegistryBackedProviderMixin, ModelProvider):
     def client(self):
         """Lazy initialization of the Anthropic client (SDK imported on first use)."""
         if self._client is None:
+            if self._use_entra:
+                self._client = self._create_foundry_client()
+                return self._client
+
             import anthropic  # imported lazily so the module loads without the SDK installed
 
             client_kwargs: dict[str, object] = {"api_key": self.api_key}
@@ -66,6 +89,24 @@ class AnthropicModelProvider(RegistryBackedProviderMixin, ModelProvider):
                 client_kwargs["base_url"] = self._base_url
             self._client = anthropic.Anthropic(**client_kwargs)
         return self._client
+
+    def _create_foundry_client(self):
+        """Build the Azure AI Foundry client that authenticates with an Entra ID token."""
+        try:
+            from anthropic import AnthropicFoundry
+        except ImportError as exc:
+            raise ImportError(
+                "Claude on Azure AI Foundry (ANTHROPIC_USE_ENTRA=true) requires anthropic>=0.74.0, "
+                "which provides AnthropicFoundry. Upgrade with `pip install -U anthropic`."
+            ) from exc
+
+        token_provider = build_entra_token_provider(
+            label="Anthropic (Azure AI Foundry)", endpoint=self._foundry_base_url
+        )
+        # Foundry sends the bearer token in per-request headers, which the SDK logs at DEBUG.
+        redact_auth_headers_in_logs("anthropic._base_client")
+        logger.info("Anthropic provider using Azure AI Foundry with Entra ID auth (DefaultAzureCredential)")
+        return AnthropicFoundry(base_url=self._foundry_base_url, azure_ad_token_provider=token_provider)
 
     def get_provider_type(self) -> ProviderType:
         return ProviderType.ANTHROPIC

@@ -1,8 +1,13 @@
 """Unit tests for the native Anthropic (Claude) provider."""
 
 import dataclasses
+import importlib
+import logging
+import sys
 from types import SimpleNamespace
 from unittest.mock import MagicMock
+
+import pytest
 
 from providers.anthropic import AnthropicModelProvider
 from providers.shared import ProviderType
@@ -170,3 +175,142 @@ class TestAnthropicGenerateContent:
         kwargs = self._sent(client)
         budget = kwargs["thinking"]["budget_tokens"]
         assert kwargs["max_tokens"] - budget >= 2000
+
+
+# ---------------------------------------------------------------------------
+# Claude on Azure AI Foundry with Entra ID auth (ANTHROPIC_USE_ENTRA)
+# ---------------------------------------------------------------------------
+
+FOUNDRY_URL = "https://example-resource.services.ai.azure.com/anthropic"
+
+
+def _fake_token_provider():
+    return "fake-entra-token"
+
+
+class TestAnthropicFoundryEntra:
+    def test_entra_mode_builds_foundry_client_without_api_key(self, monkeypatch):
+        import anthropic
+
+        built, captured = {}, {}
+
+        def fake_build(**kwargs):
+            built.update(kwargs)
+            return _fake_token_provider
+
+        class FakeFoundry:
+            def __init__(self, **kwargs):
+                captured.update(kwargs)
+
+        monkeypatch.setattr("providers.anthropic.build_entra_token_provider", fake_build)
+        monkeypatch.setattr(anthropic, "AnthropicFoundry", FakeFoundry)
+
+        p = AnthropicModelProvider("", use_entra=True, foundry_base_url=FOUNDRY_URL)
+
+        assert isinstance(p.client, FakeFoundry)
+        assert captured == {"base_url": FOUNDRY_URL, "azure_ad_token_provider": _fake_token_provider}
+        assert built == {"label": "Anthropic (Azure AI Foundry)", "endpoint": FOUNDRY_URL}
+
+    def test_entra_settings_read_from_env(self, monkeypatch):
+        import anthropic
+
+        captured = {}
+
+        class FakeFoundry:
+            def __init__(self, **kwargs):
+                captured.update(kwargs)
+
+        monkeypatch.setenv("ANTHROPIC_USE_ENTRA", "true")
+        monkeypatch.setenv("ANTHROPIC_FOUNDRY_BASE_URL", FOUNDRY_URL)
+        monkeypatch.setattr("providers.anthropic.build_entra_token_provider", lambda **_: _fake_token_provider)
+        monkeypatch.setattr(anthropic, "AnthropicFoundry", FakeFoundry)
+
+        _ = AnthropicModelProvider("").client
+
+        assert captured["base_url"] == FOUNDRY_URL
+        assert captured["azure_ad_token_provider"] is _fake_token_provider
+
+    def test_entra_mode_requires_foundry_base_url(self):
+        with pytest.raises(ValueError, match="ANTHROPIC_FOUNDRY_BASE_URL"):
+            AnthropicModelProvider("", use_entra=True)
+
+    def test_key_mode_is_unchanged_when_flag_off(self, monkeypatch):
+        import anthropic
+
+        captured = {}
+
+        class FakeAnthropic:
+            def __init__(self, **kwargs):
+                captured.update(kwargs)
+
+        def fail_build(**_):
+            raise AssertionError("Entra token provider must not be built in key mode")
+
+        monkeypatch.setattr(anthropic, "Anthropic", FakeAnthropic)
+        monkeypatch.setattr("providers.anthropic.build_entra_token_provider", fail_build)
+
+        _ = _provider().client
+
+        assert captured == {"api_key": "test-key"}
+
+    def test_entra_mode_without_azure_identity_raises_clear_error(self, monkeypatch):
+        # A None entry in sys.modules makes `from azure.identity import ...` raise ImportError.
+        monkeypatch.setitem(sys.modules, "azure.identity", None)
+        p = AnthropicModelProvider("", use_entra=True, foundry_base_url=FOUNDRY_URL)
+
+        with pytest.raises(ImportError, match="azure-identity"):
+            _ = p.client
+
+    def test_entra_mode_with_sdk_lacking_foundry_raises_clear_error(self, monkeypatch):
+        import anthropic
+
+        monkeypatch.delattr(anthropic, "AnthropicFoundry", raising=False)
+        p = AnthropicModelProvider("", use_entra=True, foundry_base_url=FOUNDRY_URL)
+
+        with pytest.raises(ImportError, match=r"anthropic>=0\.74\.0"):
+            _ = p.client
+
+    def test_foundry_bearer_token_is_sent_but_never_logged(self, monkeypatch, caplog):
+        # End to end through the real AnthropicFoundry client, with a mock transport instead of the network.
+        # The SDK logs each request's headers at DEBUG, and Foundry puts the bearer token there.
+        token = "entra-secret-token-0123456789"
+        monkeypatch.setattr("providers.anthropic.build_entra_token_provider", lambda **_: (lambda: token))
+        p = AnthropicModelProvider("", use_entra=True, foundry_base_url=FOUNDRY_URL)
+        client = p.client
+
+        # The SDK's HTTP client subclasses httpx2.Client on anthropic 1.x and httpx.Client on 0.x.
+        http_lib = importlib.import_module(
+            next(
+                cls.__module__.split(".")[0]
+                for cls in type(client._client).__mro__
+                if cls.__module__.split(".")[0] in ("httpx2", "httpx")
+            )
+        )
+        sent = {}
+
+        def handler(request):
+            sent["authorization"] = request.headers.get("authorization")
+            sent["url"] = str(request.url)
+            return http_lib.Response(
+                200,
+                json={
+                    "id": "msg_1",
+                    "type": "message",
+                    "role": "assistant",
+                    "model": "claude-opus-5",
+                    "content": [{"type": "text", "text": "OK"}],
+                    "stop_reason": "end_turn",
+                    "stop_sequence": None,
+                    "usage": {"input_tokens": 1, "output_tokens": 1},
+                },
+            )
+
+        client._client = http_lib.Client(transport=http_lib.MockTransport(handler))
+
+        with caplog.at_level(logging.DEBUG, logger="anthropic"):
+            client.messages.create(model="claude-opus-5", max_tokens=5, messages=[{"role": "user", "content": "hi"}])
+
+        assert sent["authorization"] == f"Bearer {token}"
+        assert sent["url"] == f"{FOUNDRY_URL}/v1/messages"
+        assert "Request options" in caplog.text  # the SDK did log the request headers...
+        assert token not in caplog.text  # ...with the token redacted
