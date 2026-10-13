@@ -35,18 +35,50 @@ of the work so you can enforce organisational preferences easily.
 
 ## Picking an intelligence score
 
-A straightforward rubric that mirrors typical provider tiers:
+The scores in this catalog come from the
+[Artificial Analysis (AA) Intelligence Index](https://artificialanalysis.ai/leaderboards/models)
+(v4.3). A model that AA measures gets its score from this ladder:
 
-| Intelligence | Guidance                                                                                  |
-|--------------|-------------------------------------------------------------------------------------------|
-| 18–19 | Frontier reasoning models (Gemini 3.0 Pro, Gemini 2.5 Pro, GPT‑5.1 Codex, GPT‑5.2 Pro, GPT‑5.2, GPT‑5) |
-| 15–17 | Strong general models with large context (O3 Pro, DeepSeek R1)                            |
-| 12–14 | Balanced assistants (Claude Opus/Sonnet, Mistral Large)                                   |
-| 9–11  | Fast distillations (Gemini Flash, GPT-5 Mini, Mistral medium)                             |
-| 6–8   | Local or efficiency-focused models (Llama 3 70B, Claude Haiku)                            |
-| ≤5    | Experimental/lightweight models                                                           |
+| AA Index | Score | | AA Index | Score |
+|---|---|---|---|---|
+| 52+ | 20 | | 36-37 | 14 |
+| 50-51 | 19 | | 33-35 | 13 |
+| 46-49 | 18 | | 30-32 | 12 |
+| 43-45 | 17 | | 27-29 | 11 |
+| 41-42 | 16 | | 24-26 | 10 |
+| 38-40 | 15 | | 21-23 | 9 |
 
-Record the reasoning for your scores so future updates stay consistent.
+- **Effort anchor:** today the score uses the model's AA value at its highest measured effort (usually
+  `max`). PAL tools default to `thinking_mode: medium`, so a typical call can score a few Index points
+  lower than the score suggests. A planned re-score anchors every score at `high` effort instead.
+- **Measured and estimated scores:** a model that AA does not list keeps a score that follows its
+  family and its order in the catalog. That score is an **estimate**, not an Index reading. When AA
+  publishes a value, the estimate is replaced.
+- **Provisional scores:** a description that says PROVISIONAL marks a score that waits for an AA value,
+  for example a "pro" reasoning-mode preset that AA has not measured.
+- **Record the source:** each conf description cites the AA value and the effort level behind the
+  score, so later updates stay consistent.
+
+The [model catalog](model_catalog.md) lists every measured model with its per-effort Index values.
+Generate it again with `python scripts/generate_model_catalog.py` after you change a conf file.
+
+### Fields that support the score
+
+| Field | Meaning |
+|---|---|
+| `aa_index` | The raw AA Index value behind the score. When two models share a score, the Anthropic provider uses it as the second sort key (for example, Claude Opus 5.5 at 58 wins over Claude Sonnet 5.5 at 56, although both score 20). |
+| `aa_index_by_effort` | The AA value at each effort level, for example `{"low": 42, "medium": 48, "high": 50, "xhigh": 51, "max": 52}`. `default` means AA lists a single row. Values that AA marks as incomplete (`*`) are left out. |
+| `effort_levels` | The reasoning-effort levels the route accepts. PAL sends the tool's `thinking_mode` as an explicit effort for these models (see [advanced usage](advanced-usage.md#thinking-modes-as-reasoning-effort)). |
+| `auto_selectable` | `false` keeps a model out of auto mode. Use it for presets that cost much more per request, such as the OpenRouter `-pro` reasoning-mode presets and the Fusion meta-routers. |
+| `dynamic_aliases` | Aliases that point at the model only when `DYNAMIC_MODEL_SELECTION` is on. They let a bare alias such as `haiku` follow the newest model without changing upstream defaults. |
+
+### Known gaps
+
+- A few measured scores are older than the current AA values, for example Gemini 3.1 Pro Preview
+  (score 16, AA 30) and MiniMax M3 (score 12, AA 29). The planned re-score at `high` effort corrects
+  them.
+- The ladder has no rungs below 21-23 yet. Small models with an AA value under 21 keep their earlier
+  scores until the re-score adds those rungs.
 
 ## How the rank is used
 

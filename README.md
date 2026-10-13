@@ -431,6 +431,7 @@ DISABLED_TOOLS=
 - [Configuration](docs/configuration.md) - Environment variables, restrictions
 - [Adding Providers](docs/adding_providers.md) - Provider-specific setup (OpenAI, Azure, custom gateways)
 - [Model Ranking Guide](docs/model_ranking.md) - How intelligence scores drive auto-mode suggestions
+- [Model Catalog](docs/model_catalog.md) - Every measured model with its score, AA Index values, routes, and aliases
 
 **🔧 Setup & Support**
 - [WSL Setup](docs/wsl-setup.md) - Windows users

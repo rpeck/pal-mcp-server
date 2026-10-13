@@ -8,6 +8,7 @@ _Formerly known as PAL MCP. See the short [name change note](name-change.md) for
 | [Adding Providers](adding_providers.md) | How to register new AI providers and advertise capabilities. |
 | [Azure OpenAI](azure_openai.md) | Configure Azure deployments, capability overrides, and env mappings. |
 | [Model Ranking](model_ranking.md) | How intelligence scores translate into auto-mode ordering. |
+| [Model Catalog](model_catalog.md) | Every measured model: score, per-effort AA Index values, routes, and aliases (generated). |
 | [Custom Models](custom_models.md) | Configure OpenRouter/custom models and aliases. |
 | [Adding Tools](adding_tools.md) | Create new tools using the shared base classes. |
 | [Advanced Usage](advanced-usage.md) | Auto-mode tricks, workflow tools, and collaboration tips. |

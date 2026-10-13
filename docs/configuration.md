@@ -89,7 +89,7 @@ DEFAULT_MODEL=auto  # Claude picks best model for each task (recommended)
 DYNAMIC_MODEL_SELECTION=1
 ```
 
-With `DYNAMIC_MODEL_SELECTION` unset, auto-mode uses upstream's selection *algorithm* and bare aliases keep their upstream targets (`flash`→`gemini-2.5-flash`, `pro`→`gemini-3-pro-preview`). For OpenAI this means the established per-category preference lists, unchanged. For Gemini, upstream selection is reverse-alphabetical over the available models, so the newest-numbered model in the catalogue is naturally selected — adding newer Gemini models (`gemini-3.7-flash`, `gemini-3.1-pro-preview`) advances the default Gemini auto-pick accordingly, exactly as upstream's own algorithm would when models are added. Enabling the flag additionally makes OpenAI auto-selection lead with the newest flagship and remaps the bare aliases to the newest models (`flash`→`gemini-3.7-flash`, `pro`→`gemini-3.1-pro-preview`). The bare-alias remap applies to the **native** providers (Gemini direct); on OpenRouter the bare aliases keep their existing targets, so reach the newest OpenRouter models by their explicit `or-*` names. **Caveat:** with the flag on (and, for Gemini, by default once newer models are in the catalogue), auto-mode may pick a newer model your API key cannot access yet — selection falls back only on restriction policy, not on an API model-not-found at call time. Pair it with `*_ALLOWED_MODELS` / `*_DISALLOWED_MODELS` to constrain the pool.
+With `DYNAMIC_MODEL_SELECTION` unset, auto-mode uses upstream's selection *algorithm* and bare aliases keep their upstream targets (`flash`→`gemini-2.5-flash`, `pro`→`gemini-3-pro-preview`). For OpenAI this means the established per-category preference lists, unchanged. For Gemini, upstream selection is reverse-alphabetical over the available models, so the newest-numbered model in the catalogue is naturally selected — adding newer Gemini models (`gemini-3.8-flash`, `gemini-3.1-pro-preview`) advances the default Gemini auto-pick accordingly, exactly as upstream's own algorithm would when models are added. Enabling the flag additionally makes OpenAI auto-selection lead with the newest flagship and remaps the bare aliases to the newest models (`flash`→`gemini-3.8-flash`, `pro`→`gemini-3.1-pro-preview`, and on OpenRouter `sonnet`, `haiku` and `grok`→the newest Claude Sonnet, Claude Haiku and Grok). With the flag on, Gemini's extended-reasoning pick is ranked by score across all thinking models, so `gemini-4-argon` wins even though its name does not contain "pro". The bare-alias remap applies wherever a conf entry lists the alias under `dynamic_aliases`: today that is Gemini direct (`flash`, `pro`), X.AI (`grok`), and on OpenRouter `sonnet`, `haiku` and `grok`. Other OpenRouter bare aliases keep their existing targets, so reach those models by their explicit `or-*` names. **Caveat:** with the flag on (and, for Gemini, by default once newer models are in the catalogue), auto-mode may pick a newer model your API key cannot access yet — selection falls back only on restriction policy, not on an API model-not-found at call time. Pair it with `*_ALLOWED_MODELS` / `*_DISALLOWED_MODELS` to constrain the pool.
 
 > The `intelligence_score`s that drive this ordering for the open-weight OpenRouter models are calibrated from current benchmarks and peer-reviewed — see [open_model_scoring.md](open_model_scoring.md) for the methodology and per-model reasoning.
 
@@ -97,23 +97,34 @@ With `DYNAMIC_MODEL_SELECTION` unset, auto-mode uses upstream's selection *algor
   - `conf/openai_models.json` – OpenAI catalogue (can be overridden with `OPENAI_MODELS_CONFIG_PATH`)
   - `conf/gemini_models.json` – Gemini catalogue (`GEMINI_MODELS_CONFIG_PATH`)
   - `conf/xai_models.json` – X.AI / GROK catalogue (`XAI_MODELS_CONFIG_PATH`)
+  - `conf/anthropic_models.json` – Anthropic (Claude) catalogue (`ANTHROPIC_MODELS_CONFIG_PATH`)
+  - `conf/deepseek_models.json`, `conf/qwen_models.json`, `conf/zai_models.json`, `conf/moonshot_models.json`,
+    `conf/minimax_models.json`, `conf/mistral_models.json`, `conf/nvidia_models.json`,
+    `conf/perplexity_models.json` – native open-model creator APIs (`DEEPSEEK_MODELS_CONFIG_PATH`,
+    `QWEN_MODELS_CONFIG_PATH`, `ZAI_MODELS_CONFIG_PATH`, `MOONSHOT_MODELS_CONFIG_PATH`,
+    `MINIMAX_MODELS_CONFIG_PATH`, `MISTRAL_MODELS_CONFIG_PATH`, `NVIDIA_MODELS_CONFIG_PATH`,
+    `PERPLEXITY_MODELS_CONFIG_PATH`)
   - `conf/openrouter_models.json` – OpenRouter catalogue (`OPENROUTER_MODELS_CONFIG_PATH`)
   - `conf/dial_models.json` – DIAL aggregation catalogue (`DIAL_MODELS_CONFIG_PATH`)
   - `conf/custom_models.json` – Custom/OpenAI-compatible endpoints (`CUSTOM_MODELS_CONFIG_PATH`)
 
   Each JSON file documents the allowed fields via its `_README` block and controls model aliases, capability limits, and feature flags (including `allow_code_generation`). Edit these files (or point the matching `*_MODELS_CONFIG_PATH` variable to your own copy) when you want to adjust context windows, enable JSON mode, enable structured code generation, or expose additional aliases without touching Python code.
 
-  The shipped defaults cover:
+  The shipped defaults cover these current flagships (October 2026). The [model catalog](model_catalog.md)
+  lists every measured model with its score, per-effort AA Index values, routes, and aliases.
 
-  | Provider | Canonical Models | Notable Aliases |
-  |----------|-----------------|-----------------|
-  | OpenAI | `gpt-5.2`, `gpt-5.1-codex`, `gpt-5.1-codex-mini`, `gpt-5`, `gpt-5.2-pro`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5-codex`, `gpt-4.1`, `o3`, `o3-mini`, `o3-pro`, `o4-mini` | `gpt5.2`, `gpt-5.2`, `5.2`, `gpt5.1-codex`, `codex-5.1`, `codex-mini`, `gpt5`, `gpt5pro`, `mini`, `nano`, `codex`, `o3mini`, `o3pro`, `o4mini` |
-  | Gemini | `gemini-2.5-pro`, `gemini-2.5-flash`, `gemini-2.0-flash`, `gemini-2.0-flash-lite` | `pro`, `gemini-pro`, `flash`, `flash-2.0`, `flashlite` |
-  | X.AI | `grok-4`, `grok-4.1-fast` | `grok`, `grok4`, `grok-4.1-fast-reasoning` |
-  | OpenRouter | See `conf/openrouter_models.json` for the continually evolving catalogue | e.g., `opus`, `sonnet`, `flash`, `pro`, `mistral` |
+  | Provider | Current flagships | Notable aliases |
+  |----------|-------------------|-----------------|
+  | Anthropic | `claude-opus-5-5`, `claude-fable-5-1`, `claude-sonnet-5-5`, `claude-haiku-5-5` | `opus`, `fable`, `sonnet`, `haiku` |
+  | OpenAI | `gpt-6-astra`, `gpt-6.1-sol`, `gpt-6-luna`, plus the GPT-5.x family | `astra`, `sol`, `luna` |
+  | Gemini | `gemini-4-argon`, `gemini-3.8-flash`, `gemini-3.1-pro-preview` | `argon`, `flash3.8`, `gemini-flash-latest` |
+  | X.AI | `grok-4.7`, `grok-4` | `grok-4.7`, `grok` |
+  | Native open-model APIs | DeepSeek, Qwen, GLM, Kimi, MiniMax, Mistral, NVIDIA, Perplexity | per conf file |
+  | OpenRouter | Mirrors of the above, plus Meta Muse, Xiaomi MiMo, StepFun, Cohere and more | `or-*` names; see `conf/openrouter_models.json` |
   | Custom | User-managed entries such as `llama3.2` | Define your own aliases per entry |
 
-  Latest OpenAI entries (`gpt-5.2`, `gpt-5.1-codex`, `gpt-5.1-codex-mini`, `gpt-5.2-pro`) expose 400K-token contexts with large outputs, reasoning-token support, and multimodal inputs. `gpt-5.1-codex` and `gpt-5.2-pro` are Responses-only with streaming disabled, while the base `gpt-5.2` and Codex mini support streaming along with full code-generation flags. Update your manifests if you run custom deployments so these capability bits stay accurate.
+  Optional conf fields that this fork adds (`aa_index`, `aa_index_by_effort`, `effort_levels`,
+  `auto_selectable`, `dynamic_aliases`) are described in [model_ranking.md](model_ranking.md#fields-that-support-the-score).
 
   > **Tip:** Copy the JSON file you need, customise it, and point the corresponding `*_MODELS_CONFIG_PATH` environment variable to your version. This lets you enable or disable capabilities (JSON mode, function calling, temperature support, code generation) without editing Python.
 
