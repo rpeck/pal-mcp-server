@@ -507,3 +507,132 @@ def test_measured_scores_follow_the_high_effort_ladder():
                 anchor = m["aa_index"]
             assert m.get("aa_index") is not None and abs(m["aa_index"] - anchor) < 1, f"{name}: aa_index != anchor"
             assert m["intelligence_score"] == _ladder(anchor), f"{name}: score != ladder({anchor})"
+
+
+# ---------------------------------------------------------------------------
+# Entra ID auth: Azure OpenAI (AZURE_OPENAI_USE_ENTRA) and Claude on Azure AI Foundry (ANTHROPIC_USE_ENTRA)
+# need no API key at any gate: server provider detection, registry construction, provider client.
+# ---------------------------------------------------------------------------
+
+_AZURE_ENDPOINT = "https://example.openai.azure.com"
+_FOUNDRY_URL = "https://example-resource.services.ai.azure.com/anthropic"
+
+
+@pytest.fixture
+def azure_models_file(tmp_path, monkeypatch):
+    path = tmp_path / "azure_models.json"
+    path.write_text(json.dumps({"models": [{"model_name": "gpt-5.4", "deployment": "gpt54"}]}))
+    monkeypatch.setenv("AZURE_MODELS_CONFIG_PATH", str(path))
+    return path
+
+
+@pytest.fixture
+def clean_registry():
+    ModelProviderRegistry.reset_for_testing()
+    yield
+    ModelProviderRegistry.reset_for_testing()
+
+
+def test_registry_builds_azure_in_entra_mode_without_key(monkeypatch, azure_models_file, clean_registry):
+    from providers.azure_openai import AzureOpenAIProvider
+
+    monkeypatch.delenv("AZURE_OPENAI_API_KEY", raising=False)
+    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", _AZURE_ENDPOINT)
+    monkeypatch.setenv("AZURE_OPENAI_USE_ENTRA", "true")
+    ModelProviderRegistry.register_provider(ProviderType.AZURE, AzureOpenAIProvider)
+
+    provider = ModelProviderRegistry.get_provider(ProviderType.AZURE)
+
+    assert provider is not None
+    assert provider._use_entra is True
+    assert provider.api_key == ""
+
+
+def test_registry_azure_entra_wins_over_a_configured_key(monkeypatch, azure_models_file, clean_registry):
+    # With the flag on, a leftover AZURE_OPENAI_API_KEY is never handed to the client.
+    from providers.azure_openai import AzureOpenAIProvider
+
+    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "static-key")
+    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", _AZURE_ENDPOINT)
+    monkeypatch.setenv("AZURE_OPENAI_USE_ENTRA", "true")
+    ModelProviderRegistry.register_provider(ProviderType.AZURE, AzureOpenAIProvider)
+
+    provider = ModelProviderRegistry.get_provider(ProviderType.AZURE)
+
+    assert provider._use_entra is True
+    assert provider.api_key == ""
+
+
+def test_registry_azure_stays_key_gated_when_flag_off(monkeypatch, azure_models_file, clean_registry):
+    from providers.azure_openai import AzureOpenAIProvider
+
+    monkeypatch.delenv("AZURE_OPENAI_API_KEY", raising=False)
+    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", _AZURE_ENDPOINT)
+    ModelProviderRegistry.register_provider(ProviderType.AZURE, AzureOpenAIProvider)
+
+    assert ModelProviderRegistry.get_provider(ProviderType.AZURE) is None
+
+
+def test_registry_builds_anthropic_foundry_in_entra_mode_without_key(monkeypatch, clean_registry):
+    from providers.anthropic import AnthropicModelProvider
+
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setenv("ANTHROPIC_USE_ENTRA", "true")
+    monkeypatch.setenv("ANTHROPIC_FOUNDRY_BASE_URL", _FOUNDRY_URL)
+    ModelProviderRegistry.register_provider(ProviderType.ANTHROPIC, AnthropicModelProvider)
+
+    provider = ModelProviderRegistry.get_provider(ProviderType.ANTHROPIC)
+
+    assert provider is not None
+    assert provider._use_entra is True
+    assert provider._foundry_base_url == _FOUNDRY_URL
+    assert provider.api_key == ""
+
+
+def test_registry_skips_anthropic_entra_without_foundry_url(monkeypatch, clean_registry):
+    from providers.anthropic import AnthropicModelProvider
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "static-key")
+    monkeypatch.setenv("ANTHROPIC_USE_ENTRA", "true")
+    ModelProviderRegistry.register_provider(ProviderType.ANTHROPIC, AnthropicModelProvider)
+
+    assert ModelProviderRegistry.get_provider(ProviderType.ANTHROPIC) is None
+
+
+def test_registry_anthropic_stays_key_gated_when_flag_off(monkeypatch, clean_registry):
+    from providers.anthropic import AnthropicModelProvider
+
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setenv("ANTHROPIC_FOUNDRY_BASE_URL", _FOUNDRY_URL)
+    ModelProviderRegistry.register_provider(ProviderType.ANTHROPIC, AnthropicModelProvider)
+
+    assert ModelProviderRegistry.get_provider(ProviderType.ANTHROPIC) is None
+
+
+def test_server_registers_entra_providers_without_any_api_key(monkeypatch, azure_models_file, clean_registry):
+    import server
+
+    for var in (
+        "GEMINI_API_KEY",
+        "OPENAI_API_KEY",
+        "XAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "AZURE_OPENAI_API_KEY",
+        "OPENROUTER_API_KEY",
+        "DIAL_API_KEY",
+        "CUSTOM_API_URL",
+        *(env for _, env, _ in NATIVE_VENDORS),
+    ):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("AZURE_OPENAI_USE_ENTRA", "true")
+    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", _AZURE_ENDPOINT)
+    monkeypatch.setenv("ANTHROPIC_USE_ENTRA", "true")
+    monkeypatch.setenv("ANTHROPIC_FOUNDRY_BASE_URL", _FOUNDRY_URL)
+
+    server.configure_providers()
+
+    registered = ModelProviderRegistry.get_available_providers()
+    assert ProviderType.AZURE in registered
+    assert ProviderType.ANTHROPIC in registered
+    assert ModelProviderRegistry.get_provider(ProviderType.AZURE)._use_entra is True
+    assert ModelProviderRegistry.get_provider(ProviderType.ANTHROPIC)._use_entra is True

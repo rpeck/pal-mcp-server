@@ -3,7 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, Optional
 
-from utils.env import get_env
+from utils.env import get_env, get_env_bool
 
 from .base import ModelProvider
 from .shared import ProviderType
@@ -134,7 +134,9 @@ class ModelProviderRegistry:
                 logging.info(f"Initialized Gemini provider with custom endpoint: {gemini_base_url}")
             provider = provider_class(**provider_kwargs)
         elif provider_type == ProviderType.AZURE:
-            if not api_key:
+            # Entra mode authenticates with the caller's Entra ID token, so it needs no API key.
+            use_entra = get_env_bool("AZURE_OPENAI_USE_ENTRA")
+            if not api_key and not use_entra:
                 return None
 
             azure_endpoint = get_env("AZURE_OPENAI_ENDPOINT")
@@ -143,11 +145,26 @@ class ModelProviderRegistry:
                 return None
 
             azure_version = get_env("AZURE_OPENAI_API_VERSION")
-            provider = provider_class(
-                api_key=api_key,
-                azure_endpoint=azure_endpoint,
-                api_version=azure_version,
-            )
+            if use_entra:
+                provider = provider_class(
+                    api_key="",
+                    azure_endpoint=azure_endpoint,
+                    api_version=azure_version,
+                    use_entra=True,
+                )
+            else:
+                provider = provider_class(
+                    api_key=api_key,
+                    azure_endpoint=azure_endpoint,
+                    api_version=azure_version,
+                )
+        elif provider_type == ProviderType.ANTHROPIC and get_env_bool("ANTHROPIC_USE_ENTRA"):
+            # Claude on Azure AI Foundry with an Entra ID token; ANTHROPIC_API_KEY is not used.
+            foundry_base_url = get_env("ANTHROPIC_FOUNDRY_BASE_URL")
+            if not foundry_base_url:
+                logging.warning("ANTHROPIC_USE_ENTRA set but ANTHROPIC_FOUNDRY_BASE_URL missing – skipping Anthropic")
+                return None
+            provider = provider_class(api_key="", use_entra=True, foundry_base_url=foundry_base_url)
         else:
             if not api_key:
                 return None

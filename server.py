@@ -69,7 +69,7 @@ from tools import (  # noqa: E402
 )
 from tools.models import ToolOutput  # noqa: E402
 from tools.shared.exceptions import ToolExecutionError  # noqa: E402
-from utils.env import env_override_enabled, get_env  # noqa: E402
+from utils.env import env_override_enabled, get_env, get_env_bool  # noqa: E402
 
 # Configure logging for server operations
 # Can be controlled via LOG_LEVEL environment variable (DEBUG, INFO, WARNING, ERROR)
@@ -375,6 +375,22 @@ PROMPT_TEMPLATES = {
 }
 
 
+def _warn_if_azure_identity_missing(flag: str) -> None:
+    """Log a clear error at startup when an Entra mode is on but azure-identity is not installed."""
+    import importlib.util
+
+    try:
+        installed = importlib.util.find_spec("azure.identity") is not None
+    except ModuleNotFoundError:  # the parent "azure" namespace package is absent
+        installed = False
+    if not installed:
+        logger.error(
+            "%s=true but the 'azure-identity' package is not installed; requests will fail until you run "
+            "`pip install azure-identity`",
+            flag,
+        )
+
+
 def configure_providers():
     """
     Configure and validate AI providers based on available API keys.
@@ -435,18 +451,28 @@ def configure_providers():
         else:
             logger.debug("OpenAI API key is placeholder value")
 
-    # Check for Anthropic API key
+    # Check for Anthropic API key, or Claude on Azure AI Foundry with Entra ID auth (no key needed)
     anthropic_key = get_env("ANTHROPIC_API_KEY")
-    if anthropic_key and anthropic_key != "your_anthropic_api_key_here":
+    anthropic_use_entra = get_env_bool("ANTHROPIC_USE_ENTRA")
+    anthropic_entra_ready = anthropic_use_entra and bool(get_env("ANTHROPIC_FOUNDRY_BASE_URL"))
+    anthropic_enabled = bool(anthropic_key and anthropic_key != "your_anthropic_api_key_here") or anthropic_entra_ready
+    if anthropic_use_entra and not anthropic_entra_ready:
+        logger.warning("ANTHROPIC_USE_ENTRA=true but ANTHROPIC_FOUNDRY_BASE_URL is not set - Foundry Claude disabled")
+    if anthropic_enabled:
         valid_providers.append("Anthropic")
         has_native_apis = True
-        logger.info("Anthropic API key found - Claude models available")
+        if anthropic_entra_ready:
+            _warn_if_azure_identity_missing("ANTHROPIC_USE_ENTRA")
+            logger.info("Anthropic on Azure AI Foundry with Entra ID auth - Claude models available")
+        else:
+            logger.info("Anthropic API key found - Claude models available")
 
-    # Check for Azure OpenAI configuration
+    # Check for Azure OpenAI configuration (API key, or Entra ID auth with AZURE_OPENAI_USE_ENTRA)
     azure_key = get_env("AZURE_OPENAI_API_KEY")
     azure_endpoint = get_env("AZURE_OPENAI_ENDPOINT")
+    azure_use_entra = get_env_bool("AZURE_OPENAI_USE_ENTRA")
     azure_models_available = False
-    if azure_key and azure_key != "your_azure_openai_key_here" and azure_endpoint:
+    if ((azure_key and azure_key != "your_azure_openai_key_here") or azure_use_entra) and azure_endpoint:
         try:
             from providers.registries.azure import AzureModelRegistry
 
@@ -455,7 +481,11 @@ def configure_providers():
                 valid_providers.append("Azure OpenAI")
                 has_native_apis = True
                 azure_models_available = True
-                logger.info("Azure OpenAI configuration detected")
+                if azure_use_entra:
+                    _warn_if_azure_identity_missing("AZURE_OPENAI_USE_ENTRA")
+                    logger.info("Azure OpenAI configuration detected (Entra ID auth)")
+                else:
+                    logger.info("Azure OpenAI configuration detected")
             else:
                 logger.warning(
                     "Azure OpenAI models configuration is empty. Populate conf/azure_models.json or set AZURE_MODELS_CONFIG_PATH."
@@ -550,7 +580,7 @@ def configure_providers():
             ModelProviderRegistry.register_provider(ProviderType.OPENAI, OpenAIModelProvider)
             registered_providers.append(ProviderType.OPENAI.value)
             logger.debug(f"Registered provider: {ProviderType.OPENAI.value}")
-        if anthropic_key and anthropic_key != "your_anthropic_api_key_here":
+        if anthropic_enabled:
             ModelProviderRegistry.register_provider(ProviderType.ANTHROPIC, AnthropicModelProvider)
             registered_providers.append(ProviderType.ANTHROPIC.value)
             logger.debug(f"Registered provider: {ProviderType.ANTHROPIC.value}")
@@ -600,6 +630,8 @@ def configure_providers():
             "- GEMINI_API_KEY for Gemini models\n"
             "- OPENAI_API_KEY for OpenAI models\n"
             "- ANTHROPIC_API_KEY for Anthropic Claude models\n"
+            "- ANTHROPIC_USE_ENTRA=true + ANTHROPIC_FOUNDRY_BASE_URL for Claude on Azure AI Foundry\n"
+            "- AZURE_OPENAI_API_KEY or AZURE_OPENAI_USE_ENTRA=true, plus AZURE_OPENAI_ENDPOINT, for Azure OpenAI\n"
             "- XAI_API_KEY for X.AI GROK models\n"
             "- DIAL_API_KEY for DIAL models\n"
             "- OPENROUTER_API_KEY for OpenRouter (multiple models)\n"
