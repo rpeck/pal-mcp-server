@@ -40,6 +40,9 @@ XAI_API_KEY=your_xai_api_key_here
 
 # Anthropic (Claude) direct API - native provider (dormant unless set)
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
+# Or Claude on Azure AI Foundry with your Entra ID login (no key) - see docs/entra_auth.md
+# ANTHROPIC_USE_ENTRA=true
+# ANTHROPIC_FOUNDRY_BASE_URL=https://your-resource.services.ai.azure.com/anthropic
 
 # Native direct-API providers for open-model creators (all OpenAI-compatible; each dormant unless
 # set, and ranks ahead of OpenRouter when its key is present).
