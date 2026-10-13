@@ -77,6 +77,25 @@ class TestOpenAINative:
         assert "reasoning_effort" not in client.chat.completions.create.call_args.kwargs
 
 
+class TestMaxOutputTokensField:
+    def test_native_openai_sends_max_completion_tokens(self):
+        # OpenAI's reasoning models reject max_tokens on Chat Completions.
+        provider = OpenAIModelProvider("test-key")
+        client = _with_mock_client(provider)
+        provider.generate_content(prompt="hi", model_name="astra", temperature=1.0, max_output_tokens=2000)
+        kwargs = client.chat.completions.create.call_args.kwargs
+        assert kwargs["max_completion_tokens"] == 2000
+        assert "max_tokens" not in kwargs
+
+    def test_openrouter_keeps_max_tokens(self):
+        provider = OpenRouterProvider("test-key")
+        client = _with_mock_client(provider)
+        provider.generate_content(prompt="hi", model_name="or-gpt6-astra", temperature=1.0, max_output_tokens=2000)
+        kwargs = client.chat.completions.create.call_args.kwargs
+        assert kwargs["max_tokens"] == 2000
+        assert "max_completion_tokens" not in kwargs
+
+
 class TestOpenRouter:
     @pytest.mark.parametrize(
         "model,thinking_mode,expected",

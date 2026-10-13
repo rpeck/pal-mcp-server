@@ -25,6 +25,15 @@ class OpenAIModelProvider(RegistryBackedProviderMixin, OpenAICompatibleProvider)
     REGISTRY_CLASS = OpenAIModelRegistry
     MODEL_CAPABILITIES: ClassVar[dict[str, ModelCapabilities]] = {}
 
+    def _max_output_tokens_param(self, capabilities: Optional[ModelCapabilities]) -> str:
+        """OpenAI's reasoning models (GPT-5.x, GPT-6) reject max_tokens and require max_completion_tokens.
+
+        Other models, including custom gateway models served through this provider, keep max_tokens.
+        """
+        if capabilities is not None and capabilities.supports_extended_thinking:
+            return "max_completion_tokens"
+        return "max_tokens"
+
     def __init__(self, api_key: str, **kwargs):
         """Initialize OpenAI provider with API key."""
         self._ensure_registry()

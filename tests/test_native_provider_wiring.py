@@ -44,7 +44,6 @@ SCORE_PINS = [
     ("deepseek_models.json", "deepseek-v4.1-flash", "deepseek/deepseek-v4.1-flash"),
     ("qwen_models.json", "qwen3.8-max-0902", "qwen/qwen3.8-max-0902"),
     ("openai_models.json", "gpt-6-astra", "openai/gpt-6-astra"),
-    ("openai_models.json", "gpt-6-astra-pro", "openai/gpt-6-astra-pro"),
     ("anthropic_models.json", "claude-opus-5-5", "anthropic/claude-opus-5.5"),
     ("anthropic_models.json", "claude-sonnet-5-5", "anthropic/claude-sonnet-5.5"),
     ("openai_models.json", "gpt-6.1-sol", "openai/gpt-6.1-sol"),
@@ -227,15 +226,17 @@ def _orm():
 def test_gpt6_astra_present_both_routes():
     # OpenAI GPT-6 Astra ties the top of the current AA Index at 53 (max effort) -> score 20.
     native = _models("openai_models.json")
-    for name in ("gpt-6-astra", "gpt-6-astra-pro"):
-        assert name in native, f"{name} missing from openai_models.json"
-        assert native[name]["intelligence_score"] == 20
+    assert native["gpt-6-astra"]["intelligence_score"] == 20
     assert "astra" in native["gpt-6-astra"]["aliases"]
+    # OpenAI's API has no gpt-6-astra-pro model ID: pro is reasoning.mode=pro on GPT-6 Astra.
+    assert "gpt-6-astra-pro" not in native
 
     orm = _orm()
-    for name in ("openai/gpt-6-astra", "openai/gpt-6-astra-pro"):
-        assert name in orm, f"{name} missing from openrouter_models.json"
-        assert orm[name]["intelligence_score"] == 20
+    assert orm["openai/gpt-6-astra"]["intelligence_score"] == 20
+    # The OpenRouter -pro preset exists, but it spends far more tokens, so it is explicit-only.
+    pro = orm["openai/gpt-6-astra-pro"]
+    assert pro["auto_selectable"] is False
+    assert "astra-pro" in pro["aliases"]
 
 
 def test_deepseek_v41_flash_supersedes_retired_models():

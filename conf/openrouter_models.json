@@ -653,7 +653,9 @@
     {
       "model_name": "openai/gpt-6-astra-pro",
       "aliases": [
-        "or-gpt6-astra-pro"
+        "or-gpt6-astra-pro",
+        "astra-pro",
+        "gpt6-astra-pro"
       ],
       "context_window": 1050000,
       "max_output_tokens": 128000,
@@ -670,7 +672,8 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "allow_code_generation": true,
-      "description": "GPT-6 Astra Pro via OpenRouter (backup route) - extended-reasoning tier of the GPT-6 Astra family.",
+      "auto_selectable": false,
+      "description": "GPT-6 Astra Pro via OpenRouter - the same model as GPT-6 Astra, served with reasoning.mode=pro for harder tasks. Same per-token price ($10/$50 per M), but pro mode spends far more tokens per request. OpenAI's own API has no separate model ID for it. NEVER auto-selected (auto_selectable false); use only when explicitly named. PROVISIONAL score 20, pinned to GPT-6 Astra: Artificial Analysis has not listed the pro mode. Revisit when AA publishes.",
       "intelligence_score": 20
     },
     {

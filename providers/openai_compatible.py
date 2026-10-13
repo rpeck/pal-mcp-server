@@ -602,7 +602,7 @@ class OpenAICompatibleProvider(ModelProvider):
         # Add max tokens if specified and model supports it
         # O3/O4 models that don't support temperature also don't support max_tokens
         if max_output_tokens and supports_sampling:
-            completion_params["max_tokens"] = max_output_tokens
+            completion_params[self._max_output_tokens_param(capabilities)] = max_output_tokens
 
         # Add any additional OpenAI-specific parameters
         # Use capabilities to filter parameters for reasoning models
@@ -715,6 +715,10 @@ class OpenAICompatibleProvider(ModelProvider):
             # For proxy providers, we might not have accurate capabilities
             # Log warning but don't fail
             logging.warning(f"Parameter validation limited for {model_name}: {e}")
+
+    def _max_output_tokens_param(self, capabilities: Optional[ModelCapabilities]) -> str:
+        """Return the Chat Completions field for the output-token cap. Most OpenAI-compatible APIs use max_tokens."""
+        return "max_tokens"
 
     def _augment_completion_params(self, completion_params: dict, resolved_model: str) -> None:
         """Hook for subclasses to inject sealed, provider-specific request-body params.
