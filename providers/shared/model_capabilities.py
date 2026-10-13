@@ -39,6 +39,9 @@ class ModelCapabilities:
     # Raw Artificial Analysis Intelligence Index value behind intelligence_score, when measured. The 1-20
     # scale tops out at 20, so several frontier models share it; providers use this only to order a tie.
     aa_index: Optional[float] = None
+    # Raw AA Index value per effort level (low, medium, high, xhigh, max, non-reasoning; "default" for a
+    # model with a single row). Stored data for scoring at a chosen effort; not read by selection yet.
+    aa_index_by_effort: dict[str, int] = field(default_factory=dict)
     description: str = ""
     aliases: list[str] = field(default_factory=list)
     # Aliases that only take effect when DYNAMIC_MODEL_SELECTION is enabled. They override the

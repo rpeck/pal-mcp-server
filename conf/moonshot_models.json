@@ -9,6 +9,7 @@
       "friendly_name": "Kimi K3",
       "aliases": ["kimi", "kimi-k3"],
       "intelligence_score": 17,
+      "aa_index_by_effort": {"low": 30, "max": 44},
       "description": "Moonshot Kimi K3 - flagship agentic MoE (2.8T, 1M context). Direct Moonshot API.",
       "context_window": 1048576,
       "max_output_tokens": 131072,

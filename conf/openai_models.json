@@ -22,6 +22,7 @@
       "description": "Human-readable description of the model",
       "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering. Anchored to the Artificial Analysis Intelligence Index v4.3 as listed on 2026-09-11 (v4.2 and v4.3 rescaled the Index on 2026-09-04 and 2026-09-07); re-verified against v4.3.2 on 2026-09-24 with the reference scores unchanged.",
       "aa_index": "Optional raw Artificial Analysis Intelligence Index value (v4.3, max effort) behind intelligence_score. Used only to order models that share the same intelligence_score.",
+      "aa_index_by_effort": "Optional per-effort Artificial Analysis Intelligence Index values (v4.3 leaderboard, read 2026-10-12), keyed by effort (non-reasoning, low, medium, high, xhigh, max; 'default' for a model with a single row). Values AA marks as incomplete (*) are left out.",
       "effort_levels": "Optional list of reasoning-effort levels this route accepts. When set, PAL sends the tool's thinking_mode as an explicit effort, clamped to these levels; when absent, no effort is sent.",
       "allow_code_generation": "Whether this model can generate and suggest fully working code - complete with functions, files, and detailed implementation instructions - for your AI tool to use right away. Only set this to 'true' for a model more capable than the AI model / CLI you're currently using."
     }
@@ -319,6 +320,14 @@
         "gpt5.6terra"
       ],
       "intelligence_score": 16,
+      "aa_index_by_effort": {
+        "non-reasoning": 21,
+        "low": 27,
+        "medium": 30,
+        "high": 34,
+        "xhigh": 38,
+        "max": 42
+      },
       "description": "GPT-5.6 Terra (1M context, 128K output) - balanced intelligence/cost tier of the GPT-5.6 family.",
       "context_window": 1050000,
       "max_output_tokens": 128000,
@@ -367,6 +376,13 @@
       ],
       "intelligence_score": 20,
       "aa_index": 52,
+      "aa_index_by_effort": {
+        "low": 42,
+        "medium": 48,
+        "high": 50,
+        "xhigh": 51,
+        "max": 52
+      },
       "description": "GPT-6.1 Sol (released 2026-09-29, 1M context, 128K output) - upgrade to GPT-6 Sol, below the GPT-6 Astra flagship; AA Intelligence Index 52 (max effort). $2/$10 per M.",
       "context_window": 1050000,
       "max_output_tokens": 128000,
@@ -397,6 +413,14 @@
         "gpt6luna"
       ],
       "intelligence_score": 14,
+      "aa_index_by_effort": {
+        "non-reasoning": 18,
+        "low": 22,
+        "medium": 30,
+        "high": 33,
+        "xhigh": 35,
+        "max": 38
+      },
       "description": "GPT-6 Luna (released 2026-09-22, 1M context, 128K output) - fast, low-cost tier of the GPT-6 series; AA Intelligence Index 37 (max effort). $0.10/$0.50 per M.",
       "context_window": 1050000,
       "max_output_tokens": 128000,
@@ -428,6 +452,13 @@
       ],
       "intelligence_score": 20,
       "aa_index": 53,
+      "aa_index_by_effort": {
+        "low": 46,
+        "medium": 50,
+        "high": 51,
+        "xhigh": 52,
+        "max": 53
+      },
       "description": "GPT-6 Astra (1M context, 128K output) - OpenAI flagship; ties the top of the Artificial Analysis Intelligence Index at 53 (max effort).",
       "context_window": 1050000,
       "max_output_tokens": 128000,

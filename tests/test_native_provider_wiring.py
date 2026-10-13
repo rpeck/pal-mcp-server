@@ -95,6 +95,9 @@ def test_cross_route_score_pinning(conf, native_model, or_model):
         native[native_model]["intelligence_score"] == or_scores[or_model]
     ), f"score drift: {native_model} != {or_model}"
     assert native[native_model].get("aa_index") == _orm()[or_model].get("aa_index"), f"aa_index drift: {native_model}"
+    assert native[native_model].get("aa_index_by_effort") == _orm()[or_model].get(
+        "aa_index_by_effort"
+    ), f"aa_index_by_effort drift: {native_model}"
 
 
 @pytest.mark.parametrize("ptype,env_var,conf", NATIVE_VENDORS)
@@ -388,3 +391,25 @@ def test_gpt61_sol_pro_is_explicit_only():
     assert pro["intelligence_score"] == orm["openai/gpt-6.1-sol"]["intelligence_score"]
     assert "aa_index" not in pro, "no measured Index value for the pro mode yet"
     assert "PROVISIONAL" in pro["description"]
+
+
+AA_EFFORT_KEYS = {"non-reasoning", "low", "medium", "high", "xhigh", "max", "default"}
+
+
+def test_aa_index_by_effort_well_formed():
+    # Per-effort AA values (Phase 2 of the effort-scoring plan): valid effort keys, integer values in
+    # the Index range, and "default" only for a model that has a single AA row.
+    seen = 0
+    for path in sorted(CONF.glob("*_models.json")):
+        for m in json.loads(path.read_text()).get("models", []):
+            values = m.get("aa_index_by_effort")
+            if values is None:
+                continue
+            seen += 1
+            name = f"{path.name}:{m['model_name']}"
+            assert values, f"{name}: empty aa_index_by_effort"
+            assert set(values) <= AA_EFFORT_KEYS, f"{name}: unknown effort key {set(values) - AA_EFFORT_KEYS}"
+            assert all(isinstance(v, int) and 0 < v <= 100 for v in values.values()), f"{name}: bad value"
+            if "default" in values:
+                assert len(values) == 1, f"{name}: 'default' must be the only key"
+    assert seen >= 40, "expected per-effort values on the measured models"
