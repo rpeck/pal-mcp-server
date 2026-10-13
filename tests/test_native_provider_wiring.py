@@ -49,6 +49,8 @@ SCORE_PINS = [
     ("openai_models.json", "gpt-6.1-sol", "openai/gpt-6.1-sol"),
     ("openai_models.json", "gpt-6-luna", "openai/gpt-6-luna"),
     ("xai_models.json", "grok-4.7", "x-ai/grok-4.7"),
+    ("anthropic_models.json", "claude-haiku-5-5", "anthropic/claude-haiku-5.5"),
+    ("gemini_models.json", "gemini-4-argon", "google/gemini-4-argon"),
 ]
 
 
@@ -413,3 +415,49 @@ def test_aa_index_by_effort_well_formed():
             if "default" in values:
                 assert len(values) == 1, f"{name}: 'default' must be the only key"
     assert seen >= 40, "expected per-effort values on the measured models"
+
+
+def test_october_releases():
+    # Releases through 2026-10-13, scored on the max-effort ladder (Phase 3 re-scores at high).
+    a = _models("anthropic_models.json")
+    assert a["claude-haiku-5-5"]["intelligence_score"] == 17  # AA 43 (max)
+    assert "haiku" in a["claude-haiku-5-5"]["aliases"]
+    assert "haiku" not in a["claude-haiku-4-5-20251001"]["aliases"]
+
+    g = _models("gemini_models.json")
+    assert g["gemini-4-argon"]["intelligence_score"] == 20  # AA 53 (high is AA's only row)
+    assert "dynamic_aliases" not in g["gemini-4-argon"], "Argon must not take over the pro/gemini3 aliases"
+
+    orm = _orm()
+    expected = {
+        "anthropic/claude-haiku-5.5": 17,
+        "google/gemini-4-argon": 20,
+        "meta/muse-wonder": 20,
+        "mistralai/mistral-large-4-0": 15,
+        "stepfun/step-5-preview": 17,
+        "qwen/qwen3.8-2.4t-a95b": 15,
+        "openai/gpt-6-luna-pro": 14,
+    }
+    for name, score in expected.items():
+        assert orm[name]["intelligence_score"] == score, name
+        assert orm[name].get("aa_index_by_effort") or name.endswith("-pro"), name
+    # The upstream-owned OpenRouter "haiku" alias moves only under DYNAMIC_MODEL_SELECTION.
+    assert orm["anthropic/claude-haiku-5.5"]["dynamic_aliases"] == ["haiku"]
+    assert "haiku" in orm["anthropic/claude-3.5-haiku"]["aliases"]
+    # Pro presets stay explicit-only.
+    assert orm["openai/gpt-6-luna-pro"]["auto_selectable"] is False
+
+
+def test_model_catalog_doc_is_current():
+    # docs/model_catalog.md is generated from the conf files. Every measured model and every
+    # explicit-only preset must appear in it; run scripts/generate_model_catalog.py after a change.
+    doc = (CONF.parent / "docs" / "model_catalog.md").read_text()
+    missing = []
+    for path in sorted(CONF.glob("*_models.json")):
+        for m in json.loads(path.read_text()).get("models", []):
+            listed = m.get("aa_index_by_effort") or (
+                m.get("auto_selectable") is False and "fusion" not in m["model_name"]
+            )
+            if listed and f"`{m['model_name']}`" not in doc:
+                missing.append(f"{path.name}:{m['model_name']}")
+    assert not missing, f"regenerate docs/model_catalog.md; missing: {missing}"

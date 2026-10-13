@@ -499,6 +499,17 @@ class GeminiModelProvider(RegistryBackedProviderMixin, ModelProvider):
             return sorted(candidates, reverse=True)[0]
 
         if category == ToolModelCategory.EXTENDED_REASONING:
+            from config import dynamic_model_selection_enabled
+
+            if dynamic_model_selection_enabled():
+                # Under the flag, rank decides among all thinking models, so a flagship whose name
+                # does not contain "pro" (for example gemini-4-argon) can still win.
+                ranked_thinking = [
+                    m for m in allowed_models if m in capability_map and capability_map[m].supports_extended_thinking
+                ]
+                if ranked_thinking:
+                    return find_best(ranked_thinking)
+
             # For extended reasoning, prefer models with thinking support
             # First try Pro models that support thinking
             pro_thinking = [

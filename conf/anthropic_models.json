@@ -225,10 +225,48 @@
       "allow_code_generation": true
     },
     {
+      "model_name": "claude-haiku-5-5",
+      "friendly_name": "Claude Haiku 5.5",
+      "aliases": [
+        "haiku",
+        "haiku-5.5",
+        "claude-haiku",
+        "claude-haiku-5.5"
+      ],
+      "intelligence_score": 17,
+      "description": "Claude Haiku 5.5 (released 2026-10-07, 1M context, 128K output) - small, fast tier for high-volume work; AA Intelligence Index 43 at max effort (38 at high). From $0.10/$0.50 per M. Adaptive thinking, default effort medium. Succeeds Haiku 4.5.",
+      "context_window": 1000000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "max_image_size_mb": 20.0,
+      "max_thinking_tokens": 32768,
+      "allow_code_generation": true,
+      "aa_index": 43,
+      "aa_index_by_effort": {
+        "low": 29,
+        "medium": 34,
+        "high": 38,
+        "xhigh": 41,
+        "max": 43
+      },
+      "effort_levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ]
+    },
+    {
       "model_name": "claude-haiku-4-5-20251001",
       "friendly_name": "Claude Haiku 4.5",
       "aliases": [
-        "haiku",
         "haiku-4.5",
         "claude-haiku-4.5",
         "claude-haiku-4-5"

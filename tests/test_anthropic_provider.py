@@ -42,7 +42,9 @@ class TestAnthropicCatalog:
         # Bare "sonnet" points at the newest Sonnet (5.5); "sonnet-5" still addresses Sonnet 5.
         assert p._resolve_model_name("sonnet") == "claude-sonnet-5-5"
         assert p._resolve_model_name("sonnet-5") == "claude-sonnet-5"
-        assert p._resolve_model_name("haiku") == "claude-haiku-4-5-20251001"
+        # Bare "haiku" points at the newest Haiku (5.5); "haiku-4.5" still addresses Haiku 4.5.
+        assert p._resolve_model_name("haiku") == "claude-haiku-5-5"
+        assert p._resolve_model_name("haiku-4.5") == "claude-haiku-4-5-20251001"
         assert p._resolve_model_name("claude-haiku-4.5") == "claude-haiku-4-5-20251001"
         # Case-insensitive
         assert p._resolve_model_name("OPUS") == "claude-opus-5-5"
@@ -55,7 +57,7 @@ class TestAnthropicCatalog:
         # name tie-break would pick Sonnet 5.5.
         assert p.get_preferred_model(ToolModelCategory.EXTENDED_REASONING, allowed) == "claude-opus-5-5"
         assert p.get_preferred_model(ToolModelCategory.BALANCED, allowed) == "claude-opus-5-5"
-        assert p.get_preferred_model(ToolModelCategory.FAST_RESPONSE, allowed) == "claude-haiku-4-5-20251001"
+        assert p.get_preferred_model(ToolModelCategory.FAST_RESPONSE, allowed) == "claude-haiku-5-5"
 
     def test_aa_index_orders_the_top_score_tie(self):
         p = _provider()
@@ -123,7 +125,7 @@ class TestAnthropicGenerateContent:
 
     def test_haiku_keeps_the_budget_path(self):
         p, client = self._provider_with_mock()
-        resp = p.generate_content(prompt="hi", model_name="haiku", temperature=0.2, thinking_mode="high")
+        resp = p.generate_content(prompt="hi", model_name="haiku-4.5", temperature=0.2, thinking_mode="high")
         kwargs = self._sent(client)
         assert resp.metadata["reasoning_effort"] is None
         assert "extra_body" not in kwargs
@@ -135,7 +137,7 @@ class TestAnthropicGenerateContent:
 
     def test_haiku_minimal_thinking_disables_reasoning(self):
         p, client = self._provider_with_mock()
-        p.generate_content(prompt="hi", model_name="haiku", temperature=0.3, thinking_mode="minimal")
+        p.generate_content(prompt="hi", model_name="haiku-4.5", temperature=0.3, thinking_mode="minimal")
         kwargs = self._sent(client)
         # Minimal maps below Anthropic's floor -> no thinking, caller temperature preserved
         assert "thinking" not in kwargs
@@ -146,7 +148,7 @@ class TestAnthropicGenerateContent:
         # A caller asking for a small visible output while requesting high thinking must still get
         # its output room on top of the thinking budget (Anthropic counts thinking against max_tokens).
         p, client = self._provider_with_mock()
-        p.generate_content(prompt="hi", model_name="haiku", max_output_tokens=2000, thinking_mode="high")
+        p.generate_content(prompt="hi", model_name="haiku-4.5", max_output_tokens=2000, thinking_mode="high")
         kwargs = self._sent(client)
         budget = kwargs["thinking"]["budget_tokens"]
         assert kwargs["max_tokens"] - budget >= 2000

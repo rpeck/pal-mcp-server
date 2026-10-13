@@ -27,6 +27,32 @@
   },
   "models": [
     {
+      "model_name": "gemini-4-argon",
+      "friendly_name": "Gemini (4 Argon)",
+      "aliases": [
+        "argon",
+        "gemini-argon"
+      ],
+      "intelligence_score": 20,
+      "description": "Gemini 4 Argon (released 2026-10-13, 1M context, 32K output) - Google's flagship reasoning model for complex software engineering, math and science, and autonomous agents. AA Intelligence Index 53 (high). Multimodal input. A Gemini API key on the free tier gets a 429 (quota 0) for this model; it needs a paid tier, or use the OpenRouter route.",
+      "context_window": 1048576,
+      "max_output_tokens": 32768,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "max_image_size_mb": 32.0,
+      "max_thinking_tokens": 32768,
+      "allow_code_generation": true,
+      "aa_index": 53,
+      "aa_index_by_effort": {
+        "high": 53
+      }
+    },
+    {
       "model_name": "gemini-3-pro-preview",
       "friendly_name": "Gemini Pro 3.0 Preview",
       "aliases": [

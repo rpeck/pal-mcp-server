@@ -270,6 +270,20 @@ class TestDynamicModelSelectionFlagOn:
             assert fast == "gpt-6-luna"
             assert balanced == "gpt-6.1-sol"
 
+    def test_gemini_extended_reasoning_ranks_all_thinking_models_under_flag(self):
+        """With the flag on, Gemini's extended-reasoning pick is ranked, so gemini-4-argon wins
+        even though its name does not contain "pro". The default path keeps upstream's pro-first rule."""
+        from providers.gemini import GeminiModelProvider
+
+        provider = GeminiModelProvider("test-key")
+        allowed = list(provider.get_all_model_capabilities())
+        with patch.dict(os.environ, {"DYNAMIC_MODEL_SELECTION": "1"}, clear=False):
+            assert provider.get_preferred_model(ToolModelCategory.EXTENDED_REASONING, allowed) == "gemini-4-argon"
+        with patch.dict(os.environ, {"DYNAMIC_MODEL_SELECTION": ""}, clear=False):
+            assert (
+                provider.get_preferred_model(ToolModelCategory.EXTENDED_REASONING, allowed) == "gemini-3.1-pro-preview"
+            )
+
 
 class TestCustomProviderFallback:
     """Test fallback to custom/openrouter providers."""

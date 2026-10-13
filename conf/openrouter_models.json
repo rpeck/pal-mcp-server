@@ -592,6 +592,31 @@
       }
     },
     {
+      "model_name": "openai/gpt-6-luna-pro",
+      "aliases": [
+        "or-gpt6-luna-pro",
+        "gpt-6-luna-pro"
+      ],
+      "context_window": 1050000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "supports_json_mode": false,
+      "supports_function_calling": false,
+      "supports_images": true,
+      "max_image_size_mb": 5.0,
+      "allow_code_generation": true,
+      "auto_selectable": false,
+      "description": "GPT-6 Luna Pro via OpenRouter - the same model as GPT-6 Luna, served with reasoning.mode=pro for harder tasks. Same per-token price ($0.10/$0.50 per M), but pro mode spends far more tokens per request. OpenAI's own API has no separate model ID for it. NEVER auto-selected (auto_selectable false); use only when explicitly named. PROVISIONAL score 14, pinned to GPT-6 Luna: Artificial Analysis has not listed the pro mode. Revisit when AA publishes.",
+      "intelligence_score": 14,
+      "effort_levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ]
+    },
+    {
       "model_name": "openai/gpt-6.1-sol-pro",
       "aliases": [
         "or-gpt6.1-sol-pro",
@@ -756,6 +781,34 @@
       "max_image_size_mb": 5.0,
       "description": "GPT-5.4 via OpenRouter (backup route).",
       "intelligence_score": 16
+    },
+    {
+      "model_name": "google/gemini-4-argon",
+      "aliases": [
+        "or-gemini-4-argon",
+        "gemini-4-argon-or"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "description": "Google Gemini 4 Argon via OpenRouter (released 2026-10-13) - flagship reasoning model; AA Intelligence Index 53 (high). $2/$10 per M. Multimodal input (text, image, audio, video, files).",
+      "intelligence_score": 20,
+      "aa_index": 53,
+      "aa_index_by_effort": {
+        "high": 53
+      },
+      "effort_levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "allow_code_generation": true
     },
     {
       "model_name": "google/gemini-3.8-flash",
@@ -1014,6 +1067,51 @@
       "intelligence_score": 13
     },
     {
+      "model_name": "qwen/qwen3.8-2.4t-a95b",
+      "aliases": [
+        "qwen3.8-2.4t",
+        "qwen3.8-2.4t-a95b"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 131072,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": false,
+      "max_image_size_mb": 20.0,
+      "description": "Alibaba Qwen3.8 2.4T A95B via OpenRouter - the largest Qwen3.8 MoE (2.4T total / 95B active), 1M context, text only. AA Intelligence Index 40. $2/$6 per M.",
+      "intelligence_score": 15,
+      "aa_index_by_effort": {
+        "default": 40
+      }
+    },
+    {
+      "model_name": "stepfun/step-5-preview",
+      "aliases": [
+        "step-5",
+        "step-5-preview"
+      ],
+      "context_window": 1000000,
+      "max_output_tokens": 64000,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "description": "StepFun Step 5 Preview via OpenRouter (released 2026-10-08) - flagship agentic model, sparse MoE (27B active / 600B total), 1M context. AA Intelligence Index 44. $1.00/$2.70 per M. Preview: may change or be withdrawn.",
+      "intelligence_score": 17,
+      "aa_index_by_effort": {
+        "default": 44
+      },
+      "effort_levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ]
+    },
+    {
       "model_name": "qwen/qwen3.8-27b",
       "aliases": [
         "qwen3.8-27b"
@@ -1244,6 +1342,34 @@
       "intelligence_score": 10
     },
     {
+      "model_name": "meta/muse-wonder",
+      "aliases": [
+        "muse-wonder",
+        "wonder"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 943718,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "allow_code_generation": true,
+      "description": "Meta Muse Wonder via OpenRouter (released 2026-10-12) - frontier reasoning model for complex agentic tasks; AA Intelligence Index 52 (max). $4/$20 per M. Text, image, video, audio and PDF input. AA also lists a Muse Wonder Full (56), which no route PAL uses offers.",
+      "intelligence_score": 20,
+      "aa_index": 52,
+      "aa_index_by_effort": {
+        "max": 52
+      },
+      "effort_levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ]
+    },
+    {
       "model_name": "meta/muse-spark-1.3",
       "aliases": [
         "muse-spark-1.3",
@@ -1279,6 +1405,42 @@
       "max_image_size_mb": 20.0,
       "description": "Meta Muse Spark 1.2 via OpenRouter - agentic reasoning model (1M context); not listed on the current AA Intelligence Index.",
       "intelligence_score": 13
+    },
+    {
+      "model_name": "anthropic/claude-haiku-5.5",
+      "aliases": [
+        "claude-haiku-5.5",
+        "haiku-5.5",
+        "or-claude-haiku"
+      ],
+      "dynamic_aliases": [
+        "haiku"
+      ],
+      "context_window": 1000000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "allow_code_generation": true,
+      "description": "Anthropic Claude Haiku 5.5 via OpenRouter (released 2026-10-07) - small, fast tier; AA Intelligence Index 43 at max effort (38 at high). $0.10/$0.50 per M. With DYNAMIC_MODEL_SELECTION on, the bare haiku alias points here.",
+      "intelligence_score": 17,
+      "aa_index": 43,
+      "aa_index_by_effort": {
+        "low": 29,
+        "medium": 34,
+        "high": 38,
+        "xhigh": 41,
+        "max": 43
+      },
+      "effort_levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ]
     },
     {
       "model_name": "anthropic/claude-sonnet-5.5",
@@ -1476,6 +1638,32 @@
       "max_image_size_mb": 20.0,
       "description": "Google Gemma 4 26B-A4B via OpenRouter - efficient MoE, low-cost.",
       "intelligence_score": 9
+    },
+    {
+      "model_name": "mistralai/mistral-large-4-0",
+      "aliases": [
+        "mistral-large-4",
+        "mistral-large-4-0"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 262144,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "description": "Mistral Large 4 via OpenRouter (released 2026-10-06) - frontier multimodal model for reasoning, coding and agentic work (1M context). AA Intelligence Index 38 (listed as Mistral Large 4 Preview). $0.68/$2.09 per M.",
+      "intelligence_score": 15,
+      "aa_index_by_effort": {
+        "default": 38
+      },
+      "effort_levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ]
     },
     {
       "model_name": "mistralai/mistral-large-2512",
