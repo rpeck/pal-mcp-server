@@ -61,6 +61,10 @@ class ModelCapabilities:
     supports_temperature: bool = True
     use_openai_response_api: bool = False
     default_reasoning_effort: Optional[str] = None
+    # Reasoning-effort levels the model accepts on this route (for example low..xhigh). When set, the
+    # provider sends the tool's thinking_mode as an explicit effort, clamped to these levels (see
+    # providers/shared/effort.py). When empty, no effort parameter is sent.
+    effort_levels: list[str] = field(default_factory=list)
     allow_code_generation: bool = (
         False  # Enables structured code generation in chat tool for substantial implementations
     )

@@ -80,13 +80,19 @@ def _fake_response(text="hello", input_tokens=10, output_tokens=5):
 
 class TestAnthropicGenerateContent:
     def _provider_with_mock(self):
+        # Requests are streamed (messages.stream(...) as a context manager, then get_final_message()).
         p = _provider()
         mock_client = MagicMock()
-        mock_client.messages.create.return_value = _fake_response()
+        stream = mock_client.messages.stream.return_value.__enter__.return_value
+        stream.get_final_message.return_value = _fake_response()
         p._client = mock_client
         return p, mock_client
 
-    def test_thinking_enabled_forces_temperature_and_sets_budget(self):
+    @staticmethod
+    def _sent(client):
+        return client.messages.stream.call_args.kwargs
+
+    def test_current_model_uses_adaptive_thinking_and_effort(self):
         p, client = self._provider_with_mock()
         resp = p.generate_content(
             prompt="hi", model_name="opus", system_prompt="sys", temperature=0.2, thinking_mode="high"
@@ -94,35 +100,53 @@ class TestAnthropicGenerateContent:
         assert resp.content == "hello"
         assert resp.usage["total_tokens"] == 15
         assert resp.provider == ProviderType.ANTHROPIC
-        kwargs = client.messages.create.call_args.kwargs
+        assert resp.metadata["reasoning_effort"] == "high"
+        kwargs = self._sent(client)
         assert kwargs["model"] == "claude-opus-5-5"
-        assert kwargs["max_tokens"] > 0
         assert kwargs["system"] == "sys"
+        assert kwargs["thinking"] == {"type": "adaptive"}
+        assert kwargs["output_config"] == {"effort": "high"}
+        # Current models reject sampling parameters and fixed thinking budgets with HTTP 400.
+        assert "temperature" not in kwargs
+        assert "budget_tokens" not in kwargs["thinking"]
+        assert kwargs["max_tokens"] == 128000
+        client.messages.create.assert_not_called()
+
+    def test_effort_is_clamped_to_the_model_levels(self):
+        p, client = self._provider_with_mock()
+        p.generate_content(prompt="hi", model_name="sonnet", thinking_mode="minimal")
+        assert self._sent(client)["output_config"] == {"effort": "low"}
+        p.generate_content(prompt="hi", model_name="sonnet", thinking_mode="max")
+        assert self._sent(client)["output_config"] == {"effort": "max"}
+        p.generate_content(prompt="hi", model_name="sonnet", thinking_mode=None)
+        assert self._sent(client)["output_config"] == {"effort": "medium"}
+
+    def test_haiku_keeps_the_budget_path(self):
+        p, client = self._provider_with_mock()
+        resp = p.generate_content(prompt="hi", model_name="haiku", temperature=0.2, thinking_mode="high")
+        kwargs = self._sent(client)
+        assert resp.metadata["reasoning_effort"] is None
+        assert "output_config" not in kwargs
         # Thinking on -> temperature forced to 1.0, budget >= Anthropic floor
         assert kwargs["temperature"] == 1.0
         assert kwargs["thinking"]["type"] == "enabled"
         assert kwargs["thinking"]["budget_tokens"] >= 1024
         assert kwargs["thinking"]["budget_tokens"] < kwargs["max_tokens"]
 
-    def test_minimal_thinking_disables_reasoning(self):
+    def test_haiku_minimal_thinking_disables_reasoning(self):
         p, client = self._provider_with_mock()
-        p.generate_content(prompt="hi", model_name="opus", temperature=0.3, thinking_mode="minimal")
-        kwargs = client.messages.create.call_args.kwargs
+        p.generate_content(prompt="hi", model_name="haiku", temperature=0.3, thinking_mode="minimal")
+        kwargs = self._sent(client)
         # Minimal maps below Anthropic's floor -> no thinking, caller temperature preserved
         assert "thinking" not in kwargs
         assert kwargs["temperature"] == 0.3
-
-    def test_max_tokens_always_sent(self):
-        p, client = self._provider_with_mock()
-        p.generate_content(prompt="hi", model_name="haiku", thinking_mode="minimal")
-        kwargs = client.messages.create.call_args.kwargs
         assert kwargs["max_tokens"] == 64000  # haiku's advertised ceiling
 
-    def test_thinking_budget_preserves_output_headroom(self):
+    def test_haiku_thinking_budget_preserves_output_headroom(self):
         # A caller asking for a small visible output while requesting high thinking must still get
         # its output room on top of the thinking budget (Anthropic counts thinking against max_tokens).
         p, client = self._provider_with_mock()
-        p.generate_content(prompt="hi", model_name="opus", max_output_tokens=2000, thinking_mode="high")
-        kwargs = client.messages.create.call_args.kwargs
+        p.generate_content(prompt="hi", model_name="haiku", max_output_tokens=2000, thinking_mode="high")
+        kwargs = self._sent(client)
         budget = kwargs["thinking"]["budget_tokens"]
         assert kwargs["max_tokens"] - budget >= 2000

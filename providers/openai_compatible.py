@@ -17,6 +17,7 @@ from .shared import (
     ModelResponse,
     ProviderType,
 )
+from .shared.effort import resolve_reasoning_effort
 
 
 class OpenAICompatibleProvider(ModelProvider):
@@ -413,9 +414,11 @@ class OpenAICompatibleProvider(ModelProvider):
 
         # Prepare completion parameters for responses endpoint
         # Based on OpenAI documentation, use nested reasoning object for responses endpoint
-        effort = "medium"
-        if capabilities and capabilities.default_reasoning_effort:
-            effort = capabilities.default_reasoning_effort
+        effort = resolve_reasoning_effort(kwargs.get("thinking_mode"), capabilities)
+        if effort is None:
+            effort = "medium"
+            if capabilities and capabilities.default_reasoning_effort:
+                effort = capabilities.default_reasoning_effort
 
         completion_params = {
             "model": model_name,
@@ -480,6 +483,7 @@ class OpenAICompatibleProvider(ModelProvider):
                     "id": getattr(response, "id", ""),
                     "created": getattr(response, "created_at", 0),
                     "endpoint": "responses",
+                    "reasoning_effort": effort,
                 },
             )
 
@@ -609,6 +613,12 @@ class OpenAICompatibleProvider(ModelProvider):
                     continue  # Skip unsupported parameters for reasoning models
                 completion_params[key] = value
 
+        # Send the tool's thinking_mode as an explicit reasoning effort for models that declare
+        # effort_levels. OpenAI and OpenRouter both accept the top-level reasoning_effort field.
+        reasoning_effort = resolve_reasoning_effort(kwargs.get("thinking_mode"), capabilities)
+        if reasoning_effort is not None:
+            completion_params["reasoning_effort"] = reasoning_effort
+
         # Provider hook: inject sealed, provider-specific request-body params (e.g. the OpenRouter Fusion
         # panel). This runs AFTER the caller-kwargs whitelist above, so only trusted, provider-derived
         # config can reach the body — a caller-supplied ``plugins``/``extra_body`` is already dropped.
@@ -659,6 +669,7 @@ class OpenAICompatibleProvider(ModelProvider):
                     "model": response.model,
                     "id": response.id,
                     "created": response.created,
+                    "reasoning_effort": reasoning_effort,
                 },
             )
 

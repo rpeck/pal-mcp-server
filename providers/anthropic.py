@@ -19,6 +19,7 @@ from .base import ModelProvider
 from .registries.anthropic import AnthropicModelRegistry
 from .registry_provider_mixin import RegistryBackedProviderMixin
 from .shared import ModelCapabilities, ModelResponse, ProviderType
+from .shared.effort import resolve_reasoning_effort
 
 logger = logging.getLogger(__name__)
 
@@ -103,12 +104,19 @@ class AnthropicModelProvider(RegistryBackedProviderMixin, ModelProvider):
         # max_tokens is required by the Messages API; fall back to the model's advertised ceiling.
         max_tokens = max_output_tokens or capabilities.max_output_tokens or 4096
 
+        # Current Claude models (those that declare effort_levels) use adaptive thinking steered by
+        # an effort level. They reject budget_tokens and sampling parameters with HTTP 400, so the
+        # legacy budget path below runs only for older models such as Haiku 4.5.
+        effort = resolve_reasoning_effort(thinking_mode, capabilities)
+
         # Resolve the extended-thinking budget. Anthropic requires budget_tokens >= 1024 and
         # strictly less than max_tokens, and forces temperature to 1.0 while thinking is enabled.
         thinking_config = None
         effective_temperature = temperature
         budget = 0
-        if capabilities.supports_extended_thinking and thinking_mode in self.THINKING_BUDGETS:
+        if effort is not None:
+            thinking_config = {"type": "adaptive"}
+        elif capabilities.supports_extended_thinking and thinking_mode in self.THINKING_BUDGETS:
             fraction = self.THINKING_BUDGETS[thinking_mode]
             model_config = self.get_all_model_capabilities().get(resolved_model_name)
             max_thinking = model_config.max_thinking_tokens if model_config else 0
@@ -137,10 +145,12 @@ class AnthropicModelProvider(RegistryBackedProviderMixin, ModelProvider):
         }
         if system_prompt:
             request_kwargs["system"] = system_prompt
-        if capabilities.supports_temperature:
+        if capabilities.supports_temperature and effort is None:
             request_kwargs["temperature"] = effective_temperature
         if thinking_config is not None:
             request_kwargs["thinking"] = thinking_config
+        if effort is not None:
+            request_kwargs["output_config"] = {"effort": effort}
 
         max_retries = 4
         retry_delays = [1, 3, 5, 8]
@@ -148,7 +158,10 @@ class AnthropicModelProvider(RegistryBackedProviderMixin, ModelProvider):
 
         def _attempt() -> ModelResponse:
             attempt_counter["value"] += 1
-            response = self.client.messages.create(**request_kwargs)
+            # Stream, then collect the final message: the SDK refuses a non-streaming request whose
+            # max_tokens (up to 128K on current models) could run longer than ten minutes.
+            with self.client.messages.stream(**request_kwargs) as stream:
+                response = stream.get_final_message()
 
             text = "".join(
                 getattr(block, "text", "")
@@ -166,6 +179,7 @@ class AnthropicModelProvider(RegistryBackedProviderMixin, ModelProvider):
                 metadata={
                     "thinking_mode": thinking_mode if thinking_config is not None else None,
                     "thinking_budget": budget if thinking_config is not None else 0,
+                    "reasoning_effort": effort,
                     "finish_reason": getattr(response, "stop_reason", None),
                 },
             )
