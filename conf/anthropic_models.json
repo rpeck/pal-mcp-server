@@ -94,6 +94,35 @@
       "allow_code_generation": true
     },
     {
+      "model_name": "claude-opus-4-8",
+      "friendly_name": "Claude Opus 4.8",
+      "aliases": [
+        "opus-4.8",
+        "claude-opus-4.8"
+      ],
+      "intelligence_score": 17,
+      "description": "Previous-generation Opus (1M context, 128K output) - adaptive thinking with effort levels; estimated score, superseded by Opus 5.",
+      "context_window": 1000000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "effort_levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "max_image_size_mb": 20.0,
+      "max_thinking_tokens": 32768,
+      "allow_code_generation": true
+    },
+    {
       "model_name": "claude-fable-5-1",
       "friendly_name": "Claude Fable 5.1",
       "aliases": [
@@ -223,6 +252,27 @@
       "max_image_size_mb": 20.0,
       "max_thinking_tokens": 32768,
       "allow_code_generation": true
+    },
+    {
+      "model_name": "claude-sonnet-4-5",
+      "friendly_name": "Claude Sonnet 4.5",
+      "aliases": [
+        "sonnet-4.5",
+        "claude-sonnet-4.5"
+      ],
+      "intelligence_score": 12,
+      "description": "Legacy Sonnet (200K context, 64K output) - extended thinking with a token budget, no effort parameter; estimated score.",
+      "context_window": 200000,
+      "max_output_tokens": 64000,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "max_image_size_mb": 20.0,
+      "max_thinking_tokens": 32768
     },
     {
       "model_name": "claude-haiku-5-5",

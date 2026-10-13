@@ -167,6 +167,23 @@ class TestAnthropicGenerateContent:
         assert kwargs["extra_body"] == {"temperature": 0.3}
         assert kwargs["max_tokens"] == 64000  # haiku's advertised ceiling
 
+    def test_foundry_deployment_names_resolve_and_pick_their_thinking_path(self):
+        # Foundry deployment names equal the model IDs, so the canonical name is what PAL sends.
+        p, client = self._provider_with_mock()
+        p.generate_content(prompt="hi", model_name="claude-opus-4-8", thinking_mode="high")
+        kwargs = self._sent(client)
+        assert kwargs["model"] == "claude-opus-4-8"
+        assert kwargs["thinking"] == {"type": "adaptive"}
+        assert kwargs["extra_body"] == {"output_config": {"effort": "high"}}
+
+        # Sonnet 4.5 predates effort: budget thinking, temperature allowed.
+        p.generate_content(prompt="hi", model_name="claude-sonnet-4-5", temperature=0.4, thinking_mode="minimal")
+        kwargs = self._sent(client)
+        assert kwargs["model"] == "claude-sonnet-4-5"
+        assert "thinking" not in kwargs
+        assert kwargs["extra_body"] == {"temperature": 0.4}
+        assert kwargs["max_tokens"] == 64000
+
     def test_haiku_thinking_budget_preserves_output_headroom(self):
         # A caller asking for a small visible output while requesting high thinking must still get
         # its output room on top of the thinking budget (Anthropic counts thinking against max_tokens).
