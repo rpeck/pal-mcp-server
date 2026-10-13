@@ -150,7 +150,9 @@ class AnthropicModelProvider(RegistryBackedProviderMixin, ModelProvider):
         if thinking_config is not None:
             request_kwargs["thinking"] = thinking_config
         if effort is not None:
-            request_kwargs["output_config"] = {"effort": effort}
+            # Sent through extra_body: anthropic SDKs before 1.x have no typed output_config argument,
+            # and requirements.txt keeps the 0.49 floor (the 1.x SDK needs Python 3.10).
+            request_kwargs["extra_body"] = {"output_config": {"effort": effort}}
 
         max_retries = 4
         retry_delays = [1, 3, 5, 8]

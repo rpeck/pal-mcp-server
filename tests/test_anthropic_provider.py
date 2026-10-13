@@ -105,7 +105,7 @@ class TestAnthropicGenerateContent:
         assert kwargs["model"] == "claude-opus-5-5"
         assert kwargs["system"] == "sys"
         assert kwargs["thinking"] == {"type": "adaptive"}
-        assert kwargs["output_config"] == {"effort": "high"}
+        assert kwargs["extra_body"] == {"output_config": {"effort": "high"}}
         # Current models reject sampling parameters and fixed thinking budgets with HTTP 400.
         assert "temperature" not in kwargs
         assert "budget_tokens" not in kwargs["thinking"]
@@ -115,18 +115,18 @@ class TestAnthropicGenerateContent:
     def test_effort_is_clamped_to_the_model_levels(self):
         p, client = self._provider_with_mock()
         p.generate_content(prompt="hi", model_name="sonnet", thinking_mode="minimal")
-        assert self._sent(client)["output_config"] == {"effort": "low"}
+        assert self._sent(client)["extra_body"]["output_config"] == {"effort": "low"}
         p.generate_content(prompt="hi", model_name="sonnet", thinking_mode="max")
-        assert self._sent(client)["output_config"] == {"effort": "max"}
+        assert self._sent(client)["extra_body"]["output_config"] == {"effort": "max"}
         p.generate_content(prompt="hi", model_name="sonnet", thinking_mode=None)
-        assert self._sent(client)["output_config"] == {"effort": "medium"}
+        assert self._sent(client)["extra_body"]["output_config"] == {"effort": "medium"}
 
     def test_haiku_keeps_the_budget_path(self):
         p, client = self._provider_with_mock()
         resp = p.generate_content(prompt="hi", model_name="haiku", temperature=0.2, thinking_mode="high")
         kwargs = self._sent(client)
         assert resp.metadata["reasoning_effort"] is None
-        assert "output_config" not in kwargs
+        assert "extra_body" not in kwargs
         # Thinking on -> temperature forced to 1.0, budget >= Anthropic floor
         assert kwargs["temperature"] == 1.0
         assert kwargs["thinking"]["type"] == "enabled"
