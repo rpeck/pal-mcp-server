@@ -55,11 +55,15 @@ class OpenAICompatibleProvider(ModelProvider):
             self._validate_base_url()
 
         # Warn if using external URL without authentication
-        if self.base_url and not self._is_localhost_url() and not api_key:
+        if self.base_url and not self._is_localhost_url() and not api_key and not self._authenticates_without_api_key():
             logging.warning(
                 f"Using external URL '{self.base_url}' without API key. "
                 "This may be insecure. Consider setting an API key for authentication."
             )
+
+    def _authenticates_without_api_key(self) -> bool:
+        """Return True when the provider authenticates some other way (e.g. Entra ID tokens)."""
+        return False
 
     def _ensure_model_allowed(
         self,
