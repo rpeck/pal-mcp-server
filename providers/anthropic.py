@@ -145,14 +145,19 @@ class AnthropicModelProvider(RegistryBackedProviderMixin, ModelProvider):
         }
         if system_prompt:
             request_kwargs["system"] = system_prompt
+        extra_body: dict[str, object] = {}
         if capabilities.supports_temperature and effort is None:
-            request_kwargs["temperature"] = effective_temperature
+            # Sent through extra_body: the 1.x SDK dropped the typed temperature argument (passing it is a
+            # TypeError), while the API still accepts it for the models on this path (e.g. Sonnet 4.5).
+            extra_body["temperature"] = effective_temperature
         if thinking_config is not None:
             request_kwargs["thinking"] = thinking_config
         if effort is not None:
             # Sent through extra_body: anthropic SDKs before 1.x have no typed output_config argument,
-            # and requirements.txt keeps the 0.49 floor (the 1.x SDK needs Python 3.10).
-            request_kwargs["extra_body"] = {"output_config": {"effort": effort}}
+            # and requirements.txt keeps a 0.x floor (the 1.x SDK needs Python 3.10).
+            extra_body["output_config"] = {"effort": effort}
+        if extra_body:
+            request_kwargs["extra_body"] = extra_body
 
         max_retries = 4
         retry_delays = [1, 3, 5, 8]

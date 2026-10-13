@@ -125,6 +125,7 @@ class TestAnthropicGenerateContent:
         assert kwargs["extra_body"] == {"output_config": {"effort": "high"}}
         # Current models reject sampling parameters and fixed thinking budgets with HTTP 400.
         assert "temperature" not in kwargs
+        assert "temperature" not in kwargs["extra_body"]
         assert "budget_tokens" not in kwargs["thinking"]
         assert kwargs["max_tokens"] == 128000
         client.messages.create.assert_not_called()
@@ -143,9 +144,11 @@ class TestAnthropicGenerateContent:
         resp = p.generate_content(prompt="hi", model_name="haiku-4.5", temperature=0.2, thinking_mode="high")
         kwargs = self._sent(client)
         assert resp.metadata["reasoning_effort"] is None
-        assert "extra_body" not in kwargs
-        # Thinking on -> temperature forced to 1.0, budget >= Anthropic floor
-        assert kwargs["temperature"] == 1.0
+        assert "output_config" not in kwargs["extra_body"]
+        # Thinking on -> temperature forced to 1.0, budget >= Anthropic floor. Temperature rides in
+        # extra_body: the 1.x SDK rejects it as a keyword argument.
+        assert "temperature" not in kwargs
+        assert kwargs["extra_body"]["temperature"] == 1.0
         assert kwargs["thinking"]["type"] == "enabled"
         assert kwargs["thinking"]["budget_tokens"] >= 1024
         assert kwargs["thinking"]["budget_tokens"] < kwargs["max_tokens"]
@@ -156,7 +159,7 @@ class TestAnthropicGenerateContent:
         kwargs = self._sent(client)
         # Minimal maps below Anthropic's floor -> no thinking, caller temperature preserved
         assert "thinking" not in kwargs
-        assert kwargs["temperature"] == 0.3
+        assert kwargs["extra_body"] == {"temperature": 0.3}
         assert kwargs["max_tokens"] == 64000  # haiku's advertised ceiling
 
     def test_haiku_thinking_budget_preserves_output_headroom(self):
