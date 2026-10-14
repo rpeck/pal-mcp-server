@@ -44,6 +44,9 @@ ANTHROPIC_API_KEY=your_anthropic_api_key_here
 # ANTHROPIC_USE_ENTRA=true
 # ANTHROPIC_FOUNDRY_BASE_URL=https://your-resource.services.ai.azure.com/anthropic
 
+# ChatGPT-plan models through the Codex CLI login (no key; chatgpt/<model>) - see docs/chatgpt_provider.md
+# CHATGPT_ENABLED=true
+
 # Native direct-API providers for open-model creators (all OpenAI-compatible; each dormant unless
 # set, and ranks ahead of OpenRouter when its key is present).
 DEEPSEEK_API_KEY=your_deepseek_api_key_here        # DeepSeek - api.deepseek.com
