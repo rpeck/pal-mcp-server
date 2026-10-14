@@ -27,6 +27,20 @@ key as before. With a flag on, no API key is needed or sent, even if one is also
 To skip `DefaultAzureCredential`'s other sources and use only the CLI login, set
 `AZURE_TOKEN_CREDENTIALS=AzureCliCredential`.
 
+**MCP clients.** The flags can live in `.env` or in the client's `env` block. The Azure CLI credential
+runs the `az` command, and Claude Desktop starts MCP servers with a minimal `PATH` that usually lacks
+Homebrew's `bin` folder. For Claude Desktop, add a `PATH` that includes the folder from `which az`:
+
+```json
+"env": {
+  "AZURE_OPENAI_USE_ENTRA": "true",
+  "AZURE_OPENAI_ENDPOINT": "https://your-resource.openai.azure.com/",
+  "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+}
+```
+
+Claude Code inherits your shell's `PATH` and needs no change.
+
 ## 2. Azure OpenAI
 
 ```env

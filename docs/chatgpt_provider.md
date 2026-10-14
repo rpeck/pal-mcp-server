@@ -14,7 +14,7 @@ Codex MCP servers and plugins. (Agentic Codex runs through `clink` are planned s
 1. Install the Codex CLI (for example `npm install -g @openai/codex` or `brew install codex`).
 2. Run `codex login` and choose **Sign in with ChatGPT**. `codex login status` should print
    `Logged in using ChatGPT`.
-3. Enable the provider in `.env`:
+3. Enable the provider in `.env`, or in your MCP client's `env` block (see below):
 
    ```env
    CHATGPT_ENABLED=true
@@ -38,6 +38,40 @@ running `codex login` fixes it without a restart.
 | `CHATGPT_TIMEOUT_SECONDS` | `600` | Per-call limit. Raise it for long prompts at high effort. |
 | `CHATGPT_CODEX_COMMAND` | `codex` | The Codex executable, if it is not on `PATH` under that name. |
 | `CHATGPT_MODELS_CONFIG_PATH` | `conf/chatgpt_models.json` | Your own model catalogue. |
+
+## Add PAL to your MCP client
+
+PAL reads `CHATGPT_ENABLED` from its environment, so you can set it in the client config instead of
+`.env`. These examples run PAL from a clone (paths are placeholders).
+
+**Claude Code** (user scope, so every project sees it):
+
+```bash
+claude mcp add pal -s user -e CHATGPT_ENABLED=true -- \
+  /path/to/pal-mcp-server/.pal_venv/bin/python /path/to/pal-mcp-server/server.py
+claude mcp get pal   # should show "Connected"
+```
+
+**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+
+```json
+{
+  "mcpServers": {
+    "pal": {
+      "command": "/path/to/pal-mcp-server/.pal_venv/bin/python",
+      "args": ["/path/to/pal-mcp-server/server.py"],
+      "env": {
+        "CHATGPT_ENABLED": "true",
+        "CHATGPT_CODEX_COMMAND": "/opt/homebrew/bin/codex"
+      }
+    }
+  }
+}
+```
+
+Claude Desktop starts MCP servers with a minimal `PATH` that usually lacks Homebrew and npm global
+folders, so give Codex's full path (`which codex`) in `CHATGPT_CODEX_COMMAND`. Restart Claude Desktop
+after editing the file. Claude Code inherits your shell's `PATH`, so it does not need this.
 
 ## Model names
 
@@ -92,6 +126,23 @@ codex exec --json --ephemeral --skip-git-repo-check --ignore-user-config --ignor
   (`supports_temperature` is false).
 - **Not a supported API.** This rides on the Codex CLI's command line and event output, which can change
   between Codex releases. Tested with Codex CLI 0.162.
+
+## Troubleshooting
+
+Startup messages go to `logs/mcp_server.log`; `grep -i chatgpt logs/mcp_server.log` shows the relevant ones.
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `CHATGPT_ENABLED=true but the Codex CLI ('codex') is not on PATH - ChatGPT models disabled` | PAL cannot find Codex, often because the MCP client's `PATH` is minimal | Set `CHATGPT_CODEX_COMMAND` to the full path from `which codex` |
+| `... the Codex CLI is not signed in (run codex login)` | No Codex login | Run `codex login` and choose ChatGPT. No PAL restart needed |
+| `... the Codex CLI is not signed in with ChatGPT` | Codex is signed in with an API key | Run `codex logout`, then `codex login` and choose ChatGPT |
+| `ChatGPT plan usage limit reached` | The plan's Codex usage limit | Wait for the limit to reset, or use another provider meanwhile |
+| `Codex CLI did not answer within 600s` | Long prompt or high effort | Raise `CHATGPT_TIMEOUT_SECONDS` |
+| `Codex CLI failed (exit status 2): error: unexpected argument ...` | A Codex release changed its command line | Update PAL, or pin the Codex version listed under Limits and costs |
+| `chatgpt/...` models missing from `listmodels` | Flag not set in the environment PAL actually runs with, or a `CHATGPT_ALLOWED_MODELS` filter | Check the client's `env` block and restart the client |
+
+To check the setup without spending quota, `codex login status` should print `Logged in using ChatGPT`, and
+`listmodels` should show **ChatGPT (via Codex CLI) ✅**.
 
 ## Logging
 

@@ -46,6 +46,13 @@ ANTHROPIC_API_KEY=your_anthropic_api_key_here
 
 # ChatGPT-plan models through the Codex CLI login (no key; chatgpt/<model>) - see docs/chatgpt_provider.md
 # CHATGPT_ENABLED=true
+# CHATGPT_ALLOWED_MODELS=chatgpt/gpt-6.1-sol,chatgpt/gpt-6-luna
+# CHATGPT_TIMEOUT_SECONDS=600                # per call
+# CHATGPT_CODEX_COMMAND=/opt/homebrew/bin/codex  # full path when the MCP client's PATH lacks codex
+
+# Azure OpenAI with your Entra ID login instead of AZURE_OPENAI_API_KEY - see docs/entra_auth.md
+# AZURE_OPENAI_USE_ENTRA=true
+# AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
 
 # Native direct-API providers for open-model creators (all OpenAI-compatible; each dormant unless
 # set, and ranks ahead of OpenRouter when its key is present).
@@ -273,6 +280,9 @@ XAI_MODELS_CONFIG_PATH=/path/to/xai_models.json
 OPENROUTER_MODELS_CONFIG_PATH=/path/to/openrouter_models.json
 DIAL_MODELS_CONFIG_PATH=/path/to/dial_models.json
 CUSTOM_MODELS_CONFIG_PATH=/path/to/custom_models.json
+AZURE_MODELS_CONFIG_PATH=/path/to/azure_models.json
+ANTHROPIC_MODELS_CONFIG_PATH=/path/to/anthropic_models.json
+CHATGPT_MODELS_CONFIG_PATH=/path/to/chatgpt_models.json
 ```
 
 **Conversation Settings:**
@@ -358,6 +368,9 @@ LOG_LEVEL=INFO
 - Configuration is loaded once at startup
 
 ## Related Documentation
+
+- **[Entra ID Authentication](entra_auth.md)** - Azure OpenAI and Claude on Azure AI Foundry with `az login` instead of API keys
+- **[ChatGPT Models via Codex CLI](chatgpt_provider.md)** - ChatGPT-plan models through `codex login`, with every `CHATGPT_*` setting
 
 - **[Advanced Usage Guide](advanced-usage.md)** - Advanced model usage patterns, thinking modes, and power user workflows
 - **[Context Revival Guide](context-revival.md)** - Conversation persistence and context revival across sessions
