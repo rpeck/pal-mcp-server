@@ -1,11 +1,11 @@
 # Model catalog (measured models and explicit-only presets)
 
-Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-10-13. Do not edit by hand; run the script after a catalog change.
+Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-10-14. Do not edit by hand; run the script after a catalog change.
 
 - **Scope:** every model with a measured Artificial Analysis (AA) Intelligence Index value, plus the explicit-only presets. Older and unmeasured entries are in the conf files only.
 - **Score:** the 1-20 `intelligence_score` that auto mode ranks by. See [model_ranking.md](model_ranking.md) for how it is anchored to the AA Index.
 - **AA Index by effort:** the AA v4.3 leaderboard value at each effort level (`aa_index_by_effort`). `default` means AA lists one row for the model.
-- **Routes:** `native` is the creator's own API (needs that creator's key); `openrouter` is the OpenRouter mirror (needs `OPENROUTER_API_KEY`).
+- **Routes:** `native` is the creator's own API (needs that creator's key); `openrouter` is the OpenRouter mirror (needs `OPENROUTER_API_KEY`); `chatgpt` is a ChatGPT plan through the Codex CLI (needs `CHATGPT_ENABLED=true` and `codex login`, see [chatgpt_provider.md](chatgpt_provider.md)).
 - **Explicit-only:** `auto_selectable: false`. Auto mode never picks the model; call it by name.
 - **Flag-only aliases:** these bare aliases point at the model only when `DYNAMIC_MODEL_SELECTION` is on; otherwise they keep the target that upstream PAL gives them.
 
@@ -22,12 +22,12 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
-| OpenAI (GPT-6.1 Sol) | 19 | low 42, medium 48, high 50, xhigh 51, max 52 | native: `gpt-6.1-sol`<br>openrouter: `openai/gpt-6.1-sol` | `gpt6.1-sol`, `gpt6.1sol`, `or-gpt6.1-sol`, `sol` |  |
+| OpenAI (GPT-6.1 Sol) | 19 | low 42, medium 48, high 50, xhigh 51, max 52 | native: `gpt-6.1-sol`<br>openrouter: `openai/gpt-6.1-sol`<br>chatgpt: `chatgpt/gpt-6.1-sol` | `gpt6.1-sol`, `gpt6.1sol`, `or-gpt6.1-sol`, `sol` |  |
 | GPT-6.1 Sol Pro | 19 | not measured | openrouter: `openai/gpt-6.1-sol-pro` | `gpt-6.1-sol-pro`, `or-gpt6.1-sol-pro` | explicit-only, provisional score |
-| OpenAI (GPT-6 Astra) | 19 | low 46, medium 50, high 51, xhigh 52, max 53 | native: `gpt-6-astra`<br>openrouter: `openai/gpt-6-astra` | `astra`, `gpt6-astra`, `gpt6astra`, `or-gpt6-astra` |  |
+| OpenAI (GPT-6 Astra) | 19 | low 46, medium 50, high 51, xhigh 52, max 53 | native: `gpt-6-astra`<br>openrouter: `openai/gpt-6-astra`<br>chatgpt: `chatgpt/gpt-6-astra` | `astra`, `gpt6-astra`, `gpt6astra`, `or-gpt6-astra` |  |
 | GPT-6 Astra Pro | 19 | not measured | openrouter: `openai/gpt-6-astra-pro` | `astra-pro`, `gpt6-astra-pro`, `or-gpt6-astra-pro` | explicit-only, provisional score |
-| OpenAI (GPT-5.6 Terra) | 13 | non-reasoning 21, low 27, medium 30, high 34, xhigh 38, max 42 | native: `gpt-5.6-terra`<br>openrouter: `openai/gpt-5.6-terra` | `gpt5.6-terra`, `gpt5.6terra`, `or-gpt5.6-terra`, `terra` |  |
-| OpenAI (GPT-6 Luna) | 13 | non-reasoning 18, low 22, medium 30, high 33, xhigh 35, max 38 | native: `gpt-6-luna`<br>openrouter: `openai/gpt-6-luna` | `gpt6-luna`, `gpt6luna`, `luna`, `or-gpt6-luna` |  |
+| OpenAI (GPT-5.6 Terra) | 13 | non-reasoning 21, low 27, medium 30, high 34, xhigh 38, max 42 | native: `gpt-5.6-terra`<br>openrouter: `openai/gpt-5.6-terra`<br>chatgpt: `chatgpt/gpt-5.6-terra` | `gpt5.6-terra`, `gpt5.6terra`, `or-gpt5.6-terra`, `terra` |  |
+| OpenAI (GPT-6 Luna) | 13 | non-reasoning 18, low 22, medium 30, high 33, xhigh 35, max 38 | native: `gpt-6-luna`<br>openrouter: `openai/gpt-6-luna`<br>chatgpt: `chatgpt/gpt-6-luna` | `gpt6-luna`, `gpt6luna`, `luna`, `or-gpt6-luna` |  |
 | GPT-6 Luna Pro | 13 | not measured | openrouter: `openai/gpt-6-luna-pro` | `gpt-6-luna-pro`, `or-gpt6-luna-pro` | explicit-only, provisional score |
 | GPT-OSS 120B | 6 | high 12 | openrouter: `openai/gpt-oss-120b` | `gpt-oss`, `gpt-oss-120b` |  |
 | GPT-OSS 20B | 5 | high 9 | openrouter: `openai/gpt-oss-20b` | `gpt-oss-20b`, `gpt-oss-mini` |  |

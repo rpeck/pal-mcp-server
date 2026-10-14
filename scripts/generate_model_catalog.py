@@ -109,6 +109,8 @@ def fmt_effort(values: dict) -> str:
 rows = defaultdict(dict)
 for path in sorted(CONF.glob("*_models.json")):
     conf = path.stem.replace("_models", "")
+    if conf == "chatgpt":
+        continue  # an extra route for OpenAI models already listed; added below
     for m in json.loads(path.read_text()).get("models", []):
         measured = bool(m.get("aa_index_by_effort"))
         explicit_only = m.get("auto_selectable") is False and "fusion" not in m["model_name"]
@@ -133,6 +135,12 @@ for path in sorted(CONF.glob("*_models.json")):
         if m.get("friendly_name"):
             row["friendly"] = m["friendly_name"]
 
+# ChatGPT-plan route (Codex CLI): attach it to the OpenAI rows it serves. It adds no rows of its own.
+for m in json.loads((CONF / "chatgpt_models.json").read_text()).get("models", []):
+    row = rows.get(("OpenAI", key_of(m["model_name"])))
+    if row is not None:
+        row["names"]["chatgpt"] = m["model_name"]
+
 lines = [
     "# Model catalog (measured models and explicit-only presets)",
     "",
@@ -146,7 +154,8 @@ lines = [
     "- **AA Index by effort:** the AA v4.3 leaderboard value at each effort level (`aa_index_by_effort`). "
     "`default` means AA lists one row for the model.",
     "- **Routes:** `native` is the creator's own API (needs that creator's key); `openrouter` is the "
-    "OpenRouter mirror (needs `OPENROUTER_API_KEY`).",
+    "OpenRouter mirror (needs `OPENROUTER_API_KEY`); `chatgpt` is a ChatGPT plan through the Codex CLI (needs "
+    "`CHATGPT_ENABLED=true` and `codex login`, see [chatgpt_provider.md](chatgpt_provider.md)).",
     "- **Explicit-only:** `auto_selectable: false`. Auto mode never picks the model; call it by name.",
     "- **Flag-only aliases:** these bare aliases point at the model only when `DYNAMIC_MODEL_SELECTION` is on; "
     "otherwise they keep the target that upstream PAL gives them.",
@@ -165,7 +174,9 @@ for lab in LAB_ORDER:
     for _, r in sorted(lab_rows, key=lambda kr: (-kr[1]["score"], kr[0])):
         names = r["names"]
         title = r.get("friendly") or pretty(names.get("native") or names.get("openrouter"))
-        routes = "<br>".join(f"{route}: `{names[route]}`" for route in ("native", "openrouter") if route in names)
+        routes = "<br>".join(
+            f"{route}: `{names[route]}`" for route in ("native", "openrouter", "chatgpt") if route in names
+        )
         aliases = ", ".join(f"`{a}`" for a in r["aliases"][:6])
         flag_only = [a for a in r["dynamic"] if a not in r["aliases"]]
         if flag_only:
