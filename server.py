@@ -537,6 +537,30 @@ def configure_providers():
         has_native_apis = True
         logger.info("DIAL API key found - DIAL models available")
 
+    # ChatGPT-plan models through the Codex CLI's own login (no API key). Opt-in with CHATGPT_ENABLED=true.
+    chatgpt_enabled = False
+    if get_env_bool("CHATGPT_ENABLED"):
+        import shutil
+
+        from providers.chatgpt import codex_command, codex_login_problem
+
+        codex_executable = shutil.which(codex_command())
+        if codex_executable is None:
+            logger.error(
+                "CHATGPT_ENABLED=true but the Codex CLI ('%s') is not on PATH - ChatGPT models disabled. "
+                "Install it or set CHATGPT_CODEX_COMMAND.",
+                codex_command(),
+            )
+        else:
+            login_problem = codex_login_problem(codex_executable)
+            if login_problem:
+                # Still register: the login can be fixed without restarting PAL.
+                logger.warning("CHATGPT_ENABLED=true but %s - ChatGPT model calls fail until fixed", login_problem)
+            chatgpt_enabled = True
+            valid_providers.append("ChatGPT (Codex CLI)")
+            has_native_apis = True
+            logger.info("CHATGPT_ENABLED=true - ChatGPT-plan models available through the Codex CLI")
+
     # Check for OpenRouter API key
     openrouter_key = get_env("OPENROUTER_API_KEY")
     logger.debug(f"OpenRouter key check: key={'[PRESENT]' if openrouter_key else '[MISSING]'}")
@@ -600,6 +624,12 @@ def configure_providers():
             ModelProviderRegistry.register_provider(ProviderType.DIAL, DIALModelProvider)
             registered_providers.append(ProviderType.DIAL.value)
             logger.debug(f"Registered provider: {ProviderType.DIAL.value}")
+        if chatgpt_enabled:
+            from providers.chatgpt import ChatGPTModelProvider
+
+            ModelProviderRegistry.register_provider(ProviderType.CHATGPT, ChatGPTModelProvider)
+            registered_providers.append(ProviderType.CHATGPT.value)
+            logger.debug(f"Registered provider: {ProviderType.CHATGPT.value}")
 
     # 2. Custom provider second (for local/private models)
     if has_custom:
@@ -634,6 +664,7 @@ def configure_providers():
             "- AZURE_OPENAI_API_KEY or AZURE_OPENAI_USE_ENTRA=true, plus AZURE_OPENAI_ENDPOINT, for Azure OpenAI\n"
             "- XAI_API_KEY for X.AI GROK models\n"
             "- DIAL_API_KEY for DIAL models\n"
+            "- CHATGPT_ENABLED=true for ChatGPT-plan models through the Codex CLI (`codex login`)\n"
             "- OPENROUTER_API_KEY for OpenRouter (multiple models)\n"
             "- CUSTOM_API_URL for local models (Ollama, vLLM, etc.)"
         )

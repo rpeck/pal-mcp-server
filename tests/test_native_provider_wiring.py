@@ -636,3 +636,137 @@ def test_server_registers_entra_providers_without_any_api_key(monkeypatch, azure
     assert ProviderType.ANTHROPIC in registered
     assert ModelProviderRegistry.get_provider(ProviderType.AZURE)._use_entra is True
     assert ModelProviderRegistry.get_provider(ProviderType.ANTHROPIC)._use_entra is True
+
+
+# --------------------------------------------------------------------------------------------------
+# ChatGPT-plan models through the Codex CLI (no API key; opt-in with CHATGPT_ENABLED)
+# --------------------------------------------------------------------------------------------------
+
+_NO_KEY_VARS = (
+    "GEMINI_API_KEY",
+    "OPENAI_API_KEY",
+    "XAI_API_KEY",
+    "ANTHROPIC_API_KEY",
+    "AZURE_OPENAI_API_KEY",
+    "OPENROUTER_API_KEY",
+    "DIAL_API_KEY",
+    "CUSTOM_API_URL",
+    *(env for _, env, _ in NATIVE_VENDORS),
+)
+
+
+def test_chatgpt_wired_into_priority_and_restrictions():
+    order = ModelProviderRegistry.PROVIDER_PRIORITY_ORDER
+    assert ProviderType.CHATGPT in order
+    # OpenRouter accepts any vendor/model name, so chatgpt/<model> must be claimed before it.
+    assert order.index(ProviderType.CHATGPT) < order.index(ProviderType.OPENROUTER)
+    assert order.index(ProviderType.CHATGPT) < order.index(ProviderType.CUSTOM)
+    assert ModelRestrictionService.ENV_VARS[ProviderType.CHATGPT] == "CHATGPT_ALLOWED_MODELS"
+    assert ModelRestrictionService.DISALLOWED_ENV_VARS[ProviderType.CHATGPT] == "CHATGPT_DISALLOWED_MODELS"
+
+
+def test_registry_builds_chatgpt_without_any_key(monkeypatch, clean_registry):
+    from providers.chatgpt import ChatGPTModelProvider
+
+    for var in _NO_KEY_VARS:
+        monkeypatch.delenv(var, raising=False)
+    ModelProviderRegistry.register_provider(ProviderType.CHATGPT, ChatGPTModelProvider)
+
+    provider = ModelProviderRegistry.get_provider(ProviderType.CHATGPT)
+
+    assert isinstance(provider, ChatGPTModelProvider)
+    assert provider.api_key == ""
+
+
+def test_chatgpt_names_beat_openrouter_catch_all(monkeypatch, clean_registry):
+    from providers.chatgpt import ChatGPTModelProvider
+    from providers.openrouter import OpenRouterProvider
+
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sentinel-key")
+    ModelProviderRegistry.register_provider(ProviderType.OPENROUTER, OpenRouterProvider)
+    ModelProviderRegistry.register_provider(ProviderType.CHATGPT, ChatGPTModelProvider)
+
+    provider = ModelProviderRegistry.get_provider_for_model("chatgpt/gpt-6.1-sol")
+
+    assert provider.get_provider_type() == ProviderType.CHATGPT
+
+
+def _fake_codex_on_path(monkeypatch, login_problem=None):
+    import shutil
+
+    import providers.chatgpt as chatgpt_module
+
+    monkeypatch.setattr(shutil, "which", lambda name, *a, **k: "/opt/fake/bin/codex" if name == "codex" else None)
+    monkeypatch.setattr(chatgpt_module, "codex_login_problem", lambda executable: login_problem)
+
+
+def test_server_registers_chatgpt_without_any_api_key(monkeypatch, clean_registry):
+    import server
+
+    for var in _NO_KEY_VARS:
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("CHATGPT_ENABLED", "true")
+    _fake_codex_on_path(monkeypatch)
+
+    server.configure_providers()
+
+    assert ProviderType.CHATGPT in ModelProviderRegistry.get_available_providers()
+    assert "chatgpt/gpt-6.1-sol" in ModelProviderRegistry.get_available_models(respect_restrictions=True)
+
+
+def test_server_registers_chatgpt_when_login_needs_fixing(monkeypatch, clean_registry, caplog):
+    # A missing login is logged but the provider stays registered: `codex login` fixes it without a restart.
+    import server
+
+    for var in _NO_KEY_VARS:
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("CHATGPT_ENABLED", "true")
+    _fake_codex_on_path(monkeypatch, login_problem="the Codex CLI is not signed in (run `codex login`)")
+
+    server.configure_providers()
+
+    assert ProviderType.CHATGPT in ModelProviderRegistry.get_available_providers()
+    assert "codex login" in caplog.text
+
+
+def test_server_skips_chatgpt_without_codex_cli(monkeypatch, clean_registry):
+    import server
+
+    monkeypatch.setenv("GEMINI_API_KEY", "sentinel-key")
+    monkeypatch.setenv("CHATGPT_ENABLED", "true")
+    import shutil
+
+    monkeypatch.setattr(shutil, "which", lambda name, *a, **k: None)
+
+    server.configure_providers()
+
+    assert ProviderType.CHATGPT not in ModelProviderRegistry.get_available_providers()
+
+
+def test_server_leaves_chatgpt_off_by_default(monkeypatch, clean_registry):
+    import server
+
+    monkeypatch.setenv("GEMINI_API_KEY", "sentinel-key")
+    _fake_codex_on_path(monkeypatch)
+
+    server.configure_providers()
+
+    assert ProviderType.CHATGPT not in ModelProviderRegistry.get_available_providers()
+
+
+async def test_listmodels_shows_chatgpt_models(monkeypatch, clean_registry):
+    import server
+    from tools.listmodels import ListModelsTool
+
+    for var in _NO_KEY_VARS:
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("CHATGPT_ENABLED", "true")
+    _fake_codex_on_path(monkeypatch)
+    server.configure_providers()
+
+    result = await ListModelsTool().execute({})
+    content = json.loads(result[0].text)["content"]
+
+    assert "## ChatGPT (via Codex CLI) ✅" in content
+    assert "`chatgpt/gpt-6.1-sol`" in content
+    assert "`chatgpt/sol` → `chatgpt/gpt-6.1-sol`" in content

@@ -106,6 +106,7 @@ class ListModelsTool(BaseTool):
             },
             ProviderType.XAI: {"name": "X.AI (Grok)", "env_key": "XAI_API_KEY"},
             ProviderType.DIAL: {"name": "AI DIAL", "env_key": "DIAL_API_KEY"},
+            ProviderType.CHATGPT: {"name": "ChatGPT (via Codex CLI)", "env_key": "CHATGPT_ENABLED=true"},
         }
 
         def format_model_entry(provider, display_name: str) -> list[str]:

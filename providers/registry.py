@@ -50,6 +50,7 @@ class ModelProviderRegistry:
         ProviderType.NVIDIA,  # Direct NVIDIA (Nemotron) access
         ProviderType.PERPLEXITY,  # Direct Perplexity access
         ProviderType.DIAL,  # DIAL unified API access
+        ProviderType.CHATGPT,  # ChatGPT-plan models via the Codex CLI (slower: one process per call)
         ProviderType.CUSTOM,  # Local/self-hosted models
         ProviderType.OPENROUTER,  # Catch-all for cloud models
     ]
@@ -165,6 +166,9 @@ class ModelProviderRegistry:
                 logging.warning("ANTHROPIC_USE_ENTRA set but ANTHROPIC_FOUNDRY_BASE_URL missing – skipping Anthropic")
                 return None
             provider = provider_class(api_key="", use_entra=True, foundry_base_url=foundry_base_url)
+        elif provider_type == ProviderType.CHATGPT:
+            # Authenticates through the Codex CLI's own ChatGPT login, so there is no API key.
+            provider = provider_class(api_key="")
         else:
             if not api_key:
                 return None
