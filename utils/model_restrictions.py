@@ -72,6 +72,7 @@ class ModelRestrictionService:
         ProviderType.MISTRAL: "MISTRAL_ALLOWED_MODELS",
         ProviderType.NVIDIA: "NVIDIA_ALLOWED_MODELS",
         ProviderType.PERPLEXITY: "PERPLEXITY_ALLOWED_MODELS",
+        ProviderType.CHATGPT: "CHATGPT_ALLOWED_MODELS",
         ProviderType.OPENROUTER: "OPENROUTER_ALLOWED_MODELS",
         ProviderType.DIAL: "DIAL_ALLOWED_MODELS",
     }
@@ -90,6 +91,7 @@ class ModelRestrictionService:
         ProviderType.MISTRAL: "MISTRAL_DISALLOWED_MODELS",
         ProviderType.NVIDIA: "NVIDIA_DISALLOWED_MODELS",
         ProviderType.PERPLEXITY: "PERPLEXITY_DISALLOWED_MODELS",
+        ProviderType.CHATGPT: "CHATGPT_DISALLOWED_MODELS",
         ProviderType.OPENROUTER: "OPENROUTER_DISALLOWED_MODELS",
         ProviderType.DIAL: "DIAL_DISALLOWED_MODELS",
     }

@@ -200,6 +200,21 @@ def clear_entra_auth_env(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def clear_chatgpt_env(monkeypatch):
+    """Keep a developer's exported ChatGPT (Codex CLI) settings out of tests."""
+
+    for var in (
+        "CHATGPT_ENABLED",
+        "CHATGPT_CODEX_COMMAND",
+        "CHATGPT_TIMEOUT_SECONDS",
+        "CHATGPT_MODELS_CONFIG_PATH",
+        "CHATGPT_ALLOWED_MODELS",
+        "CHATGPT_DISALLOWED_MODELS",
+    ):
+        monkeypatch.delenv(var, raising=False)
+
+
+@pytest.fixture(autouse=True)
 def disable_force_env_override(monkeypatch):
     """Default tests to runtime environment visibility unless they explicitly opt in."""
 
