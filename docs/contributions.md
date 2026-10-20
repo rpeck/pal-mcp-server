@@ -69,6 +69,7 @@ python communication_simulator_test.py
 - All linting must pass cleanly (ruff, black, isort)
 - Import sorting must be correct
 - Tests failing in GitHub Actions will result in PR rejection
+- To start the GitHub Actions checks by hand, or to run them again, see [Running the Checks in GitHub Actions](testing.md#running-the-checks-in-github-actions)
 
 ### 2. Testing Requirements
 

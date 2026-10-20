@@ -132,6 +132,67 @@ Validate real-world usage scenarios by simulating actual Claude prompts:
 - **Token allocation**: Context window management in practice
 - **Redis validation**: Conversation persistence and retrieval
 
+## Running the Checks in GitHub Actions
+
+The **Code quality checks** workflow (`.github/workflows/test.yml`) runs `./code_quality_checks.sh --check` on
+Python 3.10, 3.11, 3.12, 3.13 and 3.14. It runs:
+
+- on every pull request
+- on every push to `main`
+- when you start it by hand
+
+The workflow runs ruff, black, isort and the unit tests. Integration and simulator tests need API keys or a local
+model, so they do not run in CI.
+
+### Starting a run by hand
+
+You need write access to the repository. GitHub uses the workflow file from the branch that you pick, and that
+file must include the `workflow_dispatch` trigger. Branches made from `main` before the trigger was added do not
+have it; merge or rebase `main` into them first.
+
+**On the GitHub website:**
+
+1. Open the repository's **Actions** tab.
+2. In the list of workflows, select **Code quality checks**.
+3. Click **Run workflow**, select the branch, and click **Run workflow** again.
+
+**With the GitHub CLI:**
+
+```bash
+# Start the checks on a branch
+gh workflow run test.yml --ref <branch>
+
+# Wait a few seconds for the run to appear, then follow it
+gh run list --workflow test.yml --branch <branch> --limit 1
+gh run watch <run-id>
+```
+
+In a fork, add `--repo <owner>/pal-mcp-server` to each command.
+
+### Running the checks again
+
+To repeat a run, for example after a flaky failure:
+
+- **On the website:** open the pull request's **Checks** tab and click **Re-run all jobs** or
+  **Re-run failed jobs**.
+- **With the GitHub CLI:**
+
+  ```bash
+  gh run list --workflow test.yml --branch <branch>   # find the run ID
+  gh run rerun <run-id>                               # run every job again
+  gh run rerun <run-id> --failed                      # run only the failed jobs again
+  ```
+
+### Running the same check locally
+
+```bash
+# Change no files; fail if ruff, black or isort finds a problem, then run the unit tests (what CI runs)
+./code_quality_checks.sh --check
+
+# Fix lint and formatting in place, then run the unit tests
+./code_quality_checks.sh
+```
+
 ## Contributing
 
 For detailed contribution guidelines, testing requirements, and code quality standards, please see our [Contributing Guide](./contributions.md).
