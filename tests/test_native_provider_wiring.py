@@ -41,7 +41,8 @@ SCORE_PINS = [
     ("moonshot_models.json", "kimi-k3", "moonshotai/kimi-k3"),
     ("minimax_models.json", "MiniMax-M3", "minimax/minimax-m3"),
     ("anthropic_models.json", "claude-fable-5-1", "anthropic/claude-fable-5.1"),
-    ("deepseek_models.json", "deepseek-v4.1-flash", "deepseek/deepseek-v4.1-flash"),
+    ("deepseek_models.json", "deepseek-flash", "deepseek/deepseek-v4.1-flash-1017"),
+    ("nvidia_models.json", "nvidia/nemotron-3.5-super-vl-120b-a12b", "nvidia/nemotron-3.5-super-vl"),
     ("qwen_models.json", "qwen3.8-max-0902", "qwen/qwen3.8-max-0902"),
     ("openai_models.json", "gpt-6-astra", "openai/gpt-6-astra"),
     ("anthropic_models.json", "claude-opus-5-5", "anthropic/claude-opus-5.5"),
@@ -244,24 +245,28 @@ def test_gpt6_astra_present_both_routes():
     assert "astra-pro" in pro["aliases"]
 
 
-def test_deepseek_v41_flash_supersedes_retired_models():
-    # V4.1 Flash (AA 40) replaces V4 Flash and V4 Flash Vision Exp, which DeepSeek retired, so the
-    # bare "deepseek" / "deepseek-flash" aliases move to it on both routes.
+def test_deepseek_flash_is_the_api_model_id_and_tracks_the_1017_build():
+    # DeepSeek's API serves V4.1 Flash only as "deepseek-flash" (no "deepseek-v4.1-flash" ID), and PAL sends the
+    # canonical model_name, so the native entry must be named deepseek-flash. The old name stays as an alias.
     ds = _models("deepseek_models.json")
-    assert ds["deepseek-v4.1-flash"]["intelligence_score"] == 13
-    assert ds["deepseek-v4.1-flash"]["supports_images"] is True
-    assert "deepseek" in ds["deepseek-v4.1-flash"]["aliases"]
-    assert "deepseek-flash" in ds["deepseek-v4.1-flash"]["aliases"]
+    flash = ds["deepseek-flash"]
+    assert "deepseek-v4.1-flash" not in ds
+    assert {"deepseek", "deepseek-v4.1-flash"} <= set(flash["aliases"])
+    assert flash["intelligence_score"] == 15  # AA 45 at max, high estimated at 40.5
+    assert flash["aa_index_by_effort"] == {"max": 45}
+    assert flash["supports_images"] is True
     assert "deepseek" not in ds["deepseek-v4-pro"]["aliases"]
     assert "deepseek-flash" not in ds["deepseek-v4-flash"]["aliases"]
     # The retired entries must say so, so nobody treats them as current.
     assert "RETIRED" in ds["deepseek-v4-flash"]["description"]
     assert "RETIRED" in ds["deepseek-v4-flash-vision-exp"]["description"]
-    assert "DEPRECATED" in ds["deepseek-v4-pro"]["description"]
+    # DeepSeek kept V4 Pro running past 2026-09-14 instead of rerouting it.
+    assert "DEPRECATED" not in ds["deepseek-v4-pro"]["description"]
 
     orm = _orm()
+    assert {"deepseek", "deepseek-flash"} <= set(orm["deepseek/deepseek-v4.1-flash-1017"]["aliases"])
+    assert orm["deepseek/deepseek-v4.1-flash"]["aliases"] == ["deepseek-v4.1-flash"]
     assert orm["deepseek/deepseek-v4.1-flash"]["intelligence_score"] == 13
-    assert "deepseek" in orm["deepseek/deepseek-v4.1-flash"]["aliases"]
 
 
 def test_qwen38_max_0902_openrouter_mirror():
@@ -770,3 +775,34 @@ async def test_listmodels_shows_chatgpt_models(monkeypatch, clean_registry):
     assert "## ChatGPT (via Codex CLI) ✅" in content
     assert "`chatgpt/gpt-6.1-sol`" in content
     assert "`chatgpt/sol` → `chatgpt/gpt-6.1-sol`" in content
+
+
+def test_october_19_additions():
+    # Models released or listed 2026-10-13..19: AA values read 2026-10-19, scored on the high-effort ladder.
+    orm = _orm()
+    expected = {
+        "deepseek/deepseek-v4.1-flash-1017": 15,  # max 45, high estimated at 40.5
+        "meta/muse-spark-open": 14,  # xhigh 39, high estimated at 37
+        "reflection/beam-1.0-501b-a23b": 12,  # 30, one row
+        "nvidia/nemotron-3.5-super-vl": 10,  # 26, one row
+        "inception/mercury-3": 12,  # not measured by AA: provisional
+    }
+    for name, score in expected.items():
+        assert orm[name]["intelligence_score"] == score, name
+    # Mercury 3 waits for an AA value, and its description says so.
+    assert "aa_index" not in orm["inception/mercury-3"]
+    assert "PROVISIONAL" in orm["inception/mercury-3"]["description"]
+    assert "diffusion" in orm["inception/mercury-3"]["description"]
+    assert orm["inception/mercury-3"]["supports_images"] is False
+    # New entries declare no effort_levels until a live call confirms the route accepts them.
+    for name in expected:
+        assert "effort_levels" not in orm[name], name
+
+    mm = _models("minimax_models.json")
+    assert mm["MiniMax-M3.1-Flash"]["intelligence_score"] == 17  # 43, one row
+    assert "minimax" in mm["MiniMax-M3.1-Flash"]["aliases"]
+    assert "minimax" not in mm["MiniMax-M3"]["aliases"]
+
+    # NVIDIA's own NIM API lists Nemotron 3.5 Super VL, so it has a native entry too (score-pinned above).
+    nv = _models("nvidia_models.json")
+    assert nv["nvidia/nemotron-3.5-super-vl-120b-a12b"]["supports_images"] is True

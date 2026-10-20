@@ -1,6 +1,6 @@
 # Model catalog (measured models and explicit-only presets)
 
-Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-10-14. Do not edit by hand; run the script after a catalog change.
+Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-10-20. Do not edit by hand; run the script after a catalog change.
 
 - **Scope:** every model with a measured Artificial Analysis (AA) Intelligence Index value, plus the explicit-only presets. Older and unmeasured entries are in the conf files only.
 - **Score:** the 1-20 `intelligence_score` that auto mode ranks by. See [model_ranking.md](model_ranking.md) for how it is anchored to the AA Index.
@@ -54,12 +54,14 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 |---|---|---|---|---|---|
 | Muse Wonder | 18 | max 52 | openrouter: `meta/muse-wonder` | `muse-wonder`, `wonder` |  |
 | Muse Spark 1.3 | 17 | xhigh 45, max 48 | openrouter: `meta/muse-spark-1.3` | `muse`, `muse-spark`, `muse-spark-1.3` |  |
+| Muse Spark Open | 14 | xhigh 39 | openrouter: `meta/muse-spark-open` | `muse-open`, `muse-spark-open` |  |
 
 ## DeepSeek
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
-| DeepSeek V4.1 Flash | 13 | non-reasoning 25, max 39 | native: `deepseek-v4.1-flash`<br>openrouter: `deepseek/deepseek-v4.1-flash` | `deepseek`, `deepseek-flash`, `deepseek-v4.1-flash`, `v4.1-flash` |  |
+| DeepSeek V4.1 Flash | 15 | max 45 | native: `deepseek-flash`<br>openrouter: `deepseek/deepseek-v4.1-flash-1017` | `deepseek`, `deepseek-flash`, `deepseek-v4.1-flash`, `deepseek-v4.1-flash-1017`, `v4.1-flash` |  |
+| DeepSeek V4.1 Flash (2026-09-10 build) | 13 | non-reasoning 25, max 39 | openrouter: `deepseek/deepseek-v4.1-flash` | `deepseek-v4.1-flash` |  |
 | DeepSeek V4 Pro | 12 | non-reasoning 20, max 36 | native: `deepseek-v4-pro`<br>openrouter: `deepseek/deepseek-v4-pro` | `deepseek-v4`, `deepseek-v4-pro` |  |
 
 ## Alibaba (Qwen)
@@ -89,6 +91,7 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
+| MiniMax M3.1 Flash | 17 | default 43 | native: `MiniMax-M3.1-Flash` | `m3.1-flash`, `minimax`, `minimax-m3.1-flash` |  |
 | MiniMax M3 | 11 | default 29 | native: `MiniMax-M3`<br>openrouter: `minimax/minimax-m3` | `minimax`, `minimax-m3` |  |
 
 ## Xiaomi
@@ -108,6 +111,7 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
+| Nemotron 3.5 Super VL | 10 | default 26 | native: `nvidia/nemotron-3.5-super-vl-120b-a12b`<br>openrouter: `nvidia/nemotron-3.5-super-vl` | `nemotron-3.5-super-vl`, `nemotron-super-vl` |  |
 | Nemotron 3 Ultra 550B A55B | 9 | default 23 | openrouter: `nvidia/nemotron-3-ultra-550b-a55b` | `nemotron-3-ultra` |  |
 | Nemotron 3 Super | 6 | default 13 | native: `nvidia/nemotron-3-super-120b-a12b`<br>openrouter: `nvidia/nemotron-3-super-120b-a12b` | `nemotron`, `nemotron-super` |  |
 | Nemotron 3 Nano | 5 | default 9 | native: `nvidia/nemotron-3-nano-30b-a3b`<br>openrouter: `nvidia/nemotron-3-nano-30b-a3b` | `nemotron-nano` |  |
@@ -123,3 +127,9 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
 | Command A Plus | 6 | default 13 | openrouter: `cohere/command-a-plus` | `command-a+`, `command-a-plus` |  |
+
+## Reflection
+
+| Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
+|---|---|---|---|---|---|
+| Beam 1.0 501B A23B | 12 | default 30 | openrouter: `reflection/beam-1.0-501b-a23b` | `beam`, `beam-1.0`, `reflection-beam` |  |

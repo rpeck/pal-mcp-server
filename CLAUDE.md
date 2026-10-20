@@ -16,6 +16,9 @@ source venv/bin/activate
 ./code_quality_checks.sh
 ```
 
+GitHub Actions runs the same script with `--check` (no file changes) on every pull request and every push to
+`main`. To start it by hand, see [Running the Checks in GitHub Actions](docs/testing.md#running-the-checks-in-github-actions).
+
 This script automatically runs:
 - Ruff linting with auto-fix
 - Black code formatting 

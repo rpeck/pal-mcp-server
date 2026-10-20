@@ -48,6 +48,8 @@ OR_LAB = {
     "xiaomi": "Xiaomi",
     "stepfun": "StepFun",
     "cohere": "Cohere",
+    "reflection": "Reflection",
+    "inception": "Inception",
 }
 LAB_ORDER = [
     "Anthropic",
@@ -65,18 +67,30 @@ LAB_ORDER = [
     "NVIDIA",
     "StepFun",
     "Cohere",
+    "Reflection",
+    "Inception",
 ]
 EFFORT_ORDER = ["non-reasoning", "low", "medium", "high", "xhigh", "max", "default"]
 
 
+# Routes whose model IDs differ but serve the same model: native ID -> the OpenRouter ID it matches.
+MERGE_KEYS = {
+    "deepseek-flash": "deepseek/deepseek-v4.1-flash-1017",
+    "nvidia/nemotron-3.5-super-vl-120b-a12b": "nvidia/nemotron-3.5-super-vl",
+}
+
+
 def key_of(name: str) -> str:
     """Merge key for a model across routes: the last path part, normalized."""
-    tail = name.split("/")[-1].lower()
+    tail = MERGE_KEYS.get(name, name).split("/")[-1].lower()
     return tail.replace("claude-", "").replace(".", "-").replace("-it", "")
 
 
-NAME_OVERRIDES = {"mistralai/mistral-large-4-0": "Mistral Large 4"}
-SPECIAL_WORDS = {"mimo": "MiMo", "minimax": "MiniMax"}
+NAME_OVERRIDES = {
+    "mistralai/mistral-large-4-0": "Mistral Large 4",
+    "deepseek/deepseek-v4.1-flash": "DeepSeek V4.1 Flash (2026-09-10 build)",
+}
+SPECIAL_WORDS = {"mimo": "MiMo", "minimax": "MiniMax", "deepseek": "DeepSeek", "vl": "VL"}
 
 
 def pretty(model_id: str) -> str:
