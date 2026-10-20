@@ -1,9 +1,28 @@
 {
   "_README": {
     "description": "NVIDIA Nemotron via NIM OpenAI-compatible API (native provider, NVIDIA_API_KEY).",
-    "usage": "Base URL https://integrate.api.nvidia.com/v1. NIM model IDs use an org/model form. Scores pinned to the nvidia/* OpenRouter mirrors. NOTE: the exact NIM slugs below are PENDING live /models validation (verify on build.nvidia.com before relying on the direct route)."
+    "usage": "Base URL https://integrate.api.nvidia.com/v1. NIM model IDs use an org/model form. Scores pinned to the nvidia/* OpenRouter mirrors. Verify slugs against /v1/models before relying on the direct route: on 2026-10-20 the public list included nvidia/nemotron-3.5-super-vl-120b-a12b and nvidia/nemotron-3-super-120b-a12b, but not nvidia/nemotron-3-nano-30b-a3b (it listed nvidia/nemotron-3-nano-omni-30b-a3b-reasoning instead)."
   },
   "models": [
+    {
+      "model_name": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "friendly_name": "Nemotron 3.5 Super VL",
+      "aliases": ["nemotron-3.5-super-vl", "nemotron-super-vl"],
+      "intelligence_score": 10,
+      "aa_index": 26,
+      "aa_index_by_effort": {"default": 26},
+      "description": "NVIDIA Nemotron 3.5 Super VL (120B-A12B, released 2026-10-15) - open multimodal MoE for text, images, documents, GUI screenshots and video. Direct NIM API; the slug is from NIM's public /v1/models list (read 2026-10-20) and is not live-tested yet. AA Intelligence Index 26 (one row).",
+      "context_window": 262144,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "supports_temperature": true
+    },
     {
       "model_name": "nvidia/nemotron-3-super-120b-a12b",
       "friendly_name": "Nemotron 3 Super",

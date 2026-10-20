@@ -74,7 +74,10 @@ EFFORT_ORDER = ["non-reasoning", "low", "medium", "high", "xhigh", "max", "defau
 
 
 # Routes whose model IDs differ but serve the same model: native ID -> the OpenRouter ID it matches.
-MERGE_KEYS = {"deepseek-flash": "deepseek/deepseek-v4.1-flash-1017"}
+MERGE_KEYS = {
+    "deepseek-flash": "deepseek/deepseek-v4.1-flash-1017",
+    "nvidia/nemotron-3.5-super-vl-120b-a12b": "nvidia/nemotron-3.5-super-vl",
+}
 
 
 def key_of(name: str) -> str:

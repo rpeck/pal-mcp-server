@@ -1,6 +1,6 @@
 # Model catalog (measured models and explicit-only presets)
 
-Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-10-19. Do not edit by hand; run the script after a catalog change.
+Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-10-20. Do not edit by hand; run the script after a catalog change.
 
 - **Scope:** every model with a measured Artificial Analysis (AA) Intelligence Index value, plus the explicit-only presets. Older and unmeasured entries are in the conf files only.
 - **Score:** the 1-20 `intelligence_score` that auto mode ranks by. See [model_ranking.md](model_ranking.md) for how it is anchored to the AA Index.
@@ -111,7 +111,7 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
-| Nemotron 3.5 Super VL | 10 | default 26 | openrouter: `nvidia/nemotron-3.5-super-vl` | `nemotron-3.5-super-vl`, `nemotron-super-vl` |  |
+| Nemotron 3.5 Super VL | 10 | default 26 | native: `nvidia/nemotron-3.5-super-vl-120b-a12b`<br>openrouter: `nvidia/nemotron-3.5-super-vl` | `nemotron-3.5-super-vl`, `nemotron-super-vl` |  |
 | Nemotron 3 Ultra 550B A55B | 9 | default 23 | openrouter: `nvidia/nemotron-3-ultra-550b-a55b` | `nemotron-3-ultra` |  |
 | Nemotron 3 Super | 6 | default 13 | native: `nvidia/nemotron-3-super-120b-a12b`<br>openrouter: `nvidia/nemotron-3-super-120b-a12b` | `nemotron`, `nemotron-super` |  |
 | Nemotron 3 Nano | 5 | default 9 | native: `nvidia/nemotron-3-nano-30b-a3b`<br>openrouter: `nvidia/nemotron-3-nano-30b-a3b` | `nemotron-nano` |  |

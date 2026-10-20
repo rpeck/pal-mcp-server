@@ -42,6 +42,7 @@ SCORE_PINS = [
     ("minimax_models.json", "MiniMax-M3", "minimax/minimax-m3"),
     ("anthropic_models.json", "claude-fable-5-1", "anthropic/claude-fable-5.1"),
     ("deepseek_models.json", "deepseek-flash", "deepseek/deepseek-v4.1-flash-1017"),
+    ("nvidia_models.json", "nvidia/nemotron-3.5-super-vl-120b-a12b", "nvidia/nemotron-3.5-super-vl"),
     ("qwen_models.json", "qwen3.8-max-0902", "qwen/qwen3.8-max-0902"),
     ("openai_models.json", "gpt-6-astra", "openai/gpt-6-astra"),
     ("anthropic_models.json", "claude-opus-5-5", "anthropic/claude-opus-5.5"),
@@ -801,3 +802,7 @@ def test_october_19_additions():
     assert mm["MiniMax-M3.1-Flash"]["intelligence_score"] == 17  # 43, one row
     assert "minimax" in mm["MiniMax-M3.1-Flash"]["aliases"]
     assert "minimax" not in mm["MiniMax-M3"]["aliases"]
+
+    # NVIDIA's own NIM API lists Nemotron 3.5 Super VL, so it has a native entry too (score-pinned above).
+    nv = _models("nvidia_models.json")
+    assert nv["nvidia/nemotron-3.5-super-vl-120b-a12b"]["supports_images"] is True
