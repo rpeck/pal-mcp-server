@@ -1,13 +1,32 @@
 {
   "_README": {
     "description": "MiniMax via its OpenAI-compatible API (native provider, MINIMAX_API_KEY).",
-    "usage": "Base URL https://api.minimax.io/v1. M3 weights are open but 428B, so the API is the practical route. Scores pinned to the minimax/* OpenRouter mirrors. Verify model IDs against /models if a call 404s."
+    "usage": "Base URL https://api.minimax.io/v1. M3 weights are open but 428B, so the API is the practical route. Scores pinned to the minimax/* OpenRouter mirrors where a paid mirror exists. Verify model IDs against /models if a call 404s."
   },
   "models": [
     {
+      "model_name": "MiniMax-M3.1-Flash",
+      "friendly_name": "MiniMax M3.1 Flash",
+      "aliases": ["minimax", "minimax-m3.1-flash", "m3.1-flash"],
+      "intelligence_score": 17,
+      "aa_index": 43,
+      "aa_index_by_effort": {"default": 43},
+      "description": "MiniMax M3.1 Flash (2026-10-19) - multimodal MoE (text and image input, 1M context) for agentic coding; thinking is always on. Direct MiniMax API, $0.15/$0.60 per M. AA Intelligence Index 43 (AA lists one row; MiniMax's default effort is max, so the score at the high-effort anchor may be a little high). OpenRouter offers only a free, rate-limited endpoint so far, so there is no OpenRouter entry.",
+      "context_window": 1000000,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "max_image_size_mb": 20.0
+    },
+    {
       "model_name": "MiniMax-M3",
       "friendly_name": "MiniMax M3",
-      "aliases": ["minimax", "minimax-m3"],
+      "aliases": ["minimax-m3"],
       "intelligence_score": 11,
       "aa_index": 29,
       "aa_index_by_effort": {"default": 29},

@@ -51,7 +51,7 @@ def test_native_provider_live_smoke(ptype, env_var, module, model):
 
 @pytest.mark.integration
 # Cheap, current models from the newest catalog additions. Replace a model here when it is retired.
-@pytest.mark.parametrize("model", ["deepseek-flash", "mimo-v2.6-flash"])
+@pytest.mark.parametrize("model", ["deepseek-flash", "mercury-3", "muse-spark-open", "mimo-v2.6-flash"])
 def test_openrouter_new_models_live_smoke(model):
     key = os.environ.get("OPENROUTER_API_KEY")
     if not key:

@@ -48,6 +48,8 @@ OR_LAB = {
     "xiaomi": "Xiaomi",
     "stepfun": "StepFun",
     "cohere": "Cohere",
+    "reflection": "Reflection",
+    "inception": "Inception",
 }
 LAB_ORDER = [
     "Anthropic",
@@ -65,6 +67,8 @@ LAB_ORDER = [
     "NVIDIA",
     "StepFun",
     "Cohere",
+    "Reflection",
+    "Inception",
 ]
 EFFORT_ORDER = ["non-reasoning", "low", "medium", "high", "xhigh", "max", "default"]
 
@@ -83,7 +87,7 @@ NAME_OVERRIDES = {
     "mistralai/mistral-large-4-0": "Mistral Large 4",
     "deepseek/deepseek-v4.1-flash": "DeepSeek V4.1 Flash (2026-09-10 build)",
 }
-SPECIAL_WORDS = {"mimo": "MiMo", "minimax": "MiniMax", "deepseek": "DeepSeek"}
+SPECIAL_WORDS = {"mimo": "MiMo", "minimax": "MiniMax", "deepseek": "DeepSeek", "vl": "VL"}
 
 
 def pretty(model_id: str) -> str:

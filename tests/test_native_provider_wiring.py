@@ -774,3 +774,30 @@ async def test_listmodels_shows_chatgpt_models(monkeypatch, clean_registry):
     assert "## ChatGPT (via Codex CLI) ✅" in content
     assert "`chatgpt/gpt-6.1-sol`" in content
     assert "`chatgpt/sol` → `chatgpt/gpt-6.1-sol`" in content
+
+
+def test_october_19_additions():
+    # Models released or listed 2026-10-13..19: AA values read 2026-10-19, scored on the high-effort ladder.
+    orm = _orm()
+    expected = {
+        "deepseek/deepseek-v4.1-flash-1017": 15,  # max 45, high estimated at 40.5
+        "meta/muse-spark-open": 14,  # xhigh 39, high estimated at 37
+        "reflection/beam-1.0-501b-a23b": 12,  # 30, one row
+        "nvidia/nemotron-3.5-super-vl": 10,  # 26, one row
+        "inception/mercury-3": 12,  # not measured by AA: provisional
+    }
+    for name, score in expected.items():
+        assert orm[name]["intelligence_score"] == score, name
+    # Mercury 3 waits for an AA value, and its description says so.
+    assert "aa_index" not in orm["inception/mercury-3"]
+    assert "PROVISIONAL" in orm["inception/mercury-3"]["description"]
+    assert "diffusion" in orm["inception/mercury-3"]["description"]
+    assert orm["inception/mercury-3"]["supports_images"] is False
+    # New entries declare no effort_levels until a live call confirms the route accepts them.
+    for name in expected:
+        assert "effort_levels" not in orm[name], name
+
+    mm = _models("minimax_models.json")
+    assert mm["MiniMax-M3.1-Flash"]["intelligence_score"] == 17  # 43, one row
+    assert "minimax" in mm["MiniMax-M3.1-Flash"]["aliases"]
+    assert "minimax" not in mm["MiniMax-M3"]["aliases"]
