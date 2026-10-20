@@ -21,6 +21,7 @@ class ProviderType(Enum):
     MISTRAL = "mistral"
     NVIDIA = "nvidia"
     PERPLEXITY = "perplexity"
+    CHATGPT = "chatgpt"
     OPENROUTER = "openrouter"
     CUSTOM = "custom"
     DIAL = "dial"
