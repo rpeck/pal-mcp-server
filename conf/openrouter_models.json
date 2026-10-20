@@ -963,7 +963,7 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "DeepSeek V4.1 Flash 1017 via OpenRouter (2026-10-17 build) - native image understanding, 1M context, up to 384K output; DeepSeek serves the same build as deepseek-flash. AA Intelligence Index 45 (max effort, read 2026-10-19). Score at the high-effort anchor is an ESTIMATE: AA lists no row at or below high (max 45); high is estimated at 40.5 (range 36-43) from the median max-to-high gap of other models. $0.15/$0.60 per M.",
+      "description": "DeepSeek V4.1 Flash 1017 via OpenRouter (2026-10-17 build) - native image understanding, 1M context, up to 384K output; DeepSeek serves the same build as deepseek-flash. AA Intelligence Index 45 (max effort, read 2026-10-19). Score at the high-effort anchor is an ESTIMATE: AA lists no row at or below high (max 45); high is estimated at 40.5 (range 36-43) from the median max-to-high gap of other models. $0.15/$0.60 per M. Live-tested through PAL's OpenRouter provider on 2026-10-20: it answered correctly.",
       "intelligence_score": 15,
       "aa_index": 40,
       "aa_index_by_effort": {
@@ -1441,7 +1441,7 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "allow_code_generation": true,
-      "description": "Meta Muse Spark Open via OpenRouter (released 2026-10-15) - open-weight 816B-A42B model trained for agentic coding (1M context; weights under the Muse Model License, which has commercial limits). AA Intelligence Index 39 (xhigh). Score at the high-effort anchor is an ESTIMATE: AA lists no row at or below high (xhigh 39); high is estimated at 37 (range 34-39) from the median xhigh-to-high gap of other models. $1.25/$4.25 per M.",
+      "description": "Meta Muse Spark Open via OpenRouter (released 2026-10-15) - open-weight 816B-A42B model trained for agentic coding (1M context; weights under the Muse Model License, which has commercial limits). AA Intelligence Index 39 (xhigh). Score at the high-effort anchor is an ESTIMATE: AA lists no row at or below high (xhigh 39); high is estimated at 37 (range 34-39) from the median xhigh-to-high gap of other models. $1.25/$4.25 per M. Live-tested through PAL's OpenRouter provider on 2026-10-20: it answered correctly, but it spends about 170-300 reasoning tokens even on a one-word answer, so a call with a small max_output_tokens can end before the answer.",
       "intelligence_score": 14,
       "aa_index": 37,
       "aa_index_by_effort": {
@@ -1967,7 +1967,7 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "NVIDIA Nemotron 3.5 Super VL (120B total, 12B active) via OpenRouter (released 2026-10-15) - open multimodal MoE for text, images, documents, GUI screenshots and video (1M context). AA Intelligence Index 26 (one row). $0.15/$0.50 per M. The bare nemotron aliases stay on Nemotron 3 Super, which the native NVIDIA route also serves.",
+      "description": "NVIDIA Nemotron 3.5 Super VL (120B total, 12B active) via OpenRouter (released 2026-10-15) - open multimodal MoE for text, images, documents, GUI screenshots and video (1M context). AA Intelligence Index 26 (one row). $0.15/$0.50 per M. The bare nemotron aliases stay on Nemotron 3 Super, which the native NVIDIA route also serves. Live-tested through PAL's OpenRouter provider on 2026-10-20: it answered correctly (it reasons for about 20-35 tokens before it answers).",
       "intelligence_score": 10,
       "aa_index": 26,
       "aa_index_by_effort": {
@@ -2029,7 +2029,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "allow_code_generation": true,
-      "description": "Reflection Beam 1.0 (501B total, 23B active) via OpenRouter - open-weight text reasoning model for coding and long-horizon agentic work (announced 2026-10-05, on OpenRouter 2026-10-16; 1M context). AA Intelligence Index 30 (one row). $0.30/$1.00 per M.",
+      "description": "Reflection Beam 1.0 (501B total, 23B active) via OpenRouter - open-weight text reasoning model for coding and long-horizon agentic work (announced 2026-10-05, on OpenRouter 2026-10-16; 1M context). AA Intelligence Index 30 (one row). $0.30/$1.00 per M. Live-tested through PAL's OpenRouter provider on 2026-10-20: it answered correctly (it reasons for about 16-30 tokens before it answers).",
       "intelligence_score": 12,
       "aa_index": 30,
       "aa_index_by_effort": {
@@ -2051,7 +2051,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "allow_code_generation": true,
-      "description": "Inception Mercury 3 via OpenRouter (announced 2026-10-19) - a diffusion LLM: it refines many tokens in parallel instead of writing one token at a time, at about 1,000 tokens/s (Inception reports 1,068 on NVIDIA GPUs). 1M context, text only. $0.10/$0.35 per M at launch ($0.20/$0.70 list). PROVISIONAL score: AA has not measured it yet (Mercury 2.5 scores AA 12). Inception says it beats GPT-6 Luna and Claude Haiku 5.5 but published no benchmark scores, so the estimate sits just below GPT-6 Luna (13) until AA measures it.",
+      "description": "Inception Mercury 3 via OpenRouter (announced 2026-10-19) - a diffusion LLM: it refines many tokens in parallel instead of writing one token at a time, at about 1,000 tokens/s (Inception reports 1,068 on NVIDIA GPUs). 1M context, text only. $0.10/$0.35 per M at launch ($0.20/$0.70 list). PROVISIONAL score: AA has not measured it yet (Mercury 2.5 scores AA 12). Inception says it beats GPT-6 Luna and Claude Haiku 5.5 but published no benchmark scores, so the estimate sits just below GPT-6 Luna (13) until AA measures it. Live-tested through PAL's OpenRouter provider on 2026-10-20: it answered correctly.",
       "intelligence_score": 12
     }
   ]
