@@ -17,6 +17,8 @@ permissions:
 jobs:
   docker:
     name: Build and Push Docker Image
+    # Upstream only: on a fork this job would publish releases, tags or images.
+    if: github.repository == 'BeehiveInnovations/pal-mcp-server'
     runs-on: ubuntu-latest
     
     steps:

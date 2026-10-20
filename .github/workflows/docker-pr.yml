@@ -20,11 +20,14 @@ jobs:
   docker:
     name: Build Docker Image
     runs-on: ubuntu-latest
+    # Upstream only: on a fork this job would publish releases, tags or images.
     if: |
-      github.event.action == 'opened' ||
-      github.event.action == 'synchronize' ||
-      github.event.action == 'reopened' ||
-      contains(github.event.pull_request.labels.*.name, 'docker-build')
+      github.repository == 'BeehiveInnovations/pal-mcp-server' && (
+        github.event.action == 'opened' ||
+        github.event.action == 'synchronize' ||
+        github.event.action == 'reopened' ||
+        contains(github.event.pull_request.labels.*.name, 'docker-build')
+      )
     
     steps:
       - name: Checkout

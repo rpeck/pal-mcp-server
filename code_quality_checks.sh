@@ -3,8 +3,20 @@
 # PAL MCP Server - Code Quality Checks
 # This script runs all required linting and testing checks before committing changes.
 # ALL checks must pass 100% for CI/CD to succeed.
+#
+# Usage:
+#   ./code_quality_checks.sh          Fix lint and formatting in place, then run the unit tests.
+#   ./code_quality_checks.sh --check  Change no files. Fail if ruff, black or isort finds a problem
+#                                     (GitHub Actions runs this mode).
 
 set -e  # Exit on any error
+
+CHECK_ONLY=false
+case "${1:-}" in
+    "") ;;
+    --check) CHECK_ONLY=true ;;
+    *) echo "Usage: $0 [--check]"; exit 2 ;;
+esac
 
 echo "🔍 Running Code Quality Checks for PAL MCP Server"
 echo "================================================="
@@ -18,6 +30,11 @@ elif [[ -n "$VIRTUAL_ENV" ]]; then
     PYTHON_CMD="python"
     PIP_CMD="pip"
     echo "✅ Using activated virtual environment: $VIRTUAL_ENV"
+elif [[ "${CI:-}" == "true" ]]; then
+    # CI runners (GitHub Actions sets CI=true) install the dependencies into the job's own Python.
+    PYTHON_CMD="python"
+    PIP_CMD="python -m pip"
+    echo "✅ Using the CI Python: $(python --version)"
 else
     echo "❌ No virtual environment found!"
     echo "Please run: ./run-server.sh first to set up the environment"
@@ -66,17 +83,28 @@ echo ""
 echo "📋 Step 1: Running Linting and Formatting Checks"
 echo "--------------------------------------------------"
 
-echo "🔧 Running ruff linting with auto-fix..."
-$RUFF check --fix --exclude test_simulation_files --exclude .pal_venv
+if [ "$CHECK_ONLY" = true ]; then
+    echo "🔧 Running ruff linting (check only)..."
+    $RUFF check --exclude test_simulation_files --exclude .pal_venv
 
-echo "🎨 Running black code formatting..."
-$BLACK . --exclude="test_simulation_files/" --exclude=".pal_venv/"
+    echo "🎨 Checking black code formatting..."
+    $BLACK --check --diff . --exclude="test_simulation_files/" --exclude=".pal_venv/"
 
-echo "📦 Running import sorting with isort..."
-$ISORT . --skip-glob=".pal_venv/*" --skip-glob="test_simulation_files/*"
+    echo "📦 Checking import sorting with isort..."
+    $ISORT --check-only --diff . --skip-glob=".pal_venv/*" --skip-glob="test_simulation_files/*"
+else
+    echo "🔧 Running ruff linting with auto-fix..."
+    $RUFF check --fix --exclude test_simulation_files --exclude .pal_venv
 
-echo "✅ Verifying all linting passes..."
-$RUFF check --exclude test_simulation_files --exclude .pal_venv
+    echo "🎨 Running black code formatting..."
+    $BLACK . --exclude="test_simulation_files/" --exclude=".pal_venv/"
+
+    echo "📦 Running import sorting with isort..."
+    $ISORT . --skip-glob=".pal_venv/*" --skip-glob="test_simulation_files/*"
+
+    echo "✅ Verifying all linting passes..."
+    $RUFF check --exclude test_simulation_files --exclude .pal_venv
+fi
 
 echo "✅ Step 1 Complete: All linting and formatting checks passed!"
 echo ""

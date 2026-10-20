@@ -12,6 +12,8 @@ permissions:
 
 jobs:
   release:
+    # Upstream only: on a fork this job would publish releases, tags or images.
+    if: github.repository == 'BeehiveInnovations/pal-mcp-server'
     runs-on: ubuntu-latest
     concurrency: release
 
@@ -24,7 +26,7 @@ jobs:
           persist-credentials: true
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
