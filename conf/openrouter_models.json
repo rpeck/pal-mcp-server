@@ -932,8 +932,6 @@
     {
       "model_name": "deepseek/deepseek-v4.1-flash",
       "aliases": [
-        "deepseek",
-        "deepseek-flash",
         "deepseek-v4.1-flash"
       ],
       "context_window": 1048576,
@@ -943,12 +941,33 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "DeepSeek V4.1 Flash via OpenRouter (2026-09-10) - 763B params with native image understanding, 1M context, AA Intelligence Index 40 (max effort). Supersedes V4 Flash and V4 Flash Vision Exp. Score at the high-effort anchor is an ESTIMATE: AA lists no row at or below high (max 39); high is estimated at 34.5 (range 30-37) from the median max-to-high gap of other models.",
+      "description": "DeepSeek V4.1 Flash via OpenRouter, 2026-09-10 build - 763B params with native image understanding, 1M context. Superseded by deepseek/deepseek-v4.1-flash-1017, which now holds the bare deepseek and deepseek-flash aliases. AA no longer lists this build; its values (non-reasoning 25, max 39) are from the 2026-10-12 read. Score at the high-effort anchor is an ESTIMATE: high is estimated at 34.5 (range 30-37) from the median max-to-high gap of other models.",
       "intelligence_score": 13,
       "aa_index": 34,
       "aa_index_by_effort": {
         "non-reasoning": 25,
         "max": 39
+      }
+    },
+    {
+      "model_name": "deepseek/deepseek-v4.1-flash-1017",
+      "aliases": [
+        "deepseek",
+        "deepseek-flash",
+        "deepseek-v4.1-flash-1017"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 393216,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "description": "DeepSeek V4.1 Flash 1017 via OpenRouter (2026-10-17 build) - native image understanding, 1M context, up to 384K output; DeepSeek serves the same build as deepseek-flash. AA Intelligence Index 45 (max effort, read 2026-10-19). Score at the high-effort anchor is an ESTIMATE: AA lists no row at or below high (max 45); high is estimated at 40.5 (range 36-43) from the median max-to-high gap of other models. $0.15/$0.60 per M.",
+      "intelligence_score": 15,
+      "aa_index": 40,
+      "aa_index_by_effort": {
+        "max": 45
       }
     },
     {

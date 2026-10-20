@@ -1,6 +1,6 @@
 # Model catalog (measured models and explicit-only presets)
 
-Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-10-14. Do not edit by hand; run the script after a catalog change.
+Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-10-19. Do not edit by hand; run the script after a catalog change.
 
 - **Scope:** every model with a measured Artificial Analysis (AA) Intelligence Index value, plus the explicit-only presets. Older and unmeasured entries are in the conf files only.
 - **Score:** the 1-20 `intelligence_score` that auto mode ranks by. See [model_ranking.md](model_ranking.md) for how it is anchored to the AA Index.
@@ -59,7 +59,8 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
-| DeepSeek V4.1 Flash | 13 | non-reasoning 25, max 39 | native: `deepseek-v4.1-flash`<br>openrouter: `deepseek/deepseek-v4.1-flash` | `deepseek`, `deepseek-flash`, `deepseek-v4.1-flash`, `v4.1-flash` |  |
+| DeepSeek V4.1 Flash | 15 | max 45 | native: `deepseek-flash`<br>openrouter: `deepseek/deepseek-v4.1-flash-1017` | `deepseek`, `deepseek-flash`, `deepseek-v4.1-flash`, `deepseek-v4.1-flash-1017`, `v4.1-flash` |  |
+| DeepSeek V4.1 Flash (2026-09-10 build) | 13 | non-reasoning 25, max 39 | openrouter: `deepseek/deepseek-v4.1-flash` | `deepseek-v4.1-flash` |  |
 | DeepSeek V4 Pro | 12 | non-reasoning 20, max 36 | native: `deepseek-v4-pro`<br>openrouter: `deepseek/deepseek-v4-pro` | `deepseek-v4`, `deepseek-v4-pro` |  |
 
 ## Alibaba (Qwen)

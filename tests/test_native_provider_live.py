@@ -17,7 +17,7 @@ from providers.shared import ProviderType
 
 # (ProviderType, env var, provider module, a cheap model/alias to ping)
 LIVE_VENDORS = [
-    (ProviderType.DEEPSEEK, "DEEPSEEK_API_KEY", "providers.deepseek", "deepseek-v4.1-flash"),
+    (ProviderType.DEEPSEEK, "DEEPSEEK_API_KEY", "providers.deepseek", "deepseek-flash"),
     (ProviderType.QWEN, "DASHSCOPE_API_KEY", "providers.qwen", "qwen-flash"),
     (ProviderType.ZAI, "ZAI_API_KEY", "providers.zai", "glm-5.3"),
     (ProviderType.MOONSHOT, "MOONSHOT_API_KEY", "providers.moonshot", "kimi-k3"),
@@ -51,7 +51,7 @@ def test_native_provider_live_smoke(ptype, env_var, module, model):
 
 @pytest.mark.integration
 # Cheap, current models from the newest catalog additions. Replace a model here when it is retired.
-@pytest.mark.parametrize("model", ["deepseek-v4.1-flash", "mimo-v2.6-flash"])
+@pytest.mark.parametrize("model", ["deepseek-flash", "mimo-v2.6-flash"])
 def test_openrouter_new_models_live_smoke(model):
     key = os.environ.get("OPENROUTER_API_KEY")
     if not key:
