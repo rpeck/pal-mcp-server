@@ -2051,7 +2051,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "allow_code_generation": true,
-      "description": "Inception Mercury 3 via OpenRouter (announced 2026-10-19) - a diffusion LLM: it refines many tokens in parallel instead of writing one token at a time, at about 1,000 tokens/s (Inception reports 1,068 on NVIDIA GPUs). 1M context, text only. $0.10/$0.35 per M at launch ($0.20/$0.70 list). PROVISIONAL score: AA has not measured it yet (Mercury 2.5 scores AA 12). Inception says it beats GPT-6 Luna and Claude Haiku 5.5 but published no benchmark scores, so the estimate sits just below GPT-6 Luna (13) until AA measures it. Live-tested through PAL's OpenRouter provider on 2026-10-20: it answered correctly.",
+      "description": "Inception Mercury 3 via OpenRouter (announced 2026-10-19) - a diffusion LLM: it refines many tokens in parallel instead of writing one token at a time, at about 1,000 tokens/s (Inception reports 1,068 on NVIDIA GPUs). 1M context, text only. $0.10/$0.35 per M at launch ($0.20/$0.70 list). PROVISIONAL score: AA has not measured it yet (Mercury 2.5 scores AA 12). Inception's launch post reports its own scores at medium effort: Mercury 3 beats GPT-6 Luna and Claude Haiku 5.5 on 8 of 12 benchmarks (for example SWE-Bench Atlas 51.1 vs 33.3 and 32.3) and trails Haiku on DeepSWE (46.3 vs 51.6). No third party has checked them, so the estimate sits just below GPT-6 Luna (13) until AA measures it. Reasoning effort: instant, low, medium or high (default low); Inception documents no xhigh or max level. Live-tested through PAL's OpenRouter provider on 2026-10-20: it answered correctly.",
       "intelligence_score": 12
     }
   ]
