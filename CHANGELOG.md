@@ -2,6 +2,15 @@
 
 <!-- version list -->
 
+## Unreleased
+
+### Features
+
+- Read API keys from 1Password: set a variable to an `op://` secret reference, and PAL reads the secret with
+  `op read` on first use and keeps it until it stops. If 1Password is locked, `op` shows a Touch ID prompt. PAL
+  waits up to `PAL_OP_TIMEOUT_SECONDS` (default 60) for it. If the read fails, PAL logs one warning and treats the
+  key as not set. See [1Password References](docs/configuration.md#1password-references).
+
 ## v9.8.2 (2025-12-15)
 
 ### Bug Fixes

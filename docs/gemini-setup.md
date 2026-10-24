@@ -10,6 +10,7 @@ This guide explains how to configure PAL MCP Server to work with [Gemini CLI](ht
 - PAL MCP Server installed and configured
 - Gemini CLI installed
 - At least one API key configured in your `.env` file
+  (a key can be a 1Password `op://` reference; see [1Password References](configuration.md#1password-references))
 
 ## Configuration
 

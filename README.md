@@ -205,6 +205,7 @@ cd pal-mcp-server
 ## Provider Configuration
 
 PAL activates any provider that has credentials in your `.env`. See `.env.example` for deeper customization.
+An API key can also be a 1Password `op://` reference: see [1Password References](docs/configuration.md#1password-references).
 
 ### Sign in instead of an API key
 
