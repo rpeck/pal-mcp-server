@@ -79,6 +79,11 @@ See [Logging Documentation](logging.md) for more details on accessing logs.
 - Claude Desktop starts servers with a minimal PATH; set `CHATGPT_CODEX_COMMAND` to the full path from `which codex`
 - See [ChatGPT Models via Codex CLI › Troubleshooting](chatgpt_provider.md#troubleshooting)
 
+**A provider shows ❌ although its key is an `op://` reference**
+- `grep 1Password logs/mcp_server.log` shows the `op` error: `op` not on PATH, not signed in, a timeout, or a wrong reference
+- PAL does not try a failed reference again. Fix the cause, then restart PAL
+- See [1Password Secret References › Troubleshooting](1password.md#troubleshooting)
+
 **Azure or Foundry calls fail with 401/403 in Entra mode**
 - Run `az login` (and `az account set --subscription <id>`) in the account PAL runs as
 - Your identity needs a data-plane role on the resource, not only Owner or Contributor. See [Entra ID Authentication](entra_auth.md)

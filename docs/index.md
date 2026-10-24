@@ -9,6 +9,7 @@ _Formerly known as PAL MCP. See the short [name change note](name-change.md) for
 | [Azure OpenAI](azure_openai.md) | Configure Azure deployments, capability overrides, and env mappings. |
 | [Entra ID Authentication](entra_auth.md) | Use your `az login` identity instead of API keys for Azure OpenAI and Claude on Azure AI Foundry. |
 | [ChatGPT Models via Codex CLI](chatgpt_provider.md) | Use ChatGPT-plan models (`codex login`) from every PAL tool, without an API key. |
+| [1Password Secret References](1password.md) | Keep API keys in 1Password and give PAL `op://` references instead of plaintext. |
 | [Model Ranking](model_ranking.md) | How intelligence scores translate into auto-mode ordering. |
 | [Model Catalog](model_catalog.md) | Every measured model: score, per-effort AA Index values, routes, and aliases (generated). |
 | [Custom Models](custom_models.md) | Configure OpenRouter/custom models and aliases. |

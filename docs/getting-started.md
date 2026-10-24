@@ -217,6 +217,7 @@ Edit `~/.config/opencode/opencode.json`:
 ```
 
 Add any other API keys you rely on (`OPENAI_API_KEY`, `OPENROUTER_API_KEY`, etc.).
+A key can be a 1Password `op://` reference instead of plaintext. See [1Password Secret References](1password.md).
 
 #### IDE Clients (Cursor & VS Code)
 
@@ -472,6 +473,9 @@ Versions 0.2.1 and newer currently ignore values above ~60 seconds for some tran
 **Signed-in providers (no API key):**
 - ChatGPT models: `codex login status` must print `Logged in using ChatGPT`. See [ChatGPT Models via Codex CLI](chatgpt_provider.md#troubleshooting)
 - Entra ID: `az account show` must succeed and your identity needs a data-plane role. See [Entra ID Authentication](entra_auth.md)
+
+**1Password `op://` references:**
+- `grep 1Password logs/mcp_server.log` shows why a read failed. See [1Password Secret References › Troubleshooting](1password.md#troubleshooting)
 
 **"Model not available":**
 - Run `"Use pal to list available models"` to see what's configured

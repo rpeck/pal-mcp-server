@@ -2,6 +2,20 @@
 
 <!-- version list -->
 
+## Unreleased
+
+### Features
+
+- Read API keys from 1Password: set a variable to an `op://` secret reference, and PAL reads the secret with
+  `op read` on first use and keeps it until it stops. If 1Password is locked, `op` shows a Touch ID prompt. PAL
+  waits up to `PAL_OP_TIMEOUT_SECONDS` (default 60) for it. If the read fails, PAL logs one warning and treats the
+  key as not set. See [1Password Secret References](docs/1password.md).
+
+### Bug Fixes
+
+- `run-server.sh`: when it makes a new `.env` from shell variables, it now copies each key as plain text. Before,
+  `sed` stopped the script for a value with `/` (every `op://` reference), and changed a value with `&` or `\`.
+
 ## v9.8.2 (2025-12-15)
 
 ### Bug Fixes
