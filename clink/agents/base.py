@@ -16,6 +16,7 @@ from pathlib import Path
 from clink.constants import DEFAULT_STREAM_LIMIT
 from clink.models import ResolvedCLIClient, ResolvedCLIRole
 from clink.parsers import BaseParser, ParsedCLIResponse, ParserError, get_parser
+from utils.env import OP_REFERENCE_PREFIX, get_env
 
 logger = logging.getLogger("clink.agent")
 
@@ -200,6 +201,14 @@ class BaseCLIAgent:
 
     def _build_environment(self) -> dict[str, str]:
         env = os.environ.copy()
+        # The CLI cannot read 1Password references: give it the secret, or drop the variable if op failed.
+        for name, value in os.environ.items():
+            if value.startswith(OP_REFERENCE_PREFIX):
+                secret = get_env(name)
+                if secret is None:
+                    env.pop(name)
+                else:
+                    env[name] = secret
         env.update(self.client.env)
         return env
 

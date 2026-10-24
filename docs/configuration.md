@@ -87,6 +87,42 @@ CUSTOM_MODEL_NAME=llama3.2                          # Default model
 - Use standard localhost URLs since the server runs natively
 - Example: `http://localhost:11434/v1` for Ollama
 
+### 1Password References
+
+An API key can be a 1Password secret reference instead of a plaintext value. PAL reads the secret with
+`op read` the first time it needs the variable. It keeps the result in memory until it stops.
+
+Use a reference in the `env` block of your MCP client configuration (for example `~/.claude.json`):
+
+```json
+"env": {
+  "GEMINI_API_KEY": "op://my-vault/gemini-api-key/credential"
+}
+```
+
+Or use it in `.env`:
+
+```env
+GEMINI_API_KEY=op://my-vault/gemini-api-key/credential
+```
+
+- **Requirements**: The [1Password CLI](https://developer.1password.com/docs/cli/) (`op`) must be on the `PATH` of
+  the PAL process. Turn on the 1Password app integration (Settings > Developer > Integrate with 1Password CLI), so
+  that `op` can sign in without a terminal.
+- **Touch ID**: If 1Password is locked, `op` shows a Touch ID prompt. PAL reads the provider keys when it starts,
+  so the prompt shows when your MCP client starts PAL.
+- **Timeout**: PAL waits up to `PAL_OP_TIMEOUT_SECONDS` seconds for `op read` (default `60`). PAL answers the MCP
+  client only after this step. If your client has a shorter startup timeout, unlock 1Password before you start it.
+- **Account**: If `op` is signed in to more than one account, set `PAL_OP_ACCOUNT` to the sign-in address or the
+  account ID. PAL passes it to `op read --account`.
+- **Failures**: If `op read` fails, PAL logs one warning with the variable name and the `op` error. The key then
+  counts as not set, and its provider shows as not configured. PAL does not try that reference again until it
+  restarts.
+- **Logs**: PAL never logs the secret. Use references for API keys only: PAL logs some other settings, such as
+  `CUSTOM_API_URL`, with their value.
+- **clink**: The CLI agents that `clink` starts get the secret, not the reference. If `op read` failed, the agent
+  does not get the variable.
+
 ### Model Configuration
 
 **Default Model Selection:**
