@@ -3,8 +3,10 @@ Pytest configuration for PAL MCP Server tests
 """
 
 import asyncio
+import atexit
 import importlib
 import os
+import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -17,6 +19,12 @@ if sys.platform == "darwin":
     os.environ["TMPDIR"] = "/tmp"
     # tempfile caches the temp dir after first lookup; clear it so pytest fixtures pick up TMPDIR.
     tempfile.tempdir = None
+
+# server.py adds handlers for logs/mcp_server.log and logs/mcp_activity.log when a test imports it.
+# Send those lines to a temporary directory, so the real logs show only real server runs.
+_TEST_LOG_DIR = tempfile.mkdtemp(prefix="pal-test-logs-")
+os.environ["PAL_TEST_LOG_DIR"] = _TEST_LOG_DIR
+atexit.register(shutil.rmtree, _TEST_LOG_DIR, ignore_errors=True)
 
 # Ensure the parent directory is in the Python path for imports
 parent_dir = Path(__file__).resolve().parent.parent

@@ -19,6 +19,9 @@ python -m pytest -xvs
 python -m pytest tests/test_providers.py -xvs
 ```
 
+The unit tests write the server's log lines to a temporary directory that is deleted after the run. So
+`logs/mcp_server.log` and `logs/mcp_activity.log` show only real server runs.
+
 ### Simulator Tests
 
 Simulator tests replicate real-world Claude CLI interactions with the standalone MCP server. Unlike unit tests that test isolated functions, simulator tests validate the complete end-to-end flow including:
