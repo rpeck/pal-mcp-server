@@ -112,8 +112,9 @@ root_logger.setLevel(getattr(logging, log_level, logging.INFO))
 # Add rotating file handler for local log monitoring
 
 try:
-    # Create logs directory in project root
-    log_dir = Path(__file__).parent / "logs"
+    # Create logs directory in project root. The unit tests set PAL_TEST_LOG_DIR so that they do not write to it;
+    # it is a test hook, not a setting, so it comes from os.environ even when .env overrides the environment.
+    log_dir = Path(os.environ.get("PAL_TEST_LOG_DIR") or Path(__file__).parent / "logs")
     log_dir.mkdir(exist_ok=True)
 
     # Main server log with size-based rotation (20MB max per file)
