@@ -2,9 +2,29 @@
 Tests for the main server functionality
 """
 
+import logging
+import os
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
+
 import pytest
 
 from server import handle_call_tool
+
+
+def test_unit_tests_write_server_logs_to_a_temporary_directory():
+    """conftest.py sets PAL_TEST_LOG_DIR; every log file that server.py opens must be there, not in logs/."""
+    test_log_dir = Path(os.environ["PAL_TEST_LOG_DIR"]).resolve()
+    handlers = [
+        handler
+        for logger in (logging.getLogger(), logging.getLogger("mcp_activity"))
+        for handler in logger.handlers
+        if isinstance(handler, RotatingFileHandler)
+    ]
+
+    assert handlers
+    for handler in handlers:
+        assert Path(handler.baseFilename).resolve().parent == test_log_dir
 
 
 class TestServerTools:
