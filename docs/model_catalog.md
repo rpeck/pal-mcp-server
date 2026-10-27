@@ -1,6 +1,6 @@
 # Model catalog (measured models and explicit-only presets)
 
-Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-10-20. Do not edit by hand; run the script after a catalog change.
+Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-10-27. Do not edit by hand; run the script after a catalog change.
 
 - **Scope:** every model with a measured Artificial Analysis (AA) Intelligence Index value, plus the explicit-only presets. Older and unmeasured entries are in the conf files only.
 - **Score:** the 1-20 `intelligence_score` that auto mode ranks by. See [model_ranking.md](model_ranking.md) for how it is anchored to the AA Index.
@@ -26,7 +26,9 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 | GPT-6.1 Sol Pro | 19 | not measured | openrouter: `openai/gpt-6.1-sol-pro` | `gpt-6.1-sol-pro`, `or-gpt6.1-sol-pro` | explicit-only, provisional score |
 | OpenAI (GPT-6 Astra) | 19 | low 46, medium 50, high 51, xhigh 52, max 53 | native: `gpt-6-astra`<br>openrouter: `openai/gpt-6-astra`<br>chatgpt: `chatgpt/gpt-6-astra` | `astra`, `gpt6-astra`, `gpt6astra`, `or-gpt6-astra` |  |
 | GPT-6 Astra Pro | 19 | not measured | openrouter: `openai/gpt-6-astra-pro` | `astra-pro`, `gpt6-astra-pro`, `or-gpt6-astra-pro` | explicit-only, provisional score |
-| OpenAI (GPT-5.6 Terra) | 13 | non-reasoning 21, low 27, medium 30, high 34, xhigh 38, max 42 | native: `gpt-5.6-terra`<br>openrouter: `openai/gpt-5.6-terra`<br>chatgpt: `chatgpt/gpt-5.6-terra` | `gpt5.6-terra`, `gpt5.6terra`, `or-gpt5.6-terra`, `terra` |  |
+| OpenAI (GPT-6.1 Terra) | 17 | non-reasoning 33, low 36, medium 41, high 44, xhigh 45, max 48 | native: `gpt-6.1-terra`<br>openrouter: `openai/gpt-6.1-terra`<br>chatgpt: `chatgpt/gpt-6.1-terra` | `gpt6.1-terra`, `gpt6.1terra`, `or-gpt6.1-terra`, `terra` |  |
+| GPT-6.1 Terra Pro | 17 | not measured | openrouter: `openai/gpt-6.1-terra-pro` | `gpt-6.1-terra-pro`, `or-gpt6.1-terra-pro` | explicit-only, provisional score |
+| OpenAI (GPT-5.6 Terra) | 13 | non-reasoning 21, low 27, medium 30, high 34, xhigh 38, max 42 | native: `gpt-5.6-terra`<br>openrouter: `openai/gpt-5.6-terra`<br>chatgpt: `chatgpt/gpt-5.6-terra` | `gpt5.6-terra`, `gpt5.6terra`, `or-gpt5.6-terra` |  |
 | OpenAI (GPT-6 Luna) | 13 | non-reasoning 18, low 22, medium 30, high 33, xhigh 35, max 38 | native: `gpt-6-luna`<br>openrouter: `openai/gpt-6-luna`<br>chatgpt: `chatgpt/gpt-6-luna` | `gpt6-luna`, `gpt6luna`, `luna`, `or-gpt6-luna` |  |
 | GPT-6 Luna Pro | 13 | not measured | openrouter: `openai/gpt-6-luna-pro` | `gpt-6-luna-pro`, `or-gpt6-luna-pro` | explicit-only, provisional score |
 | GPT-OSS 120B | 6 | high 12 | openrouter: `openai/gpt-oss-120b` | `gpt-oss`, `gpt-oss-120b` |  |
@@ -84,15 +86,17 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
-| Kimi K3 | 14 | low 30, max 44 | native: `kimi-k3`<br>openrouter: `moonshotai/kimi-k3` | `kimi`, `kimi-k3` |  |
+| Kimi K3.1 Pro | 20 | default 55 | native: `kimi-k3.1-pro`<br>openrouter: `moonshotai/kimi-k3.1-pro` | `kimi`, `kimi-k3.1-pro` |  |
+| Kimi K3.1 Pro Highspeed | 20 | not measured | native: `kimi-k3.1-pro-highspeed` | `kimi-highspeed`, `kimi-k3.1-pro-highspeed` | explicit-only, provisional score |
+| Kimi K3 | 14 | low 30, max 44 | native: `kimi-k3`<br>openrouter: `moonshotai/kimi-k3` | `kimi-k3` |  |
 | Kimi K2.7 Code | 10 | default 26 | openrouter: `moonshotai/kimi-k2.7-code` | `kimi-k2.7-code` |  |
 
 ## MiniMax
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
-| MiniMax M3.1 Flash | 17 | default 43 | native: `MiniMax-M3.1-Flash` | `m3.1-flash`, `minimax`, `minimax-m3.1-flash` |  |
-| MiniMax M3 | 11 | default 29 | native: `MiniMax-M3`<br>openrouter: `minimax/minimax-m3` | `minimax`, `minimax-m3` |  |
+| MiniMax M3.1 Flash | 17 | default 43 | native: `MiniMax-M3.1-Flash`<br>openrouter: `minimax/minimax-m3.1-flash` | `m3.1-flash`, `minimax`, `minimax-m3.1-flash` |  |
+| MiniMax M3 | 11 | default 29 | native: `MiniMax-M3`<br>openrouter: `minimax/minimax-m3` | `minimax-m3` |  |
 
 ## Xiaomi
 

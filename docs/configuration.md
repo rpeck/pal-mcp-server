@@ -148,7 +148,7 @@ With `DYNAMIC_MODEL_SELECTION` unset, auto-mode uses upstream's selection *algor
   | Provider | Current flagships | Notable aliases |
   |----------|-------------------|-----------------|
   | Anthropic | `claude-opus-5-5`, `claude-fable-5-1`, `claude-sonnet-5-5`, `claude-haiku-5-5` | `opus`, `fable`, `sonnet`, `haiku` |
-  | OpenAI | `gpt-6-astra`, `gpt-6.1-sol`, `gpt-6-luna`, plus the GPT-5.x family | `astra`, `sol`, `luna` |
+  | OpenAI | `gpt-6-astra`, `gpt-6.1-sol`, `gpt-6.1-terra`, `gpt-6-luna`, plus the GPT-5.x family | `astra`, `sol`, `terra`, `luna` |
   | Gemini | `gemini-4-argon`, `gemini-3.8-flash`, `gemini-3.1-pro-preview` | `argon`, `flash3.8`, `gemini-flash-latest` |
   | X.AI | `grok-4.7`, `grok-4` | `grok-4.7`, `grok` |
   | Native open-model APIs | DeepSeek, Qwen, GLM, Kimi, MiniMax, Mistral, NVIDIA, Perplexity | per conf file |

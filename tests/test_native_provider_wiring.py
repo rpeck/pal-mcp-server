@@ -52,6 +52,9 @@ SCORE_PINS = [
     ("xai_models.json", "grok-4.7", "x-ai/grok-4.7"),
     ("anthropic_models.json", "claude-haiku-5-5", "anthropic/claude-haiku-5.5"),
     ("gemini_models.json", "gemini-4-argon", "google/gemini-4-argon"),
+    ("openai_models.json", "gpt-6.1-terra", "openai/gpt-6.1-terra"),
+    ("moonshot_models.json", "kimi-k3.1-pro", "moonshotai/kimi-k3.1-pro"),
+    ("minimax_models.json", "MiniMax-M3.1-Flash", "minimax/minimax-m3.1-flash"),
 ]
 
 
@@ -806,3 +809,46 @@ def test_october_19_additions():
     # NVIDIA's own NIM API lists Nemotron 3.5 Super VL, so it has a native entry too (score-pinned above).
     nv = _models("nvidia_models.json")
     assert nv["nvidia/nemotron-3.5-super-vl-120b-a12b"]["supports_images"] is True
+
+
+def test_october_26_additions():
+    # Models released or listed 2026-10-20..26: AA values read 2026-10-27, scored on the high-effort ladder.
+    orm = _orm()
+    expected = {
+        "openai/gpt-6.1-terra": 17,  # high 44
+        "openai/gpt-6.1-terra-pro": 17,  # not measured by AA: provisional, pinned to Terra
+        "moonshotai/kimi-k3.1-pro": 20,  # 55, one row
+        "minimax/minimax-m3.1-flash": 17,  # 43, one row
+    }
+    for name, score in expected.items():
+        assert orm[name]["intelligence_score"] == score, name
+    assert orm["openai/gpt-6.1-terra-pro"]["auto_selectable"] is False
+    assert "PROVISIONAL" in orm["openai/gpt-6.1-terra-pro"]["description"]
+    # A live call on 2026-10-27 confirmed that OpenRouter accepts every effort level for Terra.
+    assert orm["openai/gpt-6.1-terra"]["effort_levels"] == ["low", "medium", "high", "xhigh", "max"]
+    for name in ("moonshotai/kimi-k3.1-pro", "minimax/minimax-m3.1-flash"):
+        assert "effort_levels" not in orm[name], name
+
+    # Bare family aliases follow newest-wins off the superseded entries, on both routes.
+    oa = _models("openai_models.json")
+    ms = _models("moonshot_models.json")
+    assert "terra" in oa["gpt-6.1-terra"]["aliases"]
+    assert "terra" not in oa["gpt-5.6-terra"]["aliases"]
+    assert "effort_levels" not in oa["gpt-6.1-terra"]  # the native route is not live-tested yet
+    for catalog, new, old in (
+        (ms, "kimi-k3.1-pro", "kimi-k3"),
+        (orm, "moonshotai/kimi-k3.1-pro", "moonshotai/kimi-k3"),
+    ):
+        assert "kimi" in catalog[new]["aliases"]
+        assert "kimi" not in catalog[old]["aliases"]
+    assert "minimax" in orm["minimax/minimax-m3.1-flash"]["aliases"]
+    assert "minimax" not in orm["minimax/minimax-m3"]["aliases"]
+
+    # Kimi K3.1 Pro Highspeed: native only, provisional at parity with K3.1 Pro, and explicit-only
+    # because it costs twice as much at the same score.
+    hs = ms["kimi-k3.1-pro-highspeed"]
+    assert hs["intelligence_score"] == ms["kimi-k3.1-pro"]["intelligence_score"]
+    assert hs["auto_selectable"] is False
+    assert "aa_index" not in hs
+    assert "PROVISIONAL" in hs["description"]
+    assert "kimi" not in hs["aliases"]

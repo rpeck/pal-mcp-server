@@ -11,7 +11,7 @@
       "intelligence_score": 17,
       "aa_index": 43,
       "aa_index_by_effort": {"default": 43},
-      "description": "MiniMax M3.1 Flash (2026-10-19) - multimodal MoE (text and image input, 1M context) for agentic coding; thinking is always on. Direct MiniMax API, $0.15/$0.60 per M. AA Intelligence Index 43 (AA lists one row; MiniMax's default effort is max, so the score at the high-effort anchor may be a little high). OpenRouter offers only a free, rate-limited endpoint so far, so there is no OpenRouter entry.",
+      "description": "MiniMax M3.1 Flash (2026-10-19) - multimodal MoE (text and image input, 1M context) for agentic coding; thinking is always on. Direct MiniMax API, $0.15/$0.60 per M. AA Intelligence Index 43 (AA lists one row; MiniMax's default effort is max, so the score at the high-effort anchor may be a little high). Score pinned to the minimax/minimax-m3.1-flash OpenRouter mirror, which had a paid endpoint on 2026-10-27.",
       "context_window": 1000000,
       "max_output_tokens": 65536,
       "supports_extended_thinking": true,
