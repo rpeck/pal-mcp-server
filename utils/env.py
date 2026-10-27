@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import logging
 import os
+import subprocess
 from collections.abc import Mapping
 from contextlib import contextmanager
 from pathlib import Path
@@ -13,11 +15,19 @@ except ImportError:  # pragma: no cover - optional dependency
     dotenv_values = None  # type: ignore[assignment]
     load_dotenv = None  # type: ignore[assignment]
 
+logger = logging.getLogger(__name__)
+
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 _ENV_PATH = _PROJECT_ROOT / ".env"
 
+# A value with this prefix is a 1Password secret reference that get_env resolves with `op read`.
+OP_REFERENCE_PREFIX = "op://"
+_DEFAULT_OP_TIMEOUT_SECONDS = 60
+
 _DOTENV_VALUES: dict[str, str | None] = {}
 _FORCE_ENV_OVERRIDE = False
+# Result of `op read` per reference; None records a failure so it is not tried again.
+_OP_SECRETS: dict[str, str | None] = {}
 
 
 def _read_dotenv_values() -> dict[str, str | None]:
@@ -35,12 +45,16 @@ def _compute_force_override(values: Mapping[str, str | None]) -> bool:
 def reload_env(dotenv_mapping: Mapping[str, str | None] | None = None) -> None:
     """Reload .env values and recompute override semantics.
 
+    Also forgets the 1Password secrets read so far, so references are read again on next use.
+
     Args:
         dotenv_mapping: Optional mapping used instead of reading the .env file.
             Intended for tests; when provided, load_dotenv is not invoked.
     """
 
     global _DOTENV_VALUES, _FORCE_ENV_OVERRIDE
+
+    _OP_SECRETS.clear()
 
     if dotenv_mapping is not None:
         _DOTENV_VALUES = dict(dotenv_mapping)
@@ -63,16 +77,77 @@ def env_override_enabled() -> bool:
     return _FORCE_ENV_OVERRIDE
 
 
-def get_env(key: str, default: str | None = None) -> str | None:
-    """Retrieve environment variables respecting PAL_MCP_FORCE_ENV_OVERRIDE."""
+def _raw_env(key: str) -> str | None:
+    """Return the configured value of ``key`` without resolving 1Password references."""
 
     if env_override_enabled():
-        if key in _DOTENV_VALUES:
-            value = _DOTENV_VALUES[key]
-            return value if value is not None else default
-        return default
+        return _DOTENV_VALUES.get(key)
+    return os.getenv(key)
 
-    return os.getenv(key, default)
+
+def get_env(key: str, default: str | None = None) -> str | None:
+    """Retrieve environment variables respecting PAL_MCP_FORCE_ENV_OVERRIDE.
+
+    A value that starts with ``op://`` is a 1Password secret reference. Return the secret that
+    ``op read`` gives for it, or ``default`` when it cannot be read. Each reference is read once
+    per process, on first use; a failure is also kept, so it logs one warning and is not retried.
+    """
+
+    value = _raw_env(key)
+    if value is None:
+        return default
+    if not value.startswith(OP_REFERENCE_PREFIX):
+        return value
+
+    if value not in _OP_SECRETS:
+        _OP_SECRETS[value] = _read_op_secret(key, value)
+    secret = _OP_SECRETS[value]
+    return secret if secret is not None else default
+
+
+def _read_op_secret(key: str, reference: str) -> str | None:
+    """Read a 1Password secret reference with ``op read``; on failure, log a warning and return None."""
+
+    timeout = _op_timeout_seconds()
+    command = ["op", "read", reference]
+    account = _raw_env("PAL_OP_ACCOUNT")
+    if account:
+        command += ["--account", account]
+
+    try:
+        # PAL's stdin carries the MCP protocol, so op must not inherit it.
+        result = subprocess.run(
+            command, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=timeout, check=False
+        )
+    except FileNotFoundError:
+        error = "the op command is not on PATH"
+    except subprocess.TimeoutExpired:
+        error = f"op read did not finish within {timeout}s (PAL_OP_TIMEOUT_SECONDS)"
+    except (OSError, subprocess.SubprocessError, ValueError) as exc:
+        error = str(exc)
+    else:
+        secret = result.stdout.removesuffix("\n")
+        if result.returncode != 0:
+            error = result.stderr.strip() or f"op read exited with status {result.returncode}"
+        elif not secret:
+            error = "op read returned an empty value"
+        else:
+            return secret
+
+    logger.warning("Could not read %s from 1Password (%s): %s", key, reference, error)
+    return None
+
+
+def _op_timeout_seconds() -> int:
+    raw = _raw_env("PAL_OP_TIMEOUT_SECONDS")
+    if not raw:
+        return _DEFAULT_OP_TIMEOUT_SECONDS
+    try:
+        value = int(raw)
+    except ValueError:
+        logger.warning("PAL_OP_TIMEOUT_SECONDS=%r is not a whole number; using %ss", raw, _DEFAULT_OP_TIMEOUT_SECONDS)
+        return _DEFAULT_OP_TIMEOUT_SECONDS
+    return value if value > 0 else _DEFAULT_OP_TIMEOUT_SECONDS
 
 
 def get_env_bool(key: str, default: bool = False) -> bool:
@@ -84,7 +159,7 @@ def get_env_bool(key: str, default: bool = False) -> bool:
 
 
 def get_all_env() -> dict[str, str | None]:
-    """Expose the loaded .env mapping for diagnostics/logging."""
+    """Expose the loaded .env mapping for diagnostics/logging; 1Password references stay unresolved."""
 
     return dict(_DOTENV_VALUES)
 

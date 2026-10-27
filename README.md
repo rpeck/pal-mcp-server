@@ -205,6 +205,7 @@ cd pal-mcp-server
 ## Provider Configuration
 
 PAL activates any provider that has credentials in your `.env`. See `.env.example` for deeper customization.
+An API key can also be a 1Password `op://` reference: see [1Password Secret References](docs/1password.md).
 
 ### Sign in instead of an API key
 
@@ -446,6 +447,7 @@ DISABLED_TOOLS=
 - [Adding Providers](docs/adding_providers.md) - Provider-specific setup (OpenAI, Azure, custom gateways)
 - [Entra ID Authentication](docs/entra_auth.md) - Azure OpenAI and Claude on Azure AI Foundry with your `az login`, no API keys
 - [ChatGPT Models via Codex CLI](docs/chatgpt_provider.md) - ChatGPT-plan models in every PAL tool, through `codex login`
+- [1Password Secret References](docs/1password.md) - API keys as `op://` references instead of plaintext
 - [Model Ranking Guide](docs/model_ranking.md) - How intelligence scores drive auto-mode suggestions
 - [Model Catalog](docs/model_catalog.md) - Every measured model with its score, AA Index values, routes, and aliases
 

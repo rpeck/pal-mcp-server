@@ -87,6 +87,25 @@ CUSTOM_MODEL_NAME=llama3.2                          # Default model
 - Use standard localhost URLs since the server runs natively
 - Example: `http://localhost:11434/v1` for Ollama
 
+### 1Password References
+
+An API key can be a 1Password secret reference instead of a plaintext value, in the `env` block of your MCP
+client or in `.env`:
+
+```env
+GEMINI_API_KEY=op://my-vault/gemini-api-key/credential
+# Optional
+PAL_OP_ACCOUNT=my-team.1password.com   # when op is signed in to more than one account
+PAL_OP_TIMEOUT_SECONDS=60              # how long to wait for op read, Touch ID prompt included
+```
+
+- PAL reads the secret with `op read` when it first needs the variable, usually at startup. It keeps the
+  secret in memory until it stops.
+- If 1Password needs your approval, it shows a Touch ID prompt. The MCP client waits for PAL during this time.
+- If the read fails, PAL logs one warning and treats the key as not set.
+
+See [1Password Secret References](1password.md) for the setup, the startup timing, troubleshooting and logging.
+
 ### Model Configuration
 
 **Default Model Selection:**
@@ -371,6 +390,7 @@ LOG_LEVEL=INFO
 
 - **[Entra ID Authentication](entra_auth.md)** - Azure OpenAI and Claude on Azure AI Foundry with `az login` instead of API keys
 - **[ChatGPT Models via Codex CLI](chatgpt_provider.md)** - ChatGPT-plan models through `codex login`, with every `CHATGPT_*` setting
+- **[1Password Secret References](1password.md)** - API keys as `op://` references, read with `op read` instead of stored in plaintext
 
 - **[Advanced Usage Guide](advanced-usage.md)** - Advanced model usage patterns, thinking modes, and power user workflows
 - **[Context Revival Guide](context-revival.md)** - Conversation persistence and context revival across sessions

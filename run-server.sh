@@ -1081,7 +1081,12 @@ setup_env_file() {
         local key_value="${!key_name:-}"
 
         if [[ -n "$key_value" ]]; then
-            sed "${SED_INPLACE_ARGS[@]}" "s/$placeholder/$key_value/" .env
+            # Replace as plain text: a key or an op:// reference can hold /, & or \, which sed would interpret.
+            PLACEHOLDER="$placeholder" KEY_VALUE="$key_value" awk '{
+                i = index($0, ENVIRON["PLACEHOLDER"])
+                if (i) $0 = substr($0, 1, i - 1) ENVIRON["KEY_VALUE"] substr($0, i + length(ENVIRON["PLACEHOLDER"]))
+                print
+            }' .env > .env.tmp && mv .env.tmp .env
             print_success "Updated .env with $key_name from environment"
         fi
     done
