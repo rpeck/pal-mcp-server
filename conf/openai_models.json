@@ -315,7 +315,6 @@
       "model_name": "gpt-5.6-terra",
       "friendly_name": "OpenAI (GPT-5.6 Terra)",
       "aliases": [
-        "terra",
         "gpt5.6-terra",
         "gpt5.6terra"
       ],
@@ -329,7 +328,7 @@
         "xhigh": 38,
         "max": 42
       },
-      "description": "GPT-5.6 Terra (1M context, 128K output) - balanced intelligence/cost tier of the GPT-5.6 family.",
+      "description": "GPT-5.6 Terra (1M context, 128K output) - balanced intelligence/cost tier of the GPT-5.6 family, the predecessor of GPT-6.1 Terra.",
       "context_window": 1050000,
       "max_output_tokens": 128000,
       "supports_extended_thinking": true,
@@ -406,6 +405,39 @@
       "temperature_constraint": "fixed"
     },
     {
+      "model_name": "gpt-6.1-terra",
+      "friendly_name": "OpenAI (GPT-6.1 Terra)",
+      "aliases": [
+        "terra",
+        "gpt6.1-terra",
+        "gpt6.1terra"
+      ],
+      "intelligence_score": 17,
+      "aa_index": 44,
+      "aa_index_by_effort": {
+        "non-reasoning": 33,
+        "low": 36,
+        "medium": 41,
+        "high": 44,
+        "xhigh": 45,
+        "max": 48
+      },
+      "description": "GPT-6.1 Terra (released 2026-10-26, 1M context, 128K output) - mid-tier model of the GPT-6.1 family, below GPT-6.1 Sol, and the successor of GPT-5.6 Terra; strong at computer use and at reading screenshots. AA Intelligence Index 44 (high), 48 (max). $1/$5 per M; prompts above 272K input tokens cost $2/$7.50 per M. No effort_levels until a live call confirms that the native route accepts them.",
+      "context_window": 1050000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "max_image_size_mb": 20.0,
+      "default_reasoning_effort": "high",
+      "allow_code_generation": true,
+      "temperature_constraint": "fixed"
+    },
+    {
       "model_name": "gpt-6-luna",
       "friendly_name": "OpenAI (GPT-6 Luna)",
       "aliases": [
@@ -423,7 +455,7 @@
         "xhigh": 35,
         "max": 38
       },
-      "description": "GPT-6 Luna (released 2026-09-22, 1M context, 128K output) - fast, low-cost tier of the GPT-6 series; AA Intelligence Index 37 (max effort). $0.10/$0.50 per M.",
+      "description": "GPT-6 Luna (released 2026-09-22, 1M context, 128K output) - fast, low-cost tier of the GPT-6 series; AA Intelligence Index 38 (max effort). $0.10/$0.50 per M.",
       "context_window": 1050000,
       "max_output_tokens": 128000,
       "supports_extended_thinking": true,

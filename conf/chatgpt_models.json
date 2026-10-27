@@ -36,6 +36,35 @@
       "temperature_constraint": "fixed"
     },
     {
+      "model_name": "chatgpt/gpt-6.1-terra",
+      "friendly_name": "ChatGPT (GPT-6.1 Terra)",
+      "aliases": [
+        "chatgpt/terra"
+      ],
+      "intelligence_score": 17,
+      "aa_index": 44,
+      "description": "gpt-6.1-terra through a ChatGPT plan via the Codex CLI (500K context in Codex, per the 2026-10-26 release notes) - balanced intelligence/cost tier of the GPT-6.1 family, the successor of GPT-5.6 Terra; AA Intelligence Index 44 (high), 48 (max); replaces Luna for triage. Not yet enabled on this ChatGPT plan as of 2026-10-27 (Codex 0.164.0 returns model_not_found); check `codex debug models`.",
+      "context_window": 500000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "effort_levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "supports_system_prompts": true,
+      "supports_streaming": false,
+      "supports_function_calling": false,
+      "supports_json_mode": false,
+      "supports_images": true,
+      "supports_temperature": false,
+      "max_image_size_mb": 20.0,
+      "allow_code_generation": true,
+      "temperature_constraint": "fixed"
+    },
+    {
       "model_name": "chatgpt/gpt-6-astra",
       "friendly_name": "ChatGPT (GPT-6 Astra)",
       "aliases": [
@@ -148,12 +177,10 @@
     {
       "model_name": "chatgpt/gpt-5.6-terra",
       "friendly_name": "ChatGPT (GPT-5.6 Terra)",
-      "aliases": [
-        "chatgpt/terra"
-      ],
+      "aliases": [],
       "intelligence_score": 13,
       "aa_index": 34,
-      "description": "gpt-5.6-terra through a ChatGPT plan via the Codex CLI (272K context) - balanced intelligence/cost tier of the GPT-5.6 family.",
+      "description": "gpt-5.6-terra through a ChatGPT plan via the Codex CLI (272K context) - balanced intelligence/cost tier of the GPT-5.6 family, the predecessor of GPT-6.1 Terra.",
       "context_window": 272000,
       "max_output_tokens": 128000,
       "supports_extended_thinking": true,

@@ -639,8 +639,65 @@
       "max_image_size_mb": 5.0,
       "allow_code_generation": true,
       "auto_selectable": false,
-      "description": "GPT-6.1 Sol Pro via OpenRouter - the same model as GPT-6.1 Sol, served with reasoning.mode=pro for harder tasks. Same per-token price ($2/$10 per M), but pro mode spends far more tokens per request. NEVER auto-selected (auto_selectable false); use only when explicitly named. PROVISIONAL score 20, pinned to GPT-6.1 Sol: Artificial Analysis has not listed the pro mode. Revisit when AA publishes.",
+      "description": "GPT-6.1 Sol Pro via OpenRouter - the same model as GPT-6.1 Sol, served with reasoning.mode=pro for harder tasks. Same per-token price ($2/$10 per M), but pro mode spends far more tokens per request. NEVER auto-selected (auto_selectable false); use only when explicitly named. PROVISIONAL score 19, pinned to GPT-6.1 Sol: Artificial Analysis has not listed the pro mode. Revisit when AA publishes.",
       "intelligence_score": 19
+    },
+    {
+      "model_name": "openai/gpt-6.1-terra",
+      "aliases": [
+        "or-gpt6.1-terra"
+      ],
+      "context_window": 1050000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "effort_levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "supports_json_mode": false,
+      "supports_function_calling": false,
+      "supports_images": true,
+      "max_image_size_mb": 5.0,
+      "allow_code_generation": true,
+      "description": "GPT-6.1 Terra via OpenRouter (backup route, listed 2026-10-26) - AA Intelligence Index 44 (high), 48 (max). $1/$5 per M; prompts above 272K input tokens cost $2/$7.50 per M.",
+      "intelligence_score": 17,
+      "aa_index": 44,
+      "aa_index_by_effort": {
+        "non-reasoning": 33,
+        "low": 36,
+        "medium": 41,
+        "high": 44,
+        "xhigh": 45,
+        "max": 48
+      }
+    },
+    {
+      "model_name": "openai/gpt-6.1-terra-pro",
+      "aliases": [
+        "or-gpt6.1-terra-pro",
+        "gpt-6.1-terra-pro"
+      ],
+      "context_window": 1050000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "effort_levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "supports_json_mode": false,
+      "supports_function_calling": false,
+      "supports_images": true,
+      "max_image_size_mb": 5.0,
+      "allow_code_generation": true,
+      "auto_selectable": false,
+      "description": "GPT-6.1 Terra Pro via OpenRouter - the same model as GPT-6.1 Terra, served with reasoning.mode=pro for harder tasks. Same per-token price ($1/$5 per M), but pro mode spends far more tokens per request. NEVER auto-selected (auto_selectable false); use only when explicitly named. PROVISIONAL score 17, pinned to GPT-6.1 Terra: Artificial Analysis has not listed the pro mode. Revisit when AA publishes.",
+      "intelligence_score": 17
     },
     {
       "model_name": "openai/gpt-6-luna",
@@ -662,7 +719,7 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "allow_code_generation": true,
-      "description": "GPT-6 Luna via OpenRouter (backup route) - AA Intelligence Index 37 (max effort). $0.10/$0.50 per M.",
+      "description": "GPT-6 Luna via OpenRouter (backup route) - AA Intelligence Index 38 (max effort). $0.10/$0.50 per M.",
       "intelligence_score": 13,
       "aa_index": 33,
       "aa_index_by_effort": {
@@ -1234,9 +1291,28 @@
       "intelligence_score": 13
     },
     {
-      "model_name": "moonshotai/kimi-k3",
+      "model_name": "moonshotai/kimi-k3.1-pro",
       "aliases": [
         "kimi",
+        "kimi-k3.1-pro"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 131072,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "description": "Moonshot Kimi K3.1 Pro via OpenRouter (released 2026-10-23) - flagship multimodal reasoning model, a post-trained successor of Kimi K3 (1M context; text, image and video input). $2/$10 per M, about 41 tokens/s. AA Intelligence Index 55 (AA lists one row, the reasoning version, so that row is the high-effort anchor).",
+      "intelligence_score": 20,
+      "aa_index": 55,
+      "aa_index_by_effort": {
+        "default": 55
+      }
+    },
+    {
+      "model_name": "moonshotai/kimi-k3",
+      "aliases": [
         "kimi-k3"
       ],
       "context_window": 1048576,
@@ -1627,9 +1703,28 @@
       "intelligence_score": 18
     },
     {
-      "model_name": "minimax/minimax-m3",
+      "model_name": "minimax/minimax-m3.1-flash",
       "aliases": [
         "minimax",
+        "minimax-m3.1-flash"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "description": "MiniMax M3.1 Flash via OpenRouter - multimodal MoE (1M context) for agentic coding; thinking is always on. $0.15/$0.60 per M (paid endpoint, checked 2026-10-27). AA Intelligence Index 43 (AA lists one row; MiniMax's default effort is max, so the score at the high-effort anchor may be a little high).",
+      "intelligence_score": 17,
+      "aa_index": 43,
+      "aa_index_by_effort": {
+        "default": 43
+      }
+    },
+    {
+      "model_name": "minimax/minimax-m3",
+      "aliases": [
         "minimax-m3"
       ],
       "context_window": 524288,
@@ -2051,7 +2146,7 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "allow_code_generation": true,
-      "description": "Inception Mercury 3 via OpenRouter (announced 2026-10-19) - a diffusion LLM: it refines many tokens in parallel instead of writing one token at a time, at about 1,000 tokens/s (Inception reports 1,068 on NVIDIA GPUs). 1M context, text only. $0.10/$0.35 per M at launch ($0.20/$0.70 list). PROVISIONAL score: AA has not measured it yet (Mercury 2.5 scores AA 12). Inception's launch post reports its own scores at medium effort: Mercury 3 beats GPT-6 Luna and Claude Haiku 5.5 on 8 of 12 benchmarks (for example SWE-Bench Atlas 51.1 vs 33.3 and 32.3) and trails Haiku on DeepSWE (46.3 vs 51.6). No third party has checked them, so the estimate sits just below GPT-6 Luna (13) until AA measures it. Reasoning effort: instant, low, medium or high (default low); Inception documents no xhigh or max level. Live-tested through PAL's OpenRouter provider on 2026-10-20: it answered correctly.",
+      "description": "Inception Mercury 3 via OpenRouter (announced 2026-10-19) - a diffusion LLM: it refines many tokens in parallel instead of writing one token at a time, at about 1,000 tokens/s (Inception reports 1,068 on NVIDIA GPUs). 1M context, text only. $0.10/$0.35 per M at launch ($0.20/$0.70 list). PROVISIONAL score: AA has not measured it yet (Mercury 2.5 scores AA 12). Inception's launch post reports its own scores at medium effort: Mercury 3 beats GPT-6 Luna and Claude Haiku 5.5 on 8 of 12 benchmarks (for example SWE-Bench Atlas 51.1 vs 33.3 and 32.3) and trails Haiku on DeepSWE (46.3 vs 51.6). No third party has checked them, so the estimate sits just below GPT-6 Luna (13) until AA measures it. On 2026-10-27 AA still listed only Mercury 2.5 and Mercury 2. Vals AI measured Mercury 3 at high effort: Vals Index 43.66% (rank 25 of 28). Reasoning effort: instant, low, medium or high (default low); Inception documents no xhigh or max level. Live-tested through PAL's OpenRouter provider on 2026-10-20: it answered correctly.",
       "intelligence_score": 12
     }
   ]
