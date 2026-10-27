@@ -5,6 +5,7 @@ This test verifies that SimpleTool correctly validates only the original user pr
 when conversation history is embedded, rather than validating the full enhanced prompt.
 """
 
+from config import MCP_PROMPT_SIZE_LIMIT
 from tools.chat import ChatTool
 from tools.shared.base_models import ToolRequest
 
@@ -21,8 +22,11 @@ class TestPromptSizeLimitBugFix:
         # Simulate a short user prompt (should not trigger size limit)
         short_user_prompt = "Thanks for the help!"
 
-        # Simulate conversation history (large content)
-        conversation_history = "=== CONVERSATION HISTORY ===\n" + ("Previous conversation content. " * 5000)
+        # Simulate conversation history that is larger than the prompt limit. The limit follows
+        # MAX_MCP_OUTPUT_TOKENS, so size the history from MCP_PROMPT_SIZE_LIMIT, not from a fixed count.
+        repeat_text = "Previous conversation content. "
+        repetitions_needed = MCP_PROMPT_SIZE_LIMIT // len(repeat_text) + 1
+        conversation_history = "=== CONVERSATION HISTORY ===\n" + (repeat_text * repetitions_needed)
 
         # Simulate enhanced prompt with conversation history (what server.py creates)
         enhanced_prompt = f"{conversation_history}\n\n=== NEW USER INPUT ===\n{short_user_prompt}"
@@ -43,7 +47,7 @@ class TestPromptSizeLimitBugFix:
         assert len(validation_content) < 1000  # Much smaller than enhanced prompt
 
         # Verify the enhanced prompt would have triggered the bug
-        assert len(enhanced_prompt) > 50000  # This would trigger size limit
+        assert len(enhanced_prompt) > MCP_PROMPT_SIZE_LIMIT  # This would trigger size limit
 
         # Test that size check passes with the original prompt
         size_check = tool.check_prompt_size(validation_content)
