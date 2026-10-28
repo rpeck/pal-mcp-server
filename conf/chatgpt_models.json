@@ -12,9 +12,9 @@
       "aliases": [
         "chatgpt/sol"
       ],
-      "intelligence_score": 19,
+      "intelligence_score": 20,
       "aa_index": 50,
-      "description": "gpt-6.1-sol through a ChatGPT plan via the Codex CLI (500K context) - upgrade to GPT-6 Sol, below the GPT-6 Astra flagship.",
+      "description": "gpt-6.1-sol through a ChatGPT plan via the Codex CLI (500K context) - upgrade to GPT-6 Sol, below the GPT-6 Astra flagship; AA Intelligence Index v5 50 at high (55 at max).",
       "context_window": 500000,
       "max_output_tokens": 128000,
       "supports_extended_thinking": true,
@@ -41,9 +41,9 @@
       "aliases": [
         "chatgpt/terra"
       ],
-      "intelligence_score": 17,
-      "aa_index": 44,
-      "description": "gpt-6.1-terra through a ChatGPT plan via the Codex CLI (500K context in Codex, per the 2026-10-26 release notes) - balanced intelligence/cost tier of the GPT-6.1 family, the successor of GPT-5.6 Terra; AA Intelligence Index 44 (high), 48 (max); replaces Luna for triage. Not yet enabled on this ChatGPT plan as of 2026-10-27 (Codex 0.164.0 returns model_not_found); check `codex debug models`.",
+      "intelligence_score": 18,
+      "aa_index": 42,
+      "description": "gpt-6.1-terra through a ChatGPT plan via the Codex CLI (500K context in Codex, per the 2026-10-26 release notes) - balanced intelligence/cost tier of the GPT-6.1 family, the successor of GPT-5.6 Terra; AA Intelligence Index v5 42 at high (51 at max); replaces Luna for triage. Not yet enabled on this ChatGPT plan as of 2026-10-27 (Codex 0.164.0 returns model_not_found); check `codex debug models`.",
       "context_window": 500000,
       "max_output_tokens": 128000,
       "supports_extended_thinking": true,
@@ -70,9 +70,9 @@
       "aliases": [
         "chatgpt/astra"
       ],
-      "intelligence_score": 19,
-      "aa_index": 51,
-      "description": "gpt-6-astra through a ChatGPT plan via the Codex CLI (272K context) - OpenAI flagship.",
+      "intelligence_score": 20,
+      "aa_index": 55,
+      "description": "gpt-6-astra through a ChatGPT plan via the Codex CLI (272K context) - OpenAI flagship; AA Intelligence Index v5 55 at high (57 at max).",
       "context_window": 272000,
       "max_output_tokens": 128000,
       "supports_extended_thinking": true,
@@ -126,8 +126,8 @@
         "chatgpt/luna"
       ],
       "intelligence_score": 13,
-      "aa_index": 33,
-      "description": "gpt-6-luna through a ChatGPT plan via the Codex CLI (272K context) - fast, low-cost tier of the GPT-6 series.",
+      "aa_index": 21,
+      "description": "gpt-6-luna through a ChatGPT plan via the Codex CLI (272K context) - fast, low-cost tier of the GPT-6 series; AA Intelligence Index v5 21 at high (28 at max).",
       "context_window": 272000,
       "max_output_tokens": 128000,
       "supports_extended_thinking": true,
@@ -179,8 +179,7 @@
       "friendly_name": "ChatGPT (GPT-5.6 Terra)",
       "aliases": [],
       "intelligence_score": 13,
-      "aa_index": 34,
-      "description": "gpt-5.6-terra through a ChatGPT plan via the Codex CLI (272K context) - balanced intelligence/cost tier of the GPT-5.6 family, the predecessor of GPT-6.1 Terra.",
+      "description": "gpt-5.6-terra through a ChatGPT plan via the Codex CLI (272K context) - balanced intelligence/cost tier of the GPT-5.6 family, the predecessor of GPT-6.1 Terra. AA has no v5 value; the score keeps the AA v4.3 value (34 at high).",
       "context_window": 272000,
       "max_output_tokens": 128000,
       "supports_extended_thinking": true,

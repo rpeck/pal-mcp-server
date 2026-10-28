@@ -19,7 +19,7 @@ class TestDeepSeekCatalog:
         caps = _provider().get_all_model_capabilities()
         # Scores pinned to the OpenRouter mirrors, anchored to the current AA Index.
         assert caps["deepseek-flash"].intelligence_score == 15
-        assert caps["deepseek-v4-pro"].intelligence_score == 12
+        assert caps["deepseek-v4-pro"].intelligence_score == 11
         assert caps["deepseek-v4-flash"].intelligence_score == 12
         assert caps["deepseek-reasoner"].intelligence_score == 11
         # Experimental vision model scored below stable flash, and multimodal-capable.

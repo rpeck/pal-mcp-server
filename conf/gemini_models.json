@@ -20,12 +20,39 @@
       "use_openai_response_api": "Set to true when the model must use the /responses endpoint (reasoning models like GPT-5.2 Pro). Leave false/omit for standard chat completions.",
       "default_reasoning_effort": "Default reasoning effort level for models that support it (e.g., 'low', 'medium', 'high'). Omit if not applicable.",
       "description": "Human-readable description of the model",
-      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering. Since 2026-10-13 it is anchored to the Artificial Analysis Intelligence Index v4.3 at HIGH reasoning effort (aa_index_by_effort['high'], leaderboard read 2026-10-12/13) through the ladder in docs/model_ranking.md. Entries without aa_index_by_effort carry estimated scores. PAL tools default to thinking_mode medium, so a typical call can score a few Index points below the anchor.",
-      "aa_index_by_effort": "Optional per-effort Artificial Analysis Intelligence Index values (v4.3 leaderboard, read 2026-10-12), keyed by effort (non-reasoning, low, medium, high, xhigh, max; 'default' for a model with a single row). Values AA marks as incomplete (*) are left out.",
+      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering. Since 2026-10-28 it is anchored to the Artificial Analysis Intelligence Index v5 at HIGH reasoning effort (aa_index_by_effort['high'], leaderboard read 2026-10-28) through the v5 ladder in docs/model_ranking.md, which keeps the 1-20 scale of the earlier v4.3 ladder. Entries without aa_index_by_effort carry estimated scores; models that AA measured on v4.3 but not on v5 keep their v4.3-based scores. PAL tools default to thinking_mode medium, so a typical call can score a few Index points below the anchor.",
+      "aa_index_by_effort": "Optional per-effort Artificial Analysis Intelligence Index values (v5 leaderboard, read 2026-10-28), keyed by effort (non-reasoning, low, medium, high, xhigh, max; 'default' for a model with a single row). Values AA marks as incomplete (*) are left out.",
       "allow_code_generation": "Whether this model can generate and suggest fully working code - complete with functions, files, and detailed implementation instructions - for your AI tool to use right away. Only set this to 'true' for a model more capable than the AI model / CLI you're currently using."
     }
   },
   "models": [
+    {
+      "model_name": "gemini-4-carbon",
+      "friendly_name": "Gemini (4 Carbon)",
+      "aliases": [
+        "carbon",
+        "gemini-carbon"
+      ],
+      "intelligence_score": 20,
+      "aa_index": 59,
+      "description": "Gemini 4 Carbon (released 2026-10-28, 1M context) - Google's strongest frontier model, aimed at cybersecurity and long-running agentic work; it leads the AA Intelligence Index v5 at 59 (high, the only row AA lists). Multimodal input. $4/$20 per M ($2/$10 introductory). LIMITED ACCESS: on 2026-10-28 Google gave first access only to selected cyber-defense partners, the Gemini API models list for a standard key did not include it, and OpenRouter did not list it. The model ID gemini-4-carbon is UNVERIFIED (a leak shows gemini-4-carbon-preview), and the output limits copy Gemini 4 Argon until Google publishes them. NEVER auto-selected (auto_selectable false) until the API serves it; name it explicitly.",
+      "context_window": 1048576,
+      "max_output_tokens": 32768,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "max_image_size_mb": 32.0,
+      "max_thinking_tokens": 32768,
+      "allow_code_generation": true,
+      "auto_selectable": false,
+      "aa_index_by_effort": {
+        "high": 59
+      }
+    },
     {
       "model_name": "gemini-4-argon",
       "friendly_name": "Gemini (4 Argon)",
@@ -34,8 +61,8 @@
         "gemini-argon"
       ],
       "intelligence_score": 20,
-      "aa_index": 53,
-      "description": "Gemini 4 Argon (released 2026-10-13, 1M context, 32K output) - Google's flagship reasoning model for complex software engineering, math and science, and autonomous agents. AA Intelligence Index 53 (high). Multimodal input. A Gemini API key on the free tier gets a 429 (quota 0) for this model; it needs a paid tier, or use the OpenRouter route.",
+      "aa_index": 50,
+      "description": "Gemini 4 Argon (released 2026-10-13, 1M context, 32K output) - Google's flagship reasoning model for complex software engineering, math and science, and autonomous agents. AA Intelligence Index v5 50 (high), below Gemini 4 Carbon (59). Multimodal input. A Gemini API key on the free tier gets a 429 (quota 0) for this model; it needs a paid tier, or use the OpenRouter route.",
       "context_window": 1048576,
       "max_output_tokens": 32768,
       "supports_extended_thinking": true,
@@ -49,7 +76,7 @@
       "max_thinking_tokens": 32768,
       "allow_code_generation": true,
       "aa_index_by_effort": {
-        "high": 53
+        "high": 50
       }
     },
     {
@@ -165,11 +192,7 @@
         "gemini-pro-latest"
       ],
       "intelligence_score": 12,
-      "aa_index": 30,
-      "aa_index_by_effort": {
-        "default": 30
-      },
-      "description": "Deep reasoning + thinking (1M context) - complex problems, architecture, deep analysis.",
+      "description": "Deep reasoning + thinking (1M context) - complex problems, architecture, deep analysis. AA has no v5 value; the score keeps the AA v4.3 value (30).",
       "context_window": 1048576,
       "max_output_tokens": 65536,
       "supports_extended_thinking": true,
@@ -196,13 +219,13 @@
         "gemini-flash-latest"
       ],
       "intelligence_score": 16,
-      "aa_index": 41,
+      "aa_index": 31,
       "aa_index_by_effort": {
-        "low": 33,
-        "medium": 40,
-        "high": 41
+        "low": 22,
+        "medium": 30,
+        "high": 31
       },
-      "description": "Newest fast model (1M context) - AA Intelligence Index 41 (high), one step above 3.7 Flash; accepts text, image, audio and video. Supports thinking. Developer free tier.",
+      "description": "Newest fast model (1M context) - AA Intelligence Index v5 31 (high; 22 at low, 30 at medium), newer than 3.7 Flash; accepts text, image, audio and video. Supports thinking. Developer free tier.",
       "context_window": 1048576,
       "max_output_tokens": 65536,
       "supports_extended_thinking": true,
@@ -225,7 +248,7 @@
         "flash3.7"
       ],
       "intelligence_score": 14,
-      "description": "Newest fast model (1M context) - near-frontier benchmarks (GPQA-Diamond ~94.8, AA Intelligence Index 40), rapid iterations, supports thinking. Developer free tier.",
+      "description": "Newest fast model (1M context) - near-frontier benchmarks (GPQA-Diamond ~94.8, AA Intelligence Index v4.3 40, no v5 value), rapid iterations, supports thinking. Developer free tier.",
       "context_window": 1048576,
       "max_output_tokens": 65536,
       "supports_extended_thinking": true,
@@ -245,7 +268,7 @@
         "flash3.6"
       ],
       "intelligence_score": 12,
-      "description": "Fast model (1M context) - AA Intelligence Index 34, faster/cheaper than 3.5 Flash, supports thinking. Developer free tier.",
+      "description": "Fast model (1M context) - AA Intelligence Index v4.3 34 (no v5 value), faster/cheaper than 3.5 Flash, supports thinking. Developer free tier.",
       "context_window": 1048576,
       "max_output_tokens": 65536,
       "supports_extended_thinking": true,
@@ -286,11 +309,11 @@
         "gemini-flash-lite-latest"
       ],
       "intelligence_score": 9,
-      "aa_index": 22,
+      "aa_index": 12,
       "aa_index_by_effort": {
-        "default": 22
+        "default": 12
       },
-      "description": "Newest cost-efficient model (1M context) - fastest measured, AA Intelligence Index 23 (well above lite median), supports thinking. Developer free tier.",
+      "description": "Newest cost-efficient model (1M context) - fastest measured, AA Intelligence Index v5 12 (one row), supports thinking. Developer free tier.",
       "context_window": 1048576,
       "max_output_tokens": 65536,
       "supports_extended_thinking": true,

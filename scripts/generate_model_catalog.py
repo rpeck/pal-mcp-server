@@ -165,7 +165,7 @@ lines = [
     "explicit-only presets. Older and unmeasured entries are in the conf files only.",
     "- **Score:** the 1-20 `intelligence_score` that auto mode ranks by. See [model_ranking.md](model_ranking.md) "
     "for how it is anchored to the AA Index.",
-    "- **AA Index by effort:** the AA v4.3 leaderboard value at each effort level (`aa_index_by_effort`). "
+    "- **AA Index by effort:** the AA Intelligence Index v5 leaderboard value at each effort level (`aa_index_by_effort`). "
     "`default` means AA lists one row for the model.",
     "- **Routes:** `native` is the creator's own API (needs that creator's key); `openrouter` is the "
     "OpenRouter mirror (needs `OPENROUTER_API_KEY`); `chatgpt` is a ChatGPT plan through the Codex CLI (needs "

@@ -19,9 +19,9 @@
       "use_openai_response_api": "Set to true when the model must use the /responses endpoint (reasoning models like GPT-5.2 Pro). Leave false/omit for standard chat completions.",
       "default_reasoning_effort": "Default reasoning effort level for models that support it (e.g., 'low', 'medium', 'high'). Omit if not applicable.",
       "description": "Human-readable description of the model",
-      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering. Since 2026-10-13 it is anchored to the Artificial Analysis Intelligence Index v4.3 at HIGH reasoning effort (aa_index_by_effort['high'], leaderboard read 2026-10-12/13) through the ladder in docs/model_ranking.md. Entries without aa_index_by_effort carry estimated scores. PAL tools default to thinking_mode medium, so a typical call can score a few Index points below the anchor.",
+      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering. Since 2026-10-28 it is anchored to the Artificial Analysis Intelligence Index v5 at HIGH reasoning effort (aa_index_by_effort['high'], leaderboard read 2026-10-28) through the v5 ladder in docs/model_ranking.md, which keeps the 1-20 scale of the earlier v4.3 ladder. Entries without aa_index_by_effort carry estimated scores; models that AA measured on v4.3 but not on v5 keep their v4.3-based scores. PAL tools default to thinking_mode medium, so a typical call can score a few Index points below the anchor.",
       "aa_index": "Optional AA Index value behind intelligence_score at the high-effort anchor (interpolated or estimated where AA has no high row; the description says which). Used to order models that share the same intelligence_score.",
-      "aa_index_by_effort": "Optional per-effort Artificial Analysis Intelligence Index values (v4.3 leaderboard, read 2026-10-12), keyed by effort (non-reasoning, low, medium, high, xhigh, max; 'default' for a model with a single row). Values AA marks as incomplete (*) are left out.",
+      "aa_index_by_effort": "Optional per-effort Artificial Analysis Intelligence Index values (v5 leaderboard, read 2026-10-28), keyed by effort (non-reasoning, low, medium, high, xhigh, max; 'default' for a model with a single row). Values AA marks as incomplete (*) are left out.",
       "effort_levels": "Optional list of reasoning-effort levels this route accepts. When set, PAL sends the tool's thinking_mode as an explicit effort, clamped to these levels; when absent, no effort is sent.",
       "allow_code_generation": "Whether this model can generate and suggest fully working code - complete with functions, files, and detailed implementation instructions - for your AI tool to use right away. Only set this to 'true' for a model more capable than the AI model / CLI you're currently using."
     }
@@ -482,13 +482,13 @@
       "max_image_size_mb": 20.0,
       "supports_temperature": true,
       "temperature_constraint": "range",
-      "description": "Grok 4.7 via OpenRouter (released 2026-09-21) - xAI flagship for coding and agentic work; AA Intelligence Index 46 (xhigh). $2/$6 per M. With DYNAMIC_MODEL_SELECTION on, the bare grok alias points here.",
-      "intelligence_score": 18,
-      "aa_index": 46,
+      "description": "Grok 4.7 via OpenRouter (released 2026-09-21) - xAI flagship for coding and agentic work; AA Intelligence Index v5 35 at high (31 at low, 34 at xhigh). $2/$6 per M. With DYNAMIC_MODEL_SELECTION on, the bare grok alias points here.",
+      "intelligence_score": 17,
+      "aa_index": 35,
       "aa_index_by_effort": {
-        "low": 42,
-        "high": 46,
-        "xhigh": 46
+        "low": 31,
+        "high": 35,
+        "xhigh": 34
       },
       "dynamic_aliases": [
         "grok"
@@ -581,15 +581,15 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "allow_code_generation": true,
-      "description": "GPT-6.1 Sol via OpenRouter (backup route) - AA Intelligence Index 52 (max effort). $2/$10 per M.",
-      "intelligence_score": 19,
+      "description": "GPT-6.1 Sol via OpenRouter (backup route) - AA Intelligence Index v5 50 at high (55 at max). $2/$10 per M.",
+      "intelligence_score": 20,
       "aa_index": 50,
       "aa_index_by_effort": {
-        "low": 42,
-        "medium": 48,
+        "low": 35,
+        "medium": 46,
         "high": 50,
-        "xhigh": 51,
-        "max": 52
+        "xhigh": 52,
+        "max": 55
       }
     },
     {
@@ -607,7 +607,7 @@
       "max_image_size_mb": 5.0,
       "allow_code_generation": true,
       "auto_selectable": false,
-      "description": "GPT-6 Luna Pro via OpenRouter - the same model as GPT-6 Luna, served with reasoning.mode=pro for harder tasks. Same per-token price ($0.10/$0.50 per M), but pro mode spends far more tokens per request. OpenAI's own API has no separate model ID for it. NEVER auto-selected (auto_selectable false); use only when explicitly named. PROVISIONAL score 14, pinned to GPT-6 Luna: Artificial Analysis has not listed the pro mode. Revisit when AA publishes.",
+      "description": "GPT-6 Luna Pro via OpenRouter - the same model as GPT-6 Luna, served with reasoning.mode=pro for harder tasks. Same per-token price ($0.10/$0.50 per M), but pro mode spends far more tokens per request. OpenAI's own API has no separate model ID for it. NEVER auto-selected (auto_selectable false); use only when explicitly named. PROVISIONAL score 13, pinned to GPT-6 Luna: Artificial Analysis has not listed the pro mode. Revisit when AA publishes.",
       "intelligence_score": 13,
       "effort_levels": [
         "low",
@@ -639,8 +639,8 @@
       "max_image_size_mb": 5.0,
       "allow_code_generation": true,
       "auto_selectable": false,
-      "description": "GPT-6.1 Sol Pro via OpenRouter - the same model as GPT-6.1 Sol, served with reasoning.mode=pro for harder tasks. Same per-token price ($2/$10 per M), but pro mode spends far more tokens per request. NEVER auto-selected (auto_selectable false); use only when explicitly named. PROVISIONAL score 19, pinned to GPT-6.1 Sol: Artificial Analysis has not listed the pro mode. Revisit when AA publishes.",
-      "intelligence_score": 19
+      "description": "GPT-6.1 Sol Pro via OpenRouter - the same model as GPT-6.1 Sol, served with reasoning.mode=pro for harder tasks. Same per-token price ($2/$10 per M), but pro mode spends far more tokens per request. NEVER auto-selected (auto_selectable false); use only when explicitly named. PROVISIONAL score 20, pinned to GPT-6.1 Sol: Artificial Analysis has not listed the pro mode. Revisit when AA publishes.",
+      "intelligence_score": 20
     },
     {
       "model_name": "openai/gpt-6.1-terra",
@@ -662,16 +662,16 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "allow_code_generation": true,
-      "description": "GPT-6.1 Terra via OpenRouter (backup route, listed 2026-10-26) - AA Intelligence Index 44 (high), 48 (max). $1/$5 per M; prompts above 272K input tokens cost $2/$7.50 per M.",
-      "intelligence_score": 17,
-      "aa_index": 44,
+      "description": "GPT-6.1 Terra via OpenRouter (backup route, listed 2026-10-26) - AA Intelligence Index v5 42 at high (51 at max). $1/$5 per M; prompts above 272K input tokens cost $2/$7.50 per M.",
+      "intelligence_score": 18,
+      "aa_index": 42,
       "aa_index_by_effort": {
-        "non-reasoning": 33,
-        "low": 36,
-        "medium": 41,
-        "high": 44,
+        "non-reasoning": 30,
+        "low": 29,
+        "medium": 38,
+        "high": 42,
         "xhigh": 45,
-        "max": 48
+        "max": 51
       }
     },
     {
@@ -696,8 +696,8 @@
       "max_image_size_mb": 5.0,
       "allow_code_generation": true,
       "auto_selectable": false,
-      "description": "GPT-6.1 Terra Pro via OpenRouter - the same model as GPT-6.1 Terra, served with reasoning.mode=pro for harder tasks. Same per-token price ($1/$5 per M), but pro mode spends far more tokens per request. NEVER auto-selected (auto_selectable false); use only when explicitly named. PROVISIONAL score 17, pinned to GPT-6.1 Terra: Artificial Analysis has not listed the pro mode. Revisit when AA publishes.",
-      "intelligence_score": 17
+      "description": "GPT-6.1 Terra Pro via OpenRouter - the same model as GPT-6.1 Terra, served with reasoning.mode=pro for harder tasks. Same per-token price ($1/$5 per M), but pro mode spends far more tokens per request. NEVER auto-selected (auto_selectable false); use only when explicitly named. PROVISIONAL score 18, pinned to GPT-6.1 Terra: Artificial Analysis has not listed the pro mode. Revisit when AA publishes.",
+      "intelligence_score": 18
     },
     {
       "model_name": "openai/gpt-6-luna",
@@ -719,16 +719,16 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "allow_code_generation": true,
-      "description": "GPT-6 Luna via OpenRouter (backup route) - AA Intelligence Index 38 (max effort). $0.10/$0.50 per M.",
+      "description": "GPT-6 Luna via OpenRouter (backup route) - AA Intelligence Index v5 21 at high (28 at max). $0.10/$0.50 per M.",
       "intelligence_score": 13,
-      "aa_index": 33,
+      "aa_index": 21,
       "aa_index_by_effort": {
-        "non-reasoning": 18,
-        "low": 22,
-        "medium": 30,
-        "high": 33,
-        "xhigh": 35,
-        "max": 38
+        "non-reasoning": 9,
+        "low": 10,
+        "medium": 18,
+        "high": 21,
+        "xhigh": 23,
+        "max": 28
       }
     },
     {
@@ -751,15 +751,15 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "allow_code_generation": true,
-      "description": "GPT-6 Astra via OpenRouter (backup route) - ties the top of the AA Intelligence Index at 53 (max effort).",
-      "intelligence_score": 19,
-      "aa_index": 51,
+      "description": "GPT-6 Astra via OpenRouter (backup route) - AA Intelligence Index v5 55 at high (57 at max).",
+      "intelligence_score": 20,
+      "aa_index": 55,
       "aa_index_by_effort": {
-        "low": 46,
-        "medium": 50,
-        "high": 51,
-        "xhigh": 52,
-        "max": 53
+        "low": 43,
+        "medium": 52,
+        "high": 55,
+        "xhigh": 55,
+        "max": 57
       }
     },
     {
@@ -786,7 +786,7 @@
       "allow_code_generation": true,
       "auto_selectable": false,
       "description": "GPT-6 Astra Pro via OpenRouter - the same model as GPT-6 Astra, served with reasoning.mode=pro for harder tasks. Same per-token price ($10/$50 per M), but pro mode spends far more tokens per request. OpenAI's own API has no separate model ID for it. NEVER auto-selected (auto_selectable false); use only when explicitly named. PROVISIONAL score 20, pinned to GPT-6 Astra: Artificial Analysis has not listed the pro mode. Revisit when AA publishes.",
-      "intelligence_score": 19
+      "intelligence_score": 20
     },
     {
       "model_name": "openai/gpt-5.6-terra",
@@ -800,17 +800,8 @@
       "supports_function_calling": false,
       "supports_images": true,
       "max_image_size_mb": 5.0,
-      "description": "GPT-5.6 Terra via OpenRouter (backup route).",
-      "intelligence_score": 13,
-      "aa_index": 34,
-      "aa_index_by_effort": {
-        "non-reasoning": 21,
-        "low": 27,
-        "medium": 30,
-        "high": 34,
-        "xhigh": 38,
-        "max": 42
-      }
+      "description": "GPT-5.6 Terra via OpenRouter (backup route). AA has no v5 value; the score keeps the AA v4.3 value (34 at high).",
+      "intelligence_score": 13
     },
     {
       "model_name": "openai/gpt-5.6-luna",
@@ -855,11 +846,11 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Google Gemini 4 Argon via OpenRouter (released 2026-10-13) - flagship reasoning model; AA Intelligence Index 53 (high). $2/$10 per M. Multimodal input (text, image, audio, video, files).",
+      "description": "Google Gemini 4 Argon via OpenRouter (released 2026-10-13) - flagship reasoning model; AA Intelligence Index v5 50 (high), below Gemini 4 Carbon (59). $2/$10 per M. Multimodal input (text, image, audio, video, files).",
       "intelligence_score": 20,
-      "aa_index": 53,
+      "aa_index": 50,
       "aa_index_by_effort": {
-        "high": 53
+        "high": 50
       },
       "effort_levels": [
         "low",
@@ -883,13 +874,13 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Google Gemini 3.8 Flash via OpenRouter - AA Intelligence Index 41 (high), one step above 3.7 Flash; text, image, audio and video input.",
+      "description": "Google Gemini 3.8 Flash via OpenRouter - AA Intelligence Index v5 31 (high; 22 at low, 30 at medium), newer than 3.7 Flash; text, image, audio and video input.",
       "intelligence_score": 16,
-      "aa_index": 41,
+      "aa_index": 31,
       "aa_index_by_effort": {
-        "low": 33,
-        "medium": 40,
-        "high": 41
+        "low": 22,
+        "medium": 30,
+        "high": 31
       }
     },
     {
@@ -934,12 +925,8 @@
       "supports_function_calling": false,
       "supports_images": true,
       "max_image_size_mb": 5.0,
-      "description": "Gemini 3.1 Pro Preview via OpenRouter (backup route).",
-      "intelligence_score": 12,
-      "aa_index": 30,
-      "aa_index_by_effort": {
-        "default": 30
-      }
+      "description": "Gemini 3.1 Pro Preview via OpenRouter (backup route). AA has no v5 value; the score keeps the AA v4.3 value (30).",
+      "intelligence_score": 12
     },
     {
       "model_name": "google/gemini-3.1-flash-lite",
@@ -998,13 +985,8 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "DeepSeek V4.1 Flash via OpenRouter, 2026-09-10 build - 763B params with native image understanding, 1M context. Superseded by deepseek/deepseek-v4.1-flash-1017, which now holds the bare deepseek and deepseek-flash aliases. AA no longer lists this build; its values (non-reasoning 25, max 39) are from the 2026-10-12 read. Score at the high-effort anchor is an ESTIMATE: high is estimated at 34.5 (range 30-37) from the median max-to-high gap of other models.",
-      "intelligence_score": 13,
-      "aa_index": 34,
-      "aa_index_by_effort": {
-        "non-reasoning": 25,
-        "max": 39
-      }
+      "description": "DeepSeek V4.1 Flash via OpenRouter, 2026-09-10 build - 763B params with native image understanding, 1M context. Superseded by deepseek/deepseek-v4.1-flash-1017, which now holds the bare deepseek and deepseek-flash aliases. AA no longer lists this build and has no v5 value for it; its AA v4.3 values were non-reasoning 25 and max 39 (2026-10-12 read), and the score keeps the v4.3 estimate (high about 34.5).",
+      "intelligence_score": 13
     },
     {
       "model_name": "deepseek/deepseek-v4.1-flash-1017",
@@ -1020,11 +1002,11 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "DeepSeek V4.1 Flash 1017 via OpenRouter (2026-10-17 build) - native image understanding, 1M context, up to 384K output; DeepSeek serves the same build as deepseek-flash. AA Intelligence Index 45 (max effort, read 2026-10-19). Score at the high-effort anchor is an ESTIMATE: AA lists no row at or below high (max 45); high is estimated at 40.5 (range 36-43) from the median max-to-high gap of other models. $0.15/$0.60 per M. Live-tested through PAL's OpenRouter provider on 2026-10-20: it answered correctly.",
+      "description": "DeepSeek V4.1 Flash 1017 via OpenRouter (2026-10-17 build) - native image understanding, 1M context, up to 384K output; DeepSeek serves the same build as deepseek-flash. AA Intelligence Index v5 33 (max effort, read 2026-10-28). Score at the high-effort anchor is an ESTIMATE: AA lists no row at or below high (max 33); high is estimated at 26 (range 19-31) from the median max-to-high gap of other models (6.5). $0.15/$0.60 per M. Live-tested through PAL's OpenRouter provider on 2026-10-20: it answered correctly.",
       "intelligence_score": 15,
-      "aa_index": 40,
+      "aa_index": 26,
       "aa_index_by_effort": {
-        "max": 45
+        "max": 33
       }
     },
     {
@@ -1040,12 +1022,11 @@
       "supports_function_calling": true,
       "supports_images": false,
       "max_image_size_mb": 0.0,
-      "description": "DeepSeek V4 Pro via OpenRouter - flagship reasoning model (1M context). Score at the high-effort anchor is an ESTIMATE: AA lists no row at or below high (max 36); high is estimated at 31.5 (range 27-34) from the median max-to-high gap of other models.",
-      "intelligence_score": 12,
-      "aa_index": 32,
+      "description": "DeepSeek V4 Pro via OpenRouter - flagship reasoning model (1M context). AA Intelligence Index v5 23 (max effort, listed as V4 Pro 0813, read 2026-10-28). Score at the high-effort anchor is an ESTIMATE: AA lists no row at or below high (max 23); high is estimated at 17 (range 10-21) from the median max-to-high gap of other models (6.5).",
+      "intelligence_score": 11,
+      "aa_index": 17,
       "aa_index_by_effort": {
-        "non-reasoning": 20,
-        "max": 36
+        "max": 23
       }
     },
     {
@@ -1092,11 +1073,11 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Alibaba Qwen3.8 Max 0902 via OpenRouter (2026-09-01 snapshot) - post-trained for coding and agent work; #1 on Code Arena WebDev (1691). Artificial Analysis Index v4.3 lists this snapshot at 45 (checked 2026-09-24); score pinned to the native qwen3.8-max-0902 entry.",
+      "description": "Alibaba Qwen3.8 Max 0902 via OpenRouter (2026-09-01 snapshot) - post-trained for coding and agent work; #1 on Code Arena WebDev (1691). AA Intelligence Index v5 lists this snapshot at 34 (one row, read 2026-10-28); score pinned to the native qwen3.8-max-0902 entry.",
       "intelligence_score": 17,
-      "aa_index": 45,
+      "aa_index": 34,
       "aa_index_by_effort": {
-        "default": 45
+        "default": 34
       }
     },
     {
@@ -1112,7 +1093,7 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Alibaba Qwen3.8 Max via OpenRouter - flagship multimodal reasoning (1M context, AA Intelligence Index 40).",
+      "description": "Alibaba Qwen3.8 Max via OpenRouter - flagship multimodal reasoning (1M context, AA Intelligence Index v4.3 40, no v5 value).",
       "intelligence_score": 14
     },
     {
@@ -1129,12 +1110,8 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Alibaba Qwen3.8 Flash via OpenRouter - production serving of the Flash-Next architecture (1M context, text+image+video). Score pinned to the family's Artificial Analysis Intelligence Index 40; AA scored the open-weight Flash-Next checkpoint, hosted checkpoint differs slightly. Pinned to the native qwen3.8-flash entry.",
-      "intelligence_score": 15,
-      "aa_index": 40,
-      "aa_index_by_effort": {
-        "default": 40
-      }
+      "description": "Alibaba Qwen3.8 Flash via OpenRouter - production serving of the Flash-Next architecture (1M context, text+image+video). Score pinned to the family's Artificial Analysis Intelligence Index v4.3 40 (no v5 value); AA scored the open-weight Flash-Next checkpoint, hosted checkpoint differs slightly. Pinned to the native qwen3.8-flash entry.",
+      "intelligence_score": 15
     },
     {
       "model_name": "qwen/qwen3.7-max",
@@ -1164,12 +1141,8 @@
       "supports_function_calling": true,
       "supports_images": false,
       "max_image_size_mb": 20.0,
-      "description": "Alibaba Qwen3.8 2.4T A95B via OpenRouter - the largest Qwen3.8 MoE (2.4T total / 95B active), 1M context, text only. AA Intelligence Index 40. $2/$6 per M.",
-      "intelligence_score": 15,
-      "aa_index": 40,
-      "aa_index_by_effort": {
-        "default": 40
-      }
+      "description": "Alibaba Qwen3.8 2.4T A95B via OpenRouter - the largest Qwen3.8 MoE (2.4T total / 95B active), 1M context, text only. AA Intelligence Index v4.3 40 (no v5 value). $2/$6 per M.",
+      "intelligence_score": 15
     },
     {
       "model_name": "stepfun/step-5-preview",
@@ -1184,11 +1157,11 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "StepFun Step 5 Preview via OpenRouter (released 2026-10-08) - flagship agentic model, sparse MoE (27B active / 600B total), 1M context. AA Intelligence Index 44. $1.00/$2.70 per M. Preview: may change or be withdrawn.",
-      "intelligence_score": 17,
-      "aa_index": 44,
+      "description": "StepFun Step 5 Preview via OpenRouter (released 2026-10-08) - flagship agentic model, sparse MoE (27B active / 600B total), 1M context. AA Intelligence Index v5 29 (one row). $1.00/$2.70 per M. Preview: may change or be withdrawn.",
+      "intelligence_score": 16,
+      "aa_index": 29,
       "aa_index_by_effort": {
-        "default": 44
+        "default": 29
       },
       "effort_levels": [
         "low",
@@ -1210,14 +1183,11 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Alibaba Qwen3.8 27B via OpenRouter - dense open-weight tier (1M context, AA Intelligence Index 34). Score at the high-effort anchor is interpolated: AA has no high row (medium 28, xhigh 34), so high is taken as about 31.",
-      "intelligence_score": 12,
-      "aa_index": 31,
+      "description": "Alibaba Qwen3.8 27B via OpenRouter - dense open-weight tier (1M context, AA Intelligence Index v5 20 at xhigh). Score at the high-effort anchor is an ESTIMATE: AA v5 lists only xhigh (20); high is estimated at 17 (range 12-21) from the median xhigh-to-high gap of other models (2.7).",
+      "intelligence_score": 11,
+      "aa_index": 17,
       "aa_index_by_effort": {
-        "non-reasoning": 20,
-        "low": 26,
-        "medium": 28,
-        "xhigh": 34
+        "xhigh": 20
       }
     },
     {
@@ -1303,11 +1273,11 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Moonshot Kimi K3.1 Pro via OpenRouter (released 2026-10-23) - flagship multimodal reasoning model, a post-trained successor of Kimi K3 (1M context; text, image and video input). $2/$10 per M, about 41 tokens/s. AA Intelligence Index 55 (AA lists one row, the reasoning version, so that row is the high-effort anchor).",
-      "intelligence_score": 20,
-      "aa_index": 55,
+      "description": "Moonshot Kimi K3.1 Pro via OpenRouter (released 2026-10-23) - flagship multimodal reasoning model, a post-trained successor of Kimi K3 (1M context; text, image and video input). $2/$10 per M, about 41 tokens/s. AA Intelligence Index v5 46 (AA lists one row, the reasoning version, so that row is the high-effort anchor); the best open-weight model on v5.",
+      "intelligence_score": 19,
+      "aa_index": 46,
       "aa_index_by_effort": {
-        "default": 55
+        "default": 46
       }
     },
     {
@@ -1322,13 +1292,8 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Moonshot Kimi K3 via OpenRouter - flagship agentic multimodal model (1M context, AA Intelligence Index 44, top open-weights tier). Score at the high-effort anchor is interpolated: AA has no high row (low 30, max 44), so high is taken as about 37.",
-      "intelligence_score": 14,
-      "aa_index": 37,
-      "aa_index_by_effort": {
-        "low": 30,
-        "max": 44
-      }
+      "description": "Moonshot Kimi K3 via OpenRouter - flagship agentic multimodal model (1M context, AA Intelligence Index v4.3 44 at max). AA has no v5 value; the score keeps the v4.3 interpolation (low 30, max 44, high about 37).",
+      "intelligence_score": 14
     },
     {
       "model_name": "moonshotai/kimi-k2.7-code",
@@ -1342,12 +1307,8 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Moonshot Kimi K2.7 Code via OpenRouter - coding-focused variant (256K context, AA Intelligence Index 26).",
-      "intelligence_score": 10,
-      "aa_index": 26,
-      "aa_index_by_effort": {
-        "default": 26
-      }
+      "description": "Moonshot Kimi K2.7 Code via OpenRouter - coding-focused variant (256K context, AA Intelligence Index v4.3 26, no v5 value).",
+      "intelligence_score": 10
     },
     {
       "model_name": "moonshotai/kimi-k2.6",
@@ -1394,12 +1355,12 @@
       "supports_function_calling": true,
       "supports_images": false,
       "max_image_size_mb": 0.0,
-      "description": "Zhipu GLM-5.3 via OpenRouter - flagship reasoning model (1M context, AA Intelligence Index 45, top open-weights tier; reasoning always on). Score at the high-effort anchor is interpolated: AA has no high row (low 34, max 45), so high is taken as about 40.",
+      "description": "Zhipu GLM-5.3 via OpenRouter - flagship reasoning model (1M context, AA Intelligence Index v5 32 at max; reasoning always on). AA Intelligence Index v5: low 23, max 32. Score at the high-effort anchor is interpolated: AA has no high row, so high is taken as about 27.",
       "intelligence_score": 15,
-      "aa_index": 40,
+      "aa_index": 27,
       "aa_index_by_effort": {
-        "low": 34,
-        "max": 45
+        "low": 23,
+        "max": 32
       }
     },
     {
@@ -1415,12 +1376,8 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Zhipu GLM-5.3 Flash via OpenRouter - native multimodal MoE (320B/18B, 1M context, AA Intelligence Index 42); flash sibling of GLM-5.3 at about a seventh of its output price and a thirtieth of its input price (OpenRouter, 2026-09-24).",
-      "intelligence_score": 16,
-      "aa_index": 42,
-      "aa_index_by_effort": {
-        "default": 42
-      }
+      "description": "Zhipu GLM-5.3 Flash via OpenRouter - native multimodal MoE (320B/18B, 1M context, AA Intelligence Index v4.3 42, no v5 value); flash sibling of GLM-5.3 at about a seventh of its output price and a thirtieth of its input price (OpenRouter, 2026-09-24).",
+      "intelligence_score": 16
     },
     {
       "model_name": "z-ai/glm-5.1",
@@ -1466,11 +1423,11 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "allow_code_generation": true,
-      "description": "Meta Muse Wonder via OpenRouter (released 2026-10-12) - frontier reasoning model for complex agentic tasks; AA Intelligence Index 52 (max). $4/$20 per M. Text, image, video, audio and PDF input. AA also lists a Muse Wonder Full (56), which no route PAL uses offers. Score at the high-effort anchor is an ESTIMATE: AA lists no row at or below high (max 52); high is estimated at 47.5 (range 43-50) from the median max-to-high gap of other models.",
+      "description": "Meta Muse Wonder via OpenRouter (released 2026-10-12) - frontier reasoning model for complex agentic tasks; AA Intelligence Index v5 43 (max). $4/$20 per M. Text, image, video, audio and PDF input. AA also lists a Muse Wonder Full (50 at max), which no route PAL uses offers. Score at the high-effort anchor is an ESTIMATE: AA lists no row at or below high (max 43); high is estimated at 37 (range 30-41) from the median max-to-high gap of other models (6.5).",
       "intelligence_score": 18,
-      "aa_index": 48,
+      "aa_index": 37,
       "aa_index_by_effort": {
-        "max": 52
+        "max": 43
       },
       "effort_levels": [
         "low",
@@ -1495,13 +1452,8 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "allow_code_generation": true,
-      "description": "Meta Muse Spark 1.3 via OpenRouter - agentic reasoning model (1M context, AA Intelligence Index 48). Note: OpenRouter gates this model behind an 18+ age attestation on the account; without it the call returns 403 (an account setting, not a bad slug). Score at the high-effort anchor is an ESTIMATE: AA lists no row at or below high (xhigh 45); high is estimated at 43 (range 40-45) from the median xhigh-to-high gap of other models.",
-      "intelligence_score": 17,
-      "aa_index": 43,
-      "aa_index_by_effort": {
-        "xhigh": 45,
-        "max": 48
-      }
+      "description": "Meta Muse Spark 1.3 via OpenRouter - agentic reasoning model (1M context, AA Intelligence Index v4.3 48 at max, no v5 value). Note: OpenRouter gates this model behind an 18+ age attestation on the account; without it the call returns 403 (an account setting, not a bad slug). The score keeps the AA v4.3 ESTIMATE (xhigh 45, high about 43).",
+      "intelligence_score": 17
     },
     {
       "model_name": "meta/muse-spark-open",
@@ -1517,11 +1469,11 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "allow_code_generation": true,
-      "description": "Meta Muse Spark Open via OpenRouter (released 2026-10-15) - open-weight 816B-A42B model trained for agentic coding (1M context; weights under the Muse Model License, which has commercial limits). AA Intelligence Index 39 (xhigh). Score at the high-effort anchor is an ESTIMATE: AA lists no row at or below high (xhigh 39); high is estimated at 37 (range 34-39) from the median xhigh-to-high gap of other models. $1.25/$4.25 per M. Live-tested through PAL's OpenRouter provider on 2026-10-20: it answered correctly, but it spends about 170-300 reasoning tokens even on a one-word answer, so a call with a small max_output_tokens can end before the answer.",
-      "intelligence_score": 14,
-      "aa_index": 37,
+      "description": "Meta Muse Spark Open via OpenRouter (released 2026-10-15) - open-weight 816B-A42B model trained for agentic coding (1M context; weights under the Muse Model License, which has commercial limits). AA Intelligence Index v5 25 (xhigh). Score at the high-effort anchor is an ESTIMATE: AA lists no row at or below high (xhigh 25); high is estimated at 22 (range 16-25) from the median xhigh-to-high gap of other models (2.7). $1.25/$4.25 per M. Live-tested through PAL's OpenRouter provider on 2026-10-20: it answered correctly, but it spends about 170-300 reasoning tokens even on a one-word answer, so a call with a small max_output_tokens can end before the answer.",
+      "intelligence_score": 13,
+      "aa_index": 22,
       "aa_index_by_effort": {
-        "xhigh": 39
+        "xhigh": 25
       }
     },
     {
@@ -1557,15 +1509,15 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "allow_code_generation": true,
-      "description": "Anthropic Claude Haiku 5.5 via OpenRouter (released 2026-10-07) - small, fast tier; AA Intelligence Index 43 at max effort (38 at high). $0.10/$0.50 per M. With DYNAMIC_MODEL_SELECTION on, the bare haiku alias points here.",
-      "intelligence_score": 15,
-      "aa_index": 38,
+      "description": "Anthropic Claude Haiku 5.5 via OpenRouter (released 2026-10-07) - small, fast tier; AA Intelligence Index v5 36 at max effort (30 at high). $0.10/$0.50 per M. With DYNAMIC_MODEL_SELECTION on, the bare haiku alias points here.",
+      "intelligence_score": 16,
+      "aa_index": 30,
       "aa_index_by_effort": {
-        "low": 29,
-        "medium": 34,
-        "high": 38,
-        "xhigh": 41,
-        "max": 43
+        "low": 19,
+        "medium": 25,
+        "high": 30,
+        "xhigh": 34,
+        "max": 36
       },
       "effort_levels": [
         "low",
@@ -1597,15 +1549,15 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "allow_code_generation": true,
-      "description": "Anthropic Claude Sonnet 5.5 via OpenRouter (released 2026-09-28) - AA Intelligence Index 56 at max effort, above Fable 5.1 (53). $2/$10 per M. With DYNAMIC_MODEL_SELECTION on, the bare sonnet alias points here.",
+      "description": "Anthropic Claude Sonnet 5.5 via OpenRouter (released 2026-09-28) - AA Intelligence Index v5 54 at max effort and 41 at high, above Fable 5.1 (49 at max). $2/$10 per M. With DYNAMIC_MODEL_SELECTION on, the bare sonnet alias points here.",
       "intelligence_score": 18,
-      "aa_index": 47,
+      "aa_index": 41,
       "aa_index_by_effort": {
-        "low": 36,
-        "medium": 41,
-        "high": 47,
-        "xhigh": 52,
-        "max": 56
+        "low": 25,
+        "medium": 30,
+        "high": 41,
+        "xhigh": 50,
+        "max": 54
       },
       "dynamic_aliases": [
         "sonnet"
@@ -1634,14 +1586,14 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "allow_code_generation": true,
-      "description": "Anthropic Claude Opus 5.5 via OpenRouter (released 2026-09-22) - AA Intelligence Index 58 at max effort, above Fable 5.1 (53). $4/$20 per M. The bare opus alias points here.",
+      "description": "Anthropic Claude Opus 5.5 via OpenRouter (released 2026-09-22) - AA Intelligence Index v5 58 at max effort and 52 at high, above Fable 5.1 (49 at max). $4/$20 per M. The bare opus alias points here.",
       "intelligence_score": 20,
-      "aa_index": 54,
+      "aa_index": 52,
       "aa_index_by_effort": {
-        "low": 42,
-        "medium": 51,
-        "high": 54,
-        "xhigh": 56,
+        "low": 35,
+        "medium": 48,
+        "high": 52,
+        "xhigh": 57,
         "max": 58
       }
     },
@@ -1667,15 +1619,15 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "allow_code_generation": true,
-      "description": "Anthropic Claude Fable 5.1 via OpenRouter - tops the AA Intelligence Index at 53 (max effort), ahead of Opus 5 (51) and Fable 5 (50). Premium pricing ($10/$50).",
+      "description": "Anthropic Claude Fable 5.1 via OpenRouter - AA Intelligence Index v5 47 at high and 50 at xhigh, below Opus 5.5 (52 at high). Premium pricing ($10/$50).",
       "intelligence_score": 19,
-      "aa_index": 51,
+      "aa_index": 47,
       "aa_index_by_effort": {
-        "low": 47,
-        "medium": 49,
-        "high": 51,
-        "xhigh": 53,
-        "max": 53
+        "low": 39,
+        "medium": 43,
+        "high": 47,
+        "xhigh": 50,
+        "max": 49
       }
     },
     {
@@ -1699,7 +1651,7 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "allow_code_generation": true,
-      "description": "Anthropic Claude Fable 5 via OpenRouter - frontier model (1M context, AA Intelligence Index 50, superseded by Fable 5.1). Premium pricing ($10/$50).",
+      "description": "Anthropic Claude Fable 5 via OpenRouter - frontier model (1M context, AA Intelligence Index v4.3 50 (no v5 value), superseded by Fable 5.1). Premium pricing ($10/$50).",
       "intelligence_score": 18
     },
     {
@@ -1715,11 +1667,11 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "MiniMax M3.1 Flash via OpenRouter - multimodal MoE (1M context) for agentic coding; thinking is always on. $0.15/$0.60 per M (paid endpoint, checked 2026-10-27). AA Intelligence Index 43 (AA lists one row; MiniMax's default effort is max, so the score at the high-effort anchor may be a little high).",
-      "intelligence_score": 17,
-      "aa_index": 43,
+      "description": "MiniMax M3.1 Flash via OpenRouter - multimodal MoE (1M context) for agentic coding; thinking is always on. $0.15/$0.60 per M (paid endpoint, checked 2026-10-27). AA Intelligence Index v5 29 (AA lists one row; MiniMax's default effort is max, so the score at the high-effort anchor may be a little high).",
+      "intelligence_score": 16,
+      "aa_index": 29,
       "aa_index_by_effort": {
-        "default": 43
+        "default": 29
       }
     },
     {
@@ -1734,11 +1686,11 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "MiniMax M3 via OpenRouter - flagship multimodal reasoning (1M context).",
-      "intelligence_score": 11,
-      "aa_index": 29,
+      "description": "MiniMax M3 via OpenRouter - flagship multimodal reasoning (1M context). AA Intelligence Index v5 19 (one row).",
+      "intelligence_score": 12,
+      "aa_index": 19,
       "aa_index_by_effort": {
-        "default": 29
+        "default": 19
       }
     },
     {
@@ -1770,12 +1722,8 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Google Gemma 4 31B via OpenRouter - flagship open model (multimodal).",
-      "intelligence_score": 7,
-      "aa_index": 15,
-      "aa_index_by_effort": {
-        "default": 15
-      }
+      "description": "Google Gemma 4 31B via OpenRouter - flagship open model (multimodal). AA has no v5 value; the score keeps the AA v4.3 value (15).",
+      "intelligence_score": 7
     },
     {
       "model_name": "google/gemma-4-26b-a4b-it",
@@ -1806,11 +1754,11 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Mistral Large 4 via OpenRouter (released 2026-10-06) - frontier multimodal model for reasoning, coding and agentic work (1M context). AA Intelligence Index 38 (listed as Mistral Large 4 Preview). $0.68/$2.09 per M.",
-      "intelligence_score": 15,
-      "aa_index": 38,
+      "description": "Mistral Large 4 via OpenRouter (released 2026-10-06) - frontier multimodal model for reasoning, coding and agentic work (1M context). AA Intelligence Index v5 25 (one row, listed as Mistral Large 4 Preview). $0.68/$2.09 per M.",
+      "intelligence_score": 14,
+      "aa_index": 25,
       "aa_index_by_effort": {
-        "default": 38
+        "default": 25
       },
       "effort_levels": [
         "low",
@@ -1865,11 +1813,11 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Xiaomi MiMo-V2.6-Flash via OpenRouter - 309B MoE with 15B active, MIT weights, 1M context, omnimodal (text/image/audio/video). PROVISIONAL score: Artificial Analysis has not listed this variant; Xiaomi reports it within 4 points of Pro on every benchmark, so it sits one tier below Pro (46 -> 18). Revisit when AA publishes.",
+      "description": "Xiaomi MiMo-V2.6-Flash via OpenRouter - 309B MoE with 15B active, MIT weights, 1M context, omnimodal (text/image/audio/video). AA Intelligence Index v5 27 (one row, read 2026-10-28), three points below Pro (30).",
       "intelligence_score": 15,
-      "aa_index": 38,
+      "aa_index": 27,
       "aa_index_by_effort": {
-        "default": 38
+        "default": 27
       }
     },
     {
@@ -1885,8 +1833,8 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Xiaomi MiMo-V2.6-Pro-UltraSpeed via OpenRouter - the speed variant of MiMo-V2.6-Pro, up to 20x faster output at roughly 10x the price ($4.35/$8.70 per M). PROVISIONAL score: not listed by Artificial Analysis; scored at parity with Pro (46 -> 18) on Xiaomi's same-quality claim. Revisit when AA publishes.",
-      "intelligence_score": 18
+      "description": "Xiaomi MiMo-V2.6-Pro-UltraSpeed via OpenRouter - the speed variant of MiMo-V2.6-Pro, up to 20x faster output at roughly 10x the price ($4.35/$8.70 per M). PROVISIONAL score: not listed by Artificial Analysis; scored at parity with Pro (AA v5 30 -> 16) on Xiaomi's same-quality claim. Revisit when AA publishes.",
+      "intelligence_score": 16
     },
     {
       "model_name": "xiaomi/mimo-v2.6-pro",
@@ -1902,11 +1850,11 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "Xiaomi MiMo-V2.6-Pro via OpenRouter - multimodal reasoning (1M context, AA Intelligence Index 46).",
-      "intelligence_score": 18,
-      "aa_index": 46,
+      "description": "Xiaomi MiMo-V2.6-Pro via OpenRouter - multimodal reasoning (1M context, AA Intelligence Index v5 30, one row).",
+      "intelligence_score": 16,
+      "aa_index": 30,
       "aa_index_by_effort": {
-        "default": 46
+        "default": 30
       }
     },
     {
@@ -1952,12 +1900,8 @@
       "supports_function_calling": true,
       "supports_images": false,
       "max_image_size_mb": 0.0,
-      "description": "OpenAI gpt-oss-120b via OpenRouter - open-weight flagship (reasoning).",
-      "intelligence_score": 6,
-      "aa_index": 12,
-      "aa_index_by_effort": {
-        "high": 12
-      }
+      "description": "OpenAI gpt-oss-120b via OpenRouter - open-weight flagship (reasoning). AA has no v5 value; the score keeps the AA v4.3 value (12 at high).",
+      "intelligence_score": 6
     },
     {
       "model_name": "openai/gpt-oss-20b",
@@ -1972,12 +1916,8 @@
       "supports_function_calling": true,
       "supports_images": false,
       "max_image_size_mb": 0.0,
-      "description": "OpenAI gpt-oss-20b via OpenRouter - small open-weight (reasoning).",
-      "intelligence_score": 5,
-      "aa_index": 9,
-      "aa_index_by_effort": {
-        "high": 9
-      }
+      "description": "OpenAI gpt-oss-20b via OpenRouter - small open-weight (reasoning). AA has no v5 value; the score keeps the AA v4.3 value (9 at high).",
+      "intelligence_score": 5
     },
     {
       "model_name": "meta-llama/llama-4-maverick",
@@ -2022,11 +1962,11 @@
       "supports_function_calling": true,
       "supports_images": false,
       "max_image_size_mb": 0.0,
-      "description": "NVIDIA Nemotron 3 Ultra via OpenRouter - largest Nemotron 3 tier (256K context, AA Intelligence Index 23).",
+      "description": "NVIDIA Nemotron 3 Ultra via OpenRouter - largest Nemotron 3 tier (256K context, AA Intelligence Index v5 12).",
       "intelligence_score": 9,
-      "aa_index": 23,
+      "aa_index": 12,
       "aa_index_by_effort": {
-        "default": 23
+        "default": 12
       }
     },
     {
@@ -2042,12 +1982,8 @@
       "supports_function_calling": true,
       "supports_images": false,
       "max_image_size_mb": 0.0,
-      "description": "NVIDIA Nemotron-3 Super 120B via OpenRouter - flagship reasoning.",
-      "intelligence_score": 6,
-      "aa_index": 13,
-      "aa_index_by_effort": {
-        "default": 13
-      }
+      "description": "NVIDIA Nemotron-3 Super 120B via OpenRouter - flagship reasoning. AA has no v5 value; the score keeps the AA v4.3 value (13).",
+      "intelligence_score": 6
     },
     {
       "model_name": "nvidia/nemotron-3.5-super-vl",
@@ -2062,11 +1998,11 @@
       "supports_function_calling": true,
       "supports_images": true,
       "max_image_size_mb": 20.0,
-      "description": "NVIDIA Nemotron 3.5 Super VL (120B total, 12B active) via OpenRouter (released 2026-10-15) - open multimodal MoE for text, images, documents, GUI screenshots and video (1M context). AA Intelligence Index 26 (one row). $0.15/$0.50 per M. The bare nemotron aliases stay on Nemotron 3 Super, which the native NVIDIA route also serves. Live-tested through PAL's OpenRouter provider on 2026-10-20: it answered correctly (it reasons for about 20-35 tokens before it answers).",
+      "description": "NVIDIA Nemotron 3.5 Super VL (120B total, 12B active) via OpenRouter (released 2026-10-15) - open multimodal MoE for text, images, documents, GUI screenshots and video (1M context). AA Intelligence Index v5 14 (one row). $0.15/$0.50 per M. The bare nemotron aliases stay on Nemotron 3 Super, which the native NVIDIA route also serves. Live-tested through PAL's OpenRouter provider on 2026-10-20: it answered correctly (it reasons for about 20-35 tokens before it answers).",
       "intelligence_score": 10,
-      "aa_index": 26,
+      "aa_index": 14,
       "aa_index_by_effort": {
-        "default": 26
+        "default": 14
       }
     },
     {
@@ -2081,12 +2017,8 @@
       "supports_function_calling": true,
       "supports_images": false,
       "max_image_size_mb": 0.0,
-      "description": "NVIDIA Nemotron-3 Nano 30B via OpenRouter - small, low-cost reasoning.",
-      "intelligence_score": 5,
-      "aa_index": 9,
-      "aa_index_by_effort": {
-        "default": 9
-      }
+      "description": "NVIDIA Nemotron-3 Nano 30B via OpenRouter - small, low-cost reasoning. AA has no v5 value; the score keeps the AA v4.3 value (9).",
+      "intelligence_score": 5
     },
     {
       "model_name": "cohere/command-a-plus",
@@ -2102,11 +2034,11 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "allow_code_generation": true,
-      "description": "Cohere Command A+ via OpenRouter (released 2026-09-22) - enterprise agentic model, text and image input; AA Intelligence Index 13, scored 6 by interpolating between the 6 -> 3 and 21-23 -> 9 anchors. $0.30/$1.50 per M.",
+      "description": "Cohere Command A+ via OpenRouter (released 2026-09-22) - enterprise agentic model, text and image input; AA Intelligence Index v5 6 (one row). $0.30/$1.50 per M.",
       "intelligence_score": 6,
-      "aa_index": 13,
+      "aa_index": 6,
       "aa_index_by_effort": {
-        "default": 13
+        "default": 6
       }
     },
     {
@@ -2124,11 +2056,11 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "allow_code_generation": true,
-      "description": "Reflection Beam 1.0 (501B total, 23B active) via OpenRouter - open-weight text reasoning model for coding and long-horizon agentic work (announced 2026-10-05, on OpenRouter 2026-10-16; 1M context). AA Intelligence Index 30 (one row). $0.30/$1.00 per M. Live-tested through PAL's OpenRouter provider on 2026-10-20: it answered correctly (it reasons for about 16-30 tokens before it answers).",
+      "description": "Reflection Beam 1.0 (501B total, 23B active) via OpenRouter - open-weight text reasoning model for coding and long-horizon agentic work (announced 2026-10-05, on OpenRouter 2026-10-16; 1M context). AA Intelligence Index v5 18 (one row). $0.30/$1.00 per M. Live-tested through PAL's OpenRouter provider on 2026-10-20: it answered correctly (it reasons for about 16-30 tokens before it answers).",
       "intelligence_score": 12,
-      "aa_index": 30,
+      "aa_index": 18,
       "aa_index_by_effort": {
-        "default": 30
+        "default": 18
       }
     },
     {
