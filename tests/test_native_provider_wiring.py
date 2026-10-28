@@ -233,15 +233,15 @@ def _orm():
 
 
 def test_gpt6_astra_present_both_routes():
-    # OpenAI GPT-6 Astra ties the top of the current AA Index at 53 (max effort) -> score 20.
+    # OpenAI GPT-6 Astra: AA Index v5 55 at high -> score 20.
     native = _models("openai_models.json")
-    assert native["gpt-6-astra"]["intelligence_score"] == 19
+    assert native["gpt-6-astra"]["intelligence_score"] == 20
     assert "astra" in native["gpt-6-astra"]["aliases"]
     # OpenAI's API has no gpt-6-astra-pro model ID: pro is reasoning.mode=pro on GPT-6 Astra.
     assert "gpt-6-astra-pro" not in native
 
     orm = _orm()
-    assert orm["openai/gpt-6-astra"]["intelligence_score"] == 19
+    assert orm["openai/gpt-6-astra"]["intelligence_score"] == 20
     # The OpenRouter -pro preset exists, but it spends far more tokens, so it is explicit-only.
     pro = orm["openai/gpt-6-astra-pro"]
     assert pro["auto_selectable"] is False
@@ -255,8 +255,8 @@ def test_deepseek_flash_is_the_api_model_id_and_tracks_the_1017_build():
     flash = ds["deepseek-flash"]
     assert "deepseek-v4.1-flash" not in ds
     assert {"deepseek", "deepseek-v4.1-flash"} <= set(flash["aliases"])
-    assert flash["intelligence_score"] == 15  # AA 45 at max, high estimated at 40.5
-    assert flash["aa_index_by_effort"] == {"max": 45}
+    assert flash["intelligence_score"] == 15  # AA v5 33 at max, high estimated at 26
+    assert flash["aa_index_by_effort"] == {"max": 33}
     assert flash["supports_images"] is True
     assert "deepseek" not in ds["deepseek-v4-pro"]["aliases"]
     assert "deepseek-flash" not in ds["deepseek-v4-flash"]["aliases"]
@@ -282,12 +282,12 @@ def test_qwen38_max_0902_openrouter_mirror():
 
 
 def test_reanchor_top_of_catalog():
-    # The re-anchor must leave a single coherent top: Fable 5.1 and GPT-6 Astra at 20, Opus 5 at 19,
+    # The re-anchor must leave a single coherent top: GPT-6 Astra at 20 (AA v5 55), Fable 5.1 at 19 (47),
     # and no legacy model left above them.
     a = _models("anthropic_models.json")
     o = _models("openai_models.json")
     assert a["claude-fable-5-1"]["intelligence_score"] == 19
-    assert o["gpt-6-astra"]["intelligence_score"] == 19
+    assert o["gpt-6-astra"]["intelligence_score"] == 20
     assert a["claude-opus-5"]["intelligence_score"] == 18
     assert o["gpt-5.6-sol"]["intelligence_score"] == 17
     # No model anywhere may exceed the top of the scale.
@@ -313,8 +313,8 @@ def test_gemini_38_flash_and_family_refresh():
     expected = {
         "google/gemini-3.8-flash": 16,
         "meta/muse-spark-1.3": 17,
-        "xiaomi/mimo-v2.6-pro": 18,
-        "qwen/qwen3.8-27b": 12,
+        "xiaomi/mimo-v2.6-pro": 16,
+        "qwen/qwen3.8-27b": 11,
         "moonshotai/kimi-k2.7-code": 10,
         "nvidia/nemotron-3-ultra-550b-a55b": 9,
     }
@@ -331,20 +331,20 @@ def test_gemini_38_flash_and_family_refresh():
 
 def test_mimo_v26_series_complete():
     # Xiaomi announced the MiMo-V2.6 series (2026-09-22) as three models, not one. All three are
-    # MIT-weight, 1M context and omnimodal. Pro is AA-scored at 46; the other two are provisional.
+    # MIT-weight, 1M context and omnimodal. AA v5 measures Pro (30) and Flash (27); UltraSpeed is provisional.
     orm = _orm()
     expected = {
-        "xiaomi/mimo-v2.6-pro": 18,  # AA Index 46, measured
-        "xiaomi/mimo-v2.6-flash": 15,  # provisional: within 4 points of Pro, one tier below
-        "xiaomi/mimo-v2.6-pro-ultraspeed": 18,  # provisional: vendor-claimed parity with Pro
+        "xiaomi/mimo-v2.6-pro": 16,  # AA Index v5 30, measured
+        "xiaomi/mimo-v2.6-flash": 15,  # AA Index v5 27, measured
+        "xiaomi/mimo-v2.6-pro-ultraspeed": 16,  # provisional: vendor-claimed parity with Pro
     }
     for name, score in expected.items():
         assert name in orm, f"{name} missing from openrouter_models.json"
         assert orm[name]["intelligence_score"] == score, f"{name}: expected {score}"
         assert orm[name]["supports_images"] is True, f"{name}: omnimodal, must accept images"
-    # The two unmeasured entries must say so, so nobody mistakes them for AA-anchored scores.
-    for name in ("xiaomi/mimo-v2.6-flash", "xiaomi/mimo-v2.6-pro-ultraspeed"):
-        assert "PROVISIONAL" in orm[name]["description"], f"{name}: must be tagged PROVISIONAL"
+    # The unmeasured entry must say so, so nobody mistakes it for an AA-anchored score.
+    assert "PROVISIONAL" in orm["xiaomi/mimo-v2.6-pro-ultraspeed"]["description"]
+    assert "PROVISIONAL" not in orm["xiaomi/mimo-v2.6-flash"]["description"]
     # Bare family aliases stay on the flagship.
     assert "mimo" in orm["xiaomi/mimo-v2.6-pro"]["aliases"]
 
@@ -374,13 +374,13 @@ def test_late_september_releases():
     assert "sonnet" not in a["claude-sonnet-5"]["aliases"]
 
     o = _models("openai_models.json")
-    assert o["gpt-6.1-sol"]["intelligence_score"] == 19
+    assert o["gpt-6.1-sol"]["intelligence_score"] == 20
     assert o["gpt-6-luna"]["intelligence_score"] == 13
     assert "sol" in o["gpt-6.1-sol"]["aliases"] and "sol" not in o["gpt-5.6-sol"]["aliases"]
     assert "luna" in o["gpt-6-luna"]["aliases"] and "luna" not in o["gpt-5.6-luna"]["aliases"]
 
     x = _models("xai_models.json")
-    assert x["grok-4.7"]["intelligence_score"] == 18
+    assert x["grok-4.7"]["intelligence_score"] == 17
     assert x["grok-4.7"]["dynamic_aliases"] == ["grok"]
     assert "grok" in x["grok-4"]["aliases"], "default 'grok' target stays upstream's grok-4"
 
@@ -428,27 +428,29 @@ def test_aa_index_by_effort_well_formed():
 def test_october_releases():
     # Releases through 2026-10-13, scored on the max-effort ladder (Phase 3 re-scores at high).
     a = _models("anthropic_models.json")
-    assert a["claude-haiku-5-5"]["intelligence_score"] == 15  # AA 43 (max)
+    assert a["claude-haiku-5-5"]["intelligence_score"] == 16  # AA v5 30 (high)
     assert "haiku" in a["claude-haiku-5-5"]["aliases"]
     assert "haiku" not in a["claude-haiku-4-5-20251001"]["aliases"]
 
     g = _models("gemini_models.json")
-    assert g["gemini-4-argon"]["intelligence_score"] == 20  # AA 53 (high is AA's only row)
+    assert g["gemini-4-argon"]["intelligence_score"] == 20  # AA v5 50 (high is AA's only row)
     assert "dynamic_aliases" not in g["gemini-4-argon"], "Argon must not take over the pro/gemini3 aliases"
 
     orm = _orm()
     expected = {
-        "anthropic/claude-haiku-5.5": 15,
+        "anthropic/claude-haiku-5.5": 16,
         "google/gemini-4-argon": 20,
         "meta/muse-wonder": 18,
-        "mistralai/mistral-large-4-0": 15,
-        "stepfun/step-5-preview": 17,
-        "qwen/qwen3.8-2.4t-a95b": 15,
+        "mistralai/mistral-large-4-0": 14,
+        "stepfun/step-5-preview": 16,
         "openai/gpt-6-luna-pro": 13,
     }
     for name, score in expected.items():
         assert orm[name]["intelligence_score"] == score, name
         assert orm[name].get("aa_index_by_effort") or name.endswith("-pro"), name
+    # AA has no v5 value for Qwen3.8 2.4T, so it keeps its v4.3-based score and has no AA fields.
+    assert orm["qwen/qwen3.8-2.4t-a95b"]["intelligence_score"] == 15
+    assert "aa_index" not in orm["qwen/qwen3.8-2.4t-a95b"]
     # The upstream-owned OpenRouter "haiku" alias moves only under DYNAMIC_MODEL_SELECTION.
     assert orm["anthropic/claude-haiku-5.5"]["dynamic_aliases"] == ["haiku"]
     assert "haiku" in orm["anthropic/claude-3.5-haiku"]["aliases"]
@@ -471,25 +473,25 @@ def test_model_catalog_doc_is_current():
     assert not missing, f"regenerate docs/model_catalog.md; missing: {missing}"
 
 
-# AA Index (at the high-effort anchor) -> intelligence_score. Mirrors the ladder in docs/model_ranking.md.
+# AA Index v5 (at the high-effort anchor) -> intelligence_score. Mirrors the ladder in docs/model_ranking.md.
 AA_LADDER = [
-    (52, 20),
-    (50, 19),
-    (46, 18),
-    (43, 17),
-    (41, 16),
-    (38, 15),
-    (36, 14),
-    (33, 13),
-    (30, 12),
-    (27, 11),
-    (24, 10),
-    (21, 9),
-    (18, 8),
-    (15, 7),
-    (12, 6),
-    (9, 5),
-    (7, 4),
+    (49, 20),
+    (44, 19),
+    (36, 18),
+    (32, 17),
+    (29, 16),
+    (26, 15),
+    (24, 14),
+    (21, 13),
+    (18, 12),
+    (16, 11),
+    (13, 10),
+    (11, 9),
+    (9, 8),
+    (7, 7),
+    (5, 6),
+    (3, 5),
+    (2, 4),
     (0, 3),
 ]
 
@@ -784,10 +786,10 @@ def test_october_19_additions():
     # Models released or listed 2026-10-13..19: AA values read 2026-10-19, scored on the high-effort ladder.
     orm = _orm()
     expected = {
-        "deepseek/deepseek-v4.1-flash-1017": 15,  # max 45, high estimated at 40.5
-        "meta/muse-spark-open": 14,  # xhigh 39, high estimated at 37
-        "reflection/beam-1.0-501b-a23b": 12,  # 30, one row
-        "nvidia/nemotron-3.5-super-vl": 10,  # 26, one row
+        "deepseek/deepseek-v4.1-flash-1017": 15,  # AA v5 max 33, high estimated at 26
+        "meta/muse-spark-open": 13,  # AA v5 xhigh 25, high estimated at 22
+        "reflection/beam-1.0-501b-a23b": 12,  # AA v5 18, one row
+        "nvidia/nemotron-3.5-super-vl": 10,  # AA v5 14, one row
         "inception/mercury-3": 12,  # not measured by AA: provisional
     }
     for name, score in expected.items():
@@ -802,7 +804,7 @@ def test_october_19_additions():
         assert "effort_levels" not in orm[name], name
 
     mm = _models("minimax_models.json")
-    assert mm["MiniMax-M3.1-Flash"]["intelligence_score"] == 17  # 43, one row
+    assert mm["MiniMax-M3.1-Flash"]["intelligence_score"] == 16  # AA v5 29, one row
     assert "minimax" in mm["MiniMax-M3.1-Flash"]["aliases"]
     assert "minimax" not in mm["MiniMax-M3"]["aliases"]
 
@@ -815,10 +817,10 @@ def test_october_26_additions():
     # Models released or listed 2026-10-20..26: AA values read 2026-10-27, scored on the high-effort ladder.
     orm = _orm()
     expected = {
-        "openai/gpt-6.1-terra": 17,  # high 44
-        "openai/gpt-6.1-terra-pro": 17,  # not measured by AA: provisional, pinned to Terra
-        "moonshotai/kimi-k3.1-pro": 20,  # 55, one row
-        "minimax/minimax-m3.1-flash": 17,  # 43, one row
+        "openai/gpt-6.1-terra": 18,  # AA v5 42 at high
+        "openai/gpt-6.1-terra-pro": 18,  # not measured by AA: provisional, pinned to Terra
+        "moonshotai/kimi-k3.1-pro": 19,  # AA v5 46, one row
+        "minimax/minimax-m3.1-flash": 16,  # AA v5 29, one row
     }
     for name, score in expected.items():
         assert orm[name]["intelligence_score"] == score, name
@@ -852,3 +854,16 @@ def test_october_26_additions():
     assert "aa_index" not in hs
     assert "PROVISIONAL" in hs["description"]
     assert "kimi" not in hs["aliases"]
+
+
+def test_gemini_4_carbon_is_catalogued_but_explicit_only():
+    # Gemini 4 Carbon (2026-10-28) leads the AA Index v5 at 59, but Google gives first access only to selected
+    # partners and has not published the API model ID. It is callable by name and never auto-selected.
+    g = _models("gemini_models.json")
+    carbon = g["gemini-4-carbon"]
+    assert carbon["intelligence_score"] == 20
+    assert carbon["aa_index"] == 59 and carbon["aa_index_by_effort"] == {"high": 59}
+    assert carbon["auto_selectable"] is False
+    assert "carbon" in carbon["aliases"]
+    assert "LIMITED ACCESS" in carbon["description"] and "UNVERIFIED" in carbon["description"]
+    assert "gemini-4-carbon" not in _orm() and "google/gemini-4-carbon" not in _orm()

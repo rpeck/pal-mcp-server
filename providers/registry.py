@@ -412,8 +412,19 @@ class ModelProviderRegistry:
             model_map = getattr(provider, "MODEL_CAPABILITIES", None)
             supported_models = list(model_map.keys()) if isinstance(model_map, dict) else []
 
+        # Models with auto_selectable false stay callable by name but must never be picked automatically.
+        excluded: set[str] = set()
+        try:
+            for canonical, capabilities in provider.get_all_model_capabilities().items():
+                if not getattr(capabilities, "auto_selectable", True):
+                    excluded.update(name.lower() for name in [canonical, *capabilities.aliases])
+        except (NotImplementedError, AttributeError):
+            pass
+
         # Filter by restrictions
         for model_name in supported_models:
+            if model_name.lower() in excluded:
+                continue
             if restriction_service.is_allowed(provider_type, model_name):
                 allowed_models.append(model_name)
 

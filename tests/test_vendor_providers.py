@@ -16,7 +16,7 @@ VENDORS = [
     (QwenModelProvider, ProviderType.QWEN, "https://dashscope-intl.aliyuncs.com/compatible-mode/v1", "qwen3.8-max", 14),
     (ZaiModelProvider, ProviderType.ZAI, "https://api.z.ai/api/paas/v4", "glm-5.3", 15),
     (MoonshotModelProvider, ProviderType.MOONSHOT, "https://api.moonshot.ai/v1", "kimi-k3", 14),
-    (MiniMaxModelProvider, ProviderType.MINIMAX, "https://api.minimax.io/v1", "MiniMax-M3", 11),
+    (MiniMaxModelProvider, ProviderType.MINIMAX, "https://api.minimax.io/v1", "MiniMax-M3", 12),
     (MistralModelProvider, ProviderType.MISTRAL, "https://api.mistral.ai/v1", "mistral-large-latest", 10),
     (
         NvidiaModelProvider,
