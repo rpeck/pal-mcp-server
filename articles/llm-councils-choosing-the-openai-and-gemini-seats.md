@@ -1,5 +1,7 @@
 # LLM Councils: Choosing the OpenAI and Gemini Seats for a Claude-Led Council
 
+![A Claude-led LLM Council: Claude synthesizes, a GPT seat critiques, a Gemini seat checks facts, across four difficulty tiers](llm-councils-choosing-the-openai-and-gemini-seats-hero.png)
+
 ***In this article, we work out which OpenAI and Gemini models belong next to Claude in an LLM Council at each level of task difficulty, and I share the repeatable technique behind the choice.***
 
 I use LLM Councils for the hard parts of my engineering work: the plan I write for every task that has more than a couple of pieces and steps, the data migration that can't go wrong, the architecture decision that the team will live with for years, and the code review that has to find the subtle concurrency bug. As you can see, there are various levels of difficulty here.
@@ -166,6 +168,8 @@ SWE-Atlas QnA comes from the coding-agent page, with each model inside its vendo
 
 The most useful finding on the GPT side is how close Sol gets to Astra. GPT-6.1 Sol at `max` matches GPT-6 Astra at `high` on the Index (54.5 against 54.8), on FrontierCode 2.0 (40.6 against 40.1) and on Terminal-Bench 4.0 (56.1 against 54.0), for about 40% of the cost. On a ChatGPT plan that's 40% of the quota, so Sol at `max` takes the hard tier, and Astra moves up to the critical tier, where its `max` row is the best GPT result on the board.
 
+![AA Intelligence Index v5 against cost per task, one line per model from low to max effort: Sol at max matches Astra at high for about 40% of the cost, and Gemini 3.8 Flash costs as much per task as Argon](llm-councils-choosing-the-openai-and-gemini-seats-plot-cost-vs-score.png)
+
 Luna drops off the roster entirely. Sol at `low` scores 34.5 for $0.16 a task, while Luna at `max` scores 27.8 for $0.15, so for the same money Sol makes a better routine seat.
 
 ### On the Gemini side
@@ -173,6 +177,8 @@ Luna drops off the roster entirely. Sol at `low` scores 34.5 for $0.16 a task, w
 Gemini 3.8 Flash looks like the budget pick, and per token it is; however, it spends more tokens per task, so AA's cost per task for Flash comes out the same as Argon's, for about 20 fewer Index points. Flash stays only as the fallback for when Argon is overloaded.
 
 The non-hallucination column, which comes from AA-Omniscience (the knowledge test inside AA's Index), makes the strongest case for the Gemini seat. When Argon doesn't know an answer, it says so 96% of the time instead of guessing, and Carbon does it 89% of the time; Sol and Astra sit between 48% and 58%, and the Claude models between 30% and 50%. On the other hand, Argon's FrontierCode 2.0 score of 25.7 trails every other model here by a wide margin. Together, those two facts define the Gemini seat's job; it checks contracts, interfaces, facts and operational claims, and it leaves line-level code quality to the GPT seat.
+
+![Non-hallucination rate against FrontierCode 2.0 at high effort: the Gemini models sit high on facts, Argon low on code-quality judgment, and the GPT and Claude models lower on facts](llm-councils-choosing-the-openai-and-gemini-seats-plot-facts-vs-code.png)
 
 Carbon is the strongest model on the board at `high`, although most people can't call it yet, since Google is giving first access to selected cyber-defense partners. It leads the Index, FrontierCode 2.0 and Terminal-Bench 4.0 at that effort, while Astra and Sol lead CritPt and Argon leads non-hallucination. AA hasn't measured Carbon at `max` yet, so its ceiling is still an open question.
 

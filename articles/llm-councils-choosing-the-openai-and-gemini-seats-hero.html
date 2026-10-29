@@ -1,0 +1,63 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>LLM Councils hero</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #0f172a; }
+  svg { display: block; }
+</style></head>
+<body>
+<svg width="1200" height="627" viewBox="0 0 1200 627" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </radialGradient>
+    <linearGradient id="tiers" x1="0" x2="1">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="627" fill="url(#glow)"/>
+
+  <!-- Title block -->
+  <text x="64" y="104" fill="#94a3b8" font-size="22" font-weight="600" letter-spacing="3">LLM COUNCILS</text>
+  <text x="64" y="166" fill="#f8fafc" font-size="46" font-weight="700">Choosing the OpenAI</text>
+  <text x="64" y="222" fill="#f8fafc" font-size="46" font-weight="700">and Gemini seats</text>
+  <text x="64" y="270" fill="#cbd5e1" font-size="24">for a Claude-led council</text>
+  <text x="64" y="340" fill="#94a3b8" font-size="19">One policy file. Four councils. Four tiers.</text>
+  <text x="64" y="370" fill="#94a3b8" font-size="19">Picked from the AA Intelligence Index v5.</text>
+
+  <!-- Council: three seats and the critique loop -->
+  <g>
+    <line x1="842" y1="232" x2="728" y2="384" stroke="#94a3b8" stroke-width="2" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+    <line x1="918" y1="232" x2="1032" y2="384" stroke="#94a3b8" stroke-width="2" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+    <line x1="752" y1="430" x2="1008" y2="430" stroke="#94a3b8" stroke-width="2" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+
+    <circle cx="880" cy="170" r="74" fill="#c2410c" opacity="0.18"/>
+    <circle cx="880" cy="170" r="58" fill="#ea580c"/>
+    <text x="880" y="164" text-anchor="middle" fill="#fff7ed" font-size="22" font-weight="700">Claude</text>
+    <text x="880" y="190" text-anchor="middle" fill="#ffedd5" font-size="15">synthesis</text>
+
+    <circle cx="700" cy="430" r="62" fill="#059669" opacity="0.18"/>
+    <circle cx="700" cy="430" r="48" fill="#10b981"/>
+    <text x="700" y="425" text-anchor="middle" fill="#ecfdf5" font-size="20" font-weight="700">GPT</text>
+    <text x="700" y="448" text-anchor="middle" fill="#d1fae5" font-size="13">critic</text>
+    <text x="700" y="512" text-anchor="middle" fill="#cbd5e1" font-size="16">Sol · Astra</text>
+
+    <circle cx="1060" cy="430" r="62" fill="#2563eb" opacity="0.18"/>
+    <circle cx="1060" cy="430" r="48" fill="#3b82f6"/>
+    <text x="1060" y="425" text-anchor="middle" fill="#eff6ff" font-size="20" font-weight="700">Gemini</text>
+    <text x="1060" y="448" text-anchor="middle" fill="#dbeafe" font-size="13">fact check</text>
+    <text x="1060" y="512" text-anchor="middle" fill="#cbd5e1" font-size="16">Argon · Carbon</text>
+  </g>
+
+  <!-- Difficulty tiers -->
+  <rect x="64" y="540" width="1072" height="6" rx="3" fill="url(#tiers)"/>
+  <text x="64" y="580" fill="#cbd5e1" font-size="18">routine</text>
+  <text x="420" y="580" fill="#cbd5e1" font-size="18" text-anchor="middle">standard</text>
+  <text x="780" y="580" fill="#e2e8f0" font-size="18" text-anchor="middle">hard</text>
+  <text x="1136" y="580" fill="#fbbf24" font-size="18" font-weight="700" text-anchor="end">critical</text>
+</svg>
+</body></html>
