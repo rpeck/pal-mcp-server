@@ -39,8 +39,12 @@ code {{ font-family: Menlo, monospace; font-size: 15px; background: #f2f1ed; pad
 
 
 def chrome(*args):
-    return subprocess.run([CHROME, "--headless=new", "--disable-gpu", "--hide-scrollbars", *args],
-                          capture_output=True, text=True, check=True).stdout
+    return subprocess.run(
+        [CHROME, "--headless=new", "--disable-gpu", "--hide-scrollbars", *args],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
 
 
 def render_table(index, table_html):
@@ -52,7 +56,9 @@ def render_table(index, table_html):
     dom = chrome("--virtual-time-budget=2000", f"--window-size={width + 32},2000", "--dump-dom", page.as_uri())
     height = int(re.search(r'data-h="(\d+)"', dom).group(1))
     png = TABLES / f"{SLUG}-table-{index:02d}.png"
-    chrome("--force-device-scale-factor=2", f"--window-size={width + 32},{height}", f"--screenshot={png}", page.as_uri())
+    chrome(
+        "--force-device-scale-factor=2", f"--window-size={width + 32},{height}", f"--screenshot={png}", page.as_uri()
+    )
     page.unlink()
     return png.name
 
@@ -72,7 +78,9 @@ def medium_pre(match):
             lines.append("&nbsp;")
             continue
         stripped = line.lstrip(" \t")
-        lead = line[: len(line) - len(stripped)].replace("\t", WORD_JOINER + FIGURE_SPACE * 4).replace(" ", FIGURE_SPACE)
+        lead = (
+            line[: len(line) - len(stripped)].replace("\t", WORD_JOINER + FIGURE_SPACE * 4).replace(" ", FIGURE_SPACE)
+        )
         inner = re.sub(r"  +", lambda m: FIGURE_SPACE * len(m.group(0)), html.escape(stripped, quote=False))
         lines.append(lead + inner)
     cls = f' class="{lang}"' if lang else ""
@@ -82,8 +90,12 @@ def medium_pre(match):
 def main():
     base = sys.argv[sys.argv.index("--base-url") + 1] if "--base-url" in sys.argv else ""
     TABLES.mkdir(exist_ok=True)
-    body = subprocess.run(["pandoc", str(SRC), "-f", "gfm", "-t", "html5", "--wrap=none", "--syntax-highlighting=none"],
-                          capture_output=True, text=True, check=True).stdout
+    body = subprocess.run(
+        ["pandoc", str(SRC), "-f", "gfm", "-t", "html5", "--wrap=none", "--syntax-highlighting=none"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
 
     # Title and headings: h1 stays the story title; ## -> h3 (large), ### -> h4 (small).
     body = re.sub(r"<h3([^>]*)>(.*?)</h3>", r"<h4>\2</h4>", body)
@@ -94,7 +106,9 @@ def main():
     tables = re.findall(r"<table>.*?</table>", body, re.S)
     for i, t in enumerate(tables, 1):
         name = render_table(i, t)
-        body = body.replace(t, f'<figure><img src="{base}medium-tables/{name}" alt="{html.escape(table_alt(t))}"></figure>', 1)
+        body = body.replace(
+            t, f'<figure><img src="{base}medium-tables/{name}" alt="{html.escape(table_alt(t))}"></figure>', 1
+        )
 
     # Images: pandoc wraps them in <figure> with a caption from the alt text; keep the alt, drop the visible caption.
     body = re.sub(r"<figcaption.*?</figcaption>", "", body, flags=re.S)
@@ -102,17 +116,20 @@ def main():
         body = re.sub(r'src="(?!https?:)([^"]+)"', lambda m: f'src="{base}{m.group(1)}"', body)
 
     # Code blocks -> Medium markup.
-    body = re.sub(r'<pre(?: class="(?:sourceCode )?([\w-]+)")?[^>]*><code[^>]*>(.*?)</code></pre>', medium_pre, body, flags=re.S)
+    body = re.sub(
+        r'<pre(?: class="(?:sourceCode )?([\w-]+)")?[^>]*><code[^>]*>(.*?)</code></pre>', medium_pre, body, flags=re.S
+    )
     body = re.sub(r"</pre>\s+", "</pre>", body)
 
     OUT.write_text(
-        "<!doctype html><html><head><meta charset=\"utf-8\">"
-        f"<title>LLM Councils: Choosing the OpenAI and Gemini Seats</title>"
+        '<!doctype html><html><head><meta charset="utf-8">'
+        "<title>LLM Councils: Choosing the OpenAI and Gemini Seats</title>"
         "<style>body{max-width:720px;margin:40px auto;padding:0 16px;font-family:Georgia,serif;font-size:20px;"
         "line-height:1.6;color:#242424}img{max-width:100%}pre{font-family:Menlo,monospace;font-size:15px;"
         "background:#f2f2f2;padding:16px;white-space:pre-wrap}h1,h3,h4{font-family:-apple-system,Helvetica,"
         "Arial,sans-serif}code{font-size:17px;background:#f2f2f2;padding:1px 4px}</style></head><body>\n"
-        + body + "</body></html>\n"
+        + body
+        + "</body></html>\n"
     )
     print(f"wrote {OUT.name}: {len(tables)} tables as images, base URL {base or '(relative)'}")
 

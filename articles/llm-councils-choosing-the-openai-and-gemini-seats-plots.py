@@ -56,8 +56,13 @@ def label(x, y, text, anchor="start", cls="lbl"):
 
 def cost_vs_score():
     xmin, xmax, ymin, ymax = 0.1, 16.0, 25, 62
-    px = lambda c: LEFT + (math.log10(c) - math.log10(xmin)) / (math.log10(xmax) - math.log10(xmin)) * (W - LEFT - RIGHT)
-    py = lambda s: TOP + (ymax - s) / (ymax - ymin) * (H - TOP - BOTTOM)
+
+    def px(c):
+        return LEFT + (math.log10(c) - math.log10(xmin)) / (math.log10(xmax) - math.log10(xmin)) * (W - LEFT - RIGHT)
+
+    def py(s):
+        return TOP + (ymax - s) / (ymax - ymin) * (H - TOP - BOTTOM)
+
     lines = {
         ("GPT", "GPT-6.1 Sol"): [(0.161, 34.5), (0.359, 46.1), (0.591, 50.2), (1.272, 54.5)],
         ("GPT", "GPT-6 Astra"): [(1.424, 43.0), (2.732, 51.5), (3.239, 54.8), (6.245, 56.9)],
@@ -67,18 +72,26 @@ def cost_vs_score():
     points = {("Gemini", "Gemini 4 Argon"): (7.683, 50.4), ("Gemini", "Gemini 4 Carbon"): (7.756, 59.4)}
     out = []
     for c in (0.1, 0.3, 1, 3, 10):
-        out.append(f'<line x1="{px(c):.1f}" y1="{TOP}" x2="{px(c):.1f}" y2="{H - BOTTOM}" stroke="{GRID}" stroke-width="1"/>')
+        out.append(
+            f'<line x1="{px(c):.1f}" y1="{TOP}" x2="{px(c):.1f}" y2="{H - BOTTOM}" stroke="{GRID}" stroke-width="1"/>'
+        )
         out.append(label(px(c), H - BOTTOM + 30, f"${c:g}", "middle", "ax"))
     for s in (30, 40, 50, 60):
-        out.append(f'<line x1="{LEFT}" y1="{py(s):.1f}" x2="{W - RIGHT}" y2="{py(s):.1f}" stroke="{GRID}" stroke-width="1"/>')
+        out.append(
+            f'<line x1="{LEFT}" y1="{py(s):.1f}" x2="{W - RIGHT}" y2="{py(s):.1f}" stroke="{GRID}" stroke-width="1"/>'
+        )
         out.append(label(LEFT - 14, py(s) + 6, str(s), "end", "ax"))
-    out.append(label((LEFT + W - RIGHT) / 2, H - 30, "Cost per task of AA's Index run (USD, log scale)", "middle", "ax"))
-    out.append(f'<text transform="translate(34,{(TOP + H - BOTTOM) / 2}) rotate(-90)" class="ax" text-anchor="middle">AA Intelligence Index v5</text>')
-    for (vendor, name), pts in lines.items():
+    out.append(
+        label((LEFT + W - RIGHT) / 2, H - 30, "Cost per task of AA's Index run (USD, log scale)", "middle", "ax")
+    )
+    out.append(
+        f'<text transform="translate(34,{(TOP + H - BOTTOM) / 2}) rotate(-90)" class="ax" text-anchor="middle">AA Intelligence Index v5</text>'
+    )
+    for (vendor, _name), pts in lines.items():
         d = " ".join(f"{'M' if i == 0 else 'L'}{px(c):.1f},{py(s):.1f}" for i, (c, s) in enumerate(pts))
         out.append(f'<path d="{d}" fill="none" stroke="{COLOR[vendor]}" stroke-width="2"/>')
         out += [dot(px(c), py(s), COLOR[vendor]) for c, s in pts]
-    for (vendor, name), (c, s) in points.items():
+    for (vendor, _name), (c, s) in points.items():
         out.append(dot(px(c), py(s), COLOR[vendor]))
     # Direct labels at each line's cheapest (low effort) end, and beside the single points.
     out.append(label(px(0.161) + 14, py(34.5) + 26, "Sol (low → max)"))
@@ -89,8 +102,12 @@ def cost_vs_score():
     out.append(label(px(7.756) + 16, py(59.4) + 6, "Carbon"))
     # Callout: Sol at max against Astra at high.
     y = py(54.6)
-    out.append(f'<line x1="{px(1.272) + 10:.1f}" y1="{y:.1f}" x2="{px(3.239) - 10:.1f}" y2="{y:.1f}" stroke="{INK2}" stroke-width="1.5"/>')
-    out.append(f'<line x1="{px(1.9):.1f}" y1="{y - 6:.1f}" x2="{px(1.0):.1f}" y2="{py(59.6):.1f}" stroke="{INK2}" stroke-width="1"/>')
+    out.append(
+        f'<line x1="{px(1.272) + 10:.1f}" y1="{y:.1f}" x2="{px(3.239) - 10:.1f}" y2="{y:.1f}" stroke="{INK2}" stroke-width="1.5"/>'
+    )
+    out.append(
+        f'<line x1="{px(1.9):.1f}" y1="{y - 6:.1f}" x2="{px(1.0):.1f}" y2="{py(59.6):.1f}" stroke="{INK2}" stroke-width="1"/>'
+    )
     out.append(label(px(1.0) - 6, py(60.4), "Sol at max ≈ Astra at high,", "end", "note"))
     out.append(label(px(1.0) - 6, py(60.4) + 24, "for about 40% of the cost", "end", "note"))
     out.append(label(px(6.259) - 16, py(30.0) - 18, "same cost per task as Argon,", "end", "note"))
@@ -106,8 +123,13 @@ def cost_vs_score():
 
 def facts_vs_code():
     xmin, xmax, ymin, ymax = 20, 50, 20, 100
-    px = lambda v: LEFT + (v - xmin) / (xmax - xmin) * (W - LEFT - RIGHT)
-    py = lambda v: TOP + (ymax - v) / (ymax - ymin) * (H - TOP - BOTTOM)
+
+    def px(v):
+        return LEFT + (v - xmin) / (xmax - xmin) * (W - LEFT - RIGHT)
+
+    def py(v):
+        return TOP + (ymax - v) / (ymax - ymin) * (H - TOP - BOTTOM)
+
     pts = [
         ("Gemini", "Gemini 4 Argon", 25.7, 95.7, (16, 6, "start")),
         ("Gemini", "Gemini 4 Carbon", 40.6, 88.6, (16, 6, "start")),
@@ -118,13 +140,27 @@ def facts_vs_code():
     ]
     out = []
     for v in (20, 30, 40, 50):
-        out.append(f'<line x1="{px(v):.1f}" y1="{TOP}" x2="{px(v):.1f}" y2="{H - BOTTOM}" stroke="{GRID}" stroke-width="1"/>')
+        out.append(
+            f'<line x1="{px(v):.1f}" y1="{TOP}" x2="{px(v):.1f}" y2="{H - BOTTOM}" stroke="{GRID}" stroke-width="1"/>'
+        )
         out.append(label(px(v), H - BOTTOM + 30, f"{v}%", "middle", "ax"))
     for v in (20, 40, 60, 80, 100):
-        out.append(f'<line x1="{LEFT}" y1="{py(v):.1f}" x2="{W - RIGHT}" y2="{py(v):.1f}" stroke="{GRID}" stroke-width="1"/>')
+        out.append(
+            f'<line x1="{LEFT}" y1="{py(v):.1f}" x2="{W - RIGHT}" y2="{py(v):.1f}" stroke="{GRID}" stroke-width="1"/>'
+        )
         out.append(label(LEFT - 14, py(v) + 6, f"{v}%", "end", "ax"))
-    out.append(label((LEFT + W - RIGHT) / 2, H - 30, "FrontierCode 2.0: changes a maintainer would merge (code-quality judgment)", "middle", "ax"))
-    out.append(f'<text transform="translate(34,{(TOP + H - BOTTOM) / 2}) rotate(-90)" class="ax" text-anchor="middle">Non-hallucination: says "I don\'t know" instead of guessing</text>')
+    out.append(
+        label(
+            (LEFT + W - RIGHT) / 2,
+            H - 30,
+            "FrontierCode 2.0: changes a maintainer would merge (code-quality judgment)",
+            "middle",
+            "ax",
+        )
+    )
+    out.append(
+        f'<text transform="translate(34,{(TOP + H - BOTTOM) / 2}) rotate(-90)" class="ax" text-anchor="middle">Non-hallucination: says "I don\'t know" instead of guessing</text>'
+    )
     for vendor, name, x, y, (dx, dy, anchor) in pts:
         out.append(dot(px(x), py(y), COLOR[vendor]))
         out.append(label(px(x) + dx, py(y) + dy, name, anchor))
