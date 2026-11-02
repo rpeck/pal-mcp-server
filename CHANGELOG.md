@@ -21,6 +21,7 @@
 - Each log line carries the 8-character ID of its tool call, for example `[3f9a1c2e]`.
 - `chat` saves generated code to `pal_generated.<id>.code`, one file per call, so that parallel calls in the same
   directory do not overwrite each other's file. Before, every call wrote `pal_generated.code`.
+- `clink` declares `readOnlyHint: false`: its CLIs can edit files in the working directory.
 
 ### Bug Fixes
 
