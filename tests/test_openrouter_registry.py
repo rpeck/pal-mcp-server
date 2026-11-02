@@ -96,7 +96,7 @@ class TestOpenRouterModelRegistry:
             ("sonnet", "anthropic/claude-sonnet-4.5"),
             ("o3", "openai/o3"),
             ("deepseek", "deepseek/deepseek-v4.1-flash-1017"),
-            ("mistral", "mistralai/mistral-large-2411"),
+            ("mistral", "mistralai/mistral-large-2512"),
         ]
 
         for alias, expected_model in test_cases:

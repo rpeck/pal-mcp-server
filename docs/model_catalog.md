@@ -1,6 +1,6 @@
 # Model catalog (measured models and explicit-only presets)
 
-Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-10-28. Do not edit by hand; run the script after a catalog change.
+Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-11-02. Do not edit by hand; run the script after a catalog change.
 
 - **Scope:** every model with a measured Artificial Analysis (AA) Intelligence Index value, plus the explicit-only presets. Older and unmeasured entries are in the conf files only.
 - **Score:** the 1-20 `intelligence_score` that auto mode ranks by. See [model_ranking.md](model_ranking.md) for how it is anchored to the AA Index.
@@ -44,7 +44,7 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
-| X.AI (Grok 4.7) | 17 | low 31, high 35, xhigh 34 | native: `grok-4.7`<br>openrouter: `x-ai/grok-4.7` | `grok-4.7`, `grok4.7`; flag-only: `grok` |  |
+| X.AI (Grok 4.7) | 17 | low 31, high 35, xhigh 34 | native: `grok-4.7`<br>openrouter: `x-ai/grok-4.7` | `grok`, `grok-4.7`, `grok4.7` |  |
 
 ## Meta
 
@@ -64,7 +64,7 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
-| Qwen3.8 Max 0902 | 17 | default 34 | native: `qwen3.8-max-0902`<br>openrouter: `qwen/qwen3.8-max-0902` | `qwen-max`, `qwen3-max`, `qwen3.8-max-0902`, `qwen3.8-max-2026-09-02` |  |
+| Qwen3.8 Max 0902 | 17 | default 34 | native: `qwen3.8-max-0902`<br>openrouter: `qwen/qwen3.8-max-0902` | `qwen`, `qwen-max`, `qwen3-max`, `qwen3.8-max`, `qwen3.8-max-0902`, `qwen3.8-max-2026-09-02` |  |
 | Qwen3.8 27B | 11 | xhigh 20 | openrouter: `qwen/qwen3.8-27b` | `qwen3.8-27b` |  |
 
 ## Z.ai (GLM)
