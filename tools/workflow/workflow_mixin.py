@@ -33,6 +33,7 @@ from config import MCP_PROMPT_SIZE_LIMIT
 from utils.conversation_memory import add_turn, create_thread
 from utils.model_calls import run_model_call
 
+from ..shared.argument_errors import build_request
 from ..shared.base_models import ConsolidatedFindings
 from ..shared.exceptions import ToolExecutionError
 
@@ -619,7 +620,7 @@ class BaseWorkflowMixin(ABC):
             self._current_arguments = arguments
 
             # Validate request using tool-specific model
-            request = self.get_workflow_request_model()(**arguments)
+            request = build_request(self.get_name(), self.get_workflow_request_model(), arguments)
 
             # Validate step field size (basic validation for workflow instructions)
             # If step is too large, user should use shorter instructions and put details in files

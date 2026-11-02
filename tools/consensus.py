@@ -28,6 +28,7 @@ from mcp.types import TextContent
 
 from config import TEMPERATURE_ANALYTICAL
 from systemprompts import CONSENSUS_PROMPT
+from tools.shared.argument_errors import build_request
 from tools.shared.base_models import ConsolidatedFindings, WorkflowRequest
 from utils.conversation_memory import MAX_CONVERSATION_TURNS, create_thread, get_thread
 from utils.model_calls import run_model_call
@@ -441,7 +442,7 @@ of the evidence, even when it strongly points in one direction.""",
         self._current_arguments = arguments
 
         # Validate request
-        request = self.get_workflow_request_model()(**arguments)
+        request = build_request(self.get_name(), self.get_workflow_request_model(), arguments)
 
         # Resolve existing continuation_id or create a new one on first step
         continuation_id = request.continuation_id

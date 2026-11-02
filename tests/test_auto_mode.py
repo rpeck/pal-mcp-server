@@ -172,7 +172,7 @@ class TestAutoMode:
             importlib.reload(config)
 
     @pytest.mark.asyncio
-    async def test_unavailable_model_error_message(self):
+    async def test_unavailable_model_error_message(self, tmp_path):
         """Test that unavailable model shows helpful error with available models using real integration testing"""
         # Save original environment
         original_env = {}
@@ -210,6 +210,7 @@ class TestAutoMode:
                     {
                         "absolute_file_paths": ["/tmp/test.py"],
                         "prompt": "Analyze this",
+                        "working_directory_absolute_path": str(tmp_path),
                         "model": "nonexistent-model-xyz",  # This model definitely doesn't exist
                     }
                 )

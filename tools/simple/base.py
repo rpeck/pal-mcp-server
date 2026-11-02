@@ -15,6 +15,7 @@ capabilities from BaseTool.
 from abc import abstractmethod
 from typing import Any, Optional
 
+from tools.shared.argument_errors import build_request
 from tools.shared.base_models import ToolRequest
 from tools.shared.base_tool import BaseTool
 from tools.shared.exceptions import ToolExecutionError
@@ -293,7 +294,7 @@ class SimpleTool(BaseTool):
 
             # Validate request using the tool's Pydantic model
             request_model = self.get_request_model()
-            request = request_model(**arguments)
+            request = build_request(self.get_name(), request_model, arguments)
             logger.debug(f"Request validation successful for {self.get_name()}")
 
             # Validate file paths for security

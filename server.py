@@ -75,6 +75,7 @@ from tools import (  # noqa: E402
     VersionTool,
 )
 from tools.models import ToolOutput  # noqa: E402
+from tools.shared.argument_errors import invalid_arguments_error, schema_problems  # noqa: E402
 from tools.shared.exceptions import ToolExecutionError  # noqa: E402
 from utils.env import env_override_enabled, get_env, get_env_bool  # noqa: E402
 from utils.model_calls import request_id_var  # noqa: E402
@@ -843,7 +844,8 @@ async def handle_list_tools() -> list[Tool]:
     return tools
 
 
-@server.call_tool()
+# PAL validates the arguments itself (handle_call_tool), so that one error lists every problem with its parameter.
+@server.call_tool(validate_input=False)
 async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
     """
     Handle incoming tool execution requests from MCP clients.
@@ -902,6 +904,20 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
     """
     request_id_var.set(uuid.uuid4().hex[:8])
     logger.info(f"MCP tool call: {name}")
+
+    # Reject a call that cannot run before anything else, with an error that says exactly what to fix.
+    if name not in TOOLS:
+        unknown = ToolOutput(
+            status="error",
+            content=f"Unknown tool '{name}'. Nothing ran. Call one of these tools: {', '.join(sorted(TOOLS))}.",
+            content_type="text",
+            metadata={"tool_name": name, "error_type": "unknown_tool"},
+        )
+        raise ToolExecutionError(unknown.model_dump_json())
+    problems = schema_problems(TOOLS[name].get_input_schema(), arguments)
+    if problems:
+        logger.info(f"Invalid arguments for {name}: {len(problems)} problem(s)")
+        raise invalid_arguments_error(name, problems)
     logger.debug(f"MCP tool arguments: {list(arguments.keys())}")
 
     # Log to activity file for monitoring
@@ -1027,10 +1043,6 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
         except Exception:
             pass
         return result
-
-    # Handle unknown tool requests gracefully
-    else:
-        return [TextContent(type="text", text=f"Unknown tool: {name}")]
 
 
 def parse_model_option(model_string: str) -> tuple[str, Optional[str]]:
