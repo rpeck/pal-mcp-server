@@ -30,6 +30,11 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Any, Optional
 
+# Tools import "server" lazily. When this file runs as a script, make that import return this module; otherwise
+# Python runs the file a second time, which adds duplicate log handlers and a second set of tools.
+if __name__ == "__main__":
+    sys.modules.setdefault("server", sys.modules[__name__])
+
 from mcp.server import Server  # noqa: E402
 from mcp.server.models import InitializationOptions  # noqa: E402
 from mcp.server.stdio import stdio_server  # noqa: E402
