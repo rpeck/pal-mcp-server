@@ -7,6 +7,8 @@ call never starts, a running subprocess (for example the Codex CLI) is killed, a
 import asyncio
 import contextvars
 import logging
+import os
+import signal
 import subprocess
 import threading
 from concurrent.futures import Future, ThreadPoolExecutor
@@ -26,6 +28,21 @@ class ModelCallCancelled(Exception):
     """The client canceled the tool call that started this model call."""
 
 
+def kill_process_tree(process: Any) -> None:
+    """Kill a process started with ``start_new_session=True`` and every process in its group.
+
+    A CLI often runs its real work in a child process (for example an npm launcher), so killing only the direct
+    child would leave that work running. Works for ``subprocess.Popen`` and ``asyncio.subprocess.Process``.
+    """
+    try:
+        if hasattr(os, "killpg"):
+            os.killpg(process.pid, signal.SIGKILL)
+        else:
+            process.kill()
+    except OSError:
+        pass  # The process ended already.
+
+
 class CancelToken:
     """Kills the subprocesses of one model call when the client cancels the call. Thread-safe."""
 
@@ -39,17 +56,14 @@ class CancelToken:
             if not self.cancelled:
                 self._processes.append(process)
                 return
-        process.kill()
+        kill_process_tree(process)
 
     def cancel(self) -> None:
         with self._lock:
             self.cancelled = True
             processes, self._processes = self._processes, []
         for process in processes:
-            try:
-                process.kill()
-            except OSError:
-                pass  # The process ended already.
+            kill_process_tree(process)
 
 
 _cancel_token: contextvars.ContextVar[Optional[CancelToken]] = contextvars.ContextVar("pal_cancel_token", default=None)
@@ -130,7 +144,13 @@ def run_cancellable(
         ModelCallCancelled: the client canceled the call while the command ran.
     """
     with subprocess.Popen(
-        command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd, env=env
+        command,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        cwd=cwd,
+        env=env,
+        start_new_session=True,  # its own process group, so a kill reaches its children too
     ) as process:
         token = _cancel_token.get()
         if token is not None:
@@ -138,11 +158,11 @@ def run_cancellable(
         try:
             stdout, stderr = process.communicate(input, timeout=timeout)
         except subprocess.TimeoutExpired:
-            process.kill()
-            process.communicate()
+            kill_process_tree(process)
+            process.wait()
             raise
         except BaseException:
-            process.kill()
+            kill_process_tree(process)
             raise
     raise_if_cancelled()
     return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)

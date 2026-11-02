@@ -2,6 +2,8 @@
 
 import asyncio
 import logging
+import os
+import subprocess
 import sys
 import threading
 import time
@@ -22,25 +24,58 @@ async def wait_until(condition, timeout=5.0):
         await asyncio.sleep(0.02)
 
 
+# A launcher that starts the real work in a child process with the same pipes, as an npm-installed CLI does.
+# The grandchild writes its PID to the file named by the first argument.
+LAUNCHER = (
+    "import subprocess, sys, time; "
+    "subprocess.Popen([sys.executable, '-c', "
+    "'import os, sys, time; open(sys.argv[1], \"w\").write(str(os.getpid())); time.sleep(30)', sys.argv[1]]); "
+    "time.sleep(30)"
+)
+
+
+def process_exists(pid):
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    return True
+
+
 @pytest.mark.asyncio
-async def test_cancel_kills_the_running_subprocess():
+async def test_cancel_kills_the_subprocess_and_its_children(tmp_path):
+    pid_file = tmp_path / "grandchild.pid"
     outcome = []
 
     def codex_like_call():
         start = time.monotonic()
         try:
-            run_cancellable([sys.executable, "-c", "import time; time.sleep(30)"], timeout=60)
+            run_cancellable([sys.executable, "-c", LAUNCHER, str(pid_file)], timeout=60)
         except ModelCallCancelled:
             outcome.append(time.monotonic() - start)
 
     task = asyncio.create_task(run_model_call(codex_like_call))
-    await asyncio.sleep(0.5)
+    await wait_until(lambda: pid_file.exists() and pid_file.read_text())
     task.cancel()
     with pytest.raises(asyncio.CancelledError):
         await task
 
     await wait_until(lambda: outcome)
-    assert outcome[0] < 5, "the subprocess ran on after the cancel"
+    assert outcome[0] < 5, "the call ran on after the cancel"
+    await wait_until(lambda: not process_exists(int(pid_file.read_text())))
+
+
+def test_timeout_kills_the_subprocess_and_its_children(tmp_path):
+    pid_file = tmp_path / "grandchild.pid"
+    start = time.monotonic()
+    with pytest.raises(subprocess.TimeoutExpired):
+        run_cancellable([sys.executable, "-c", LAUNCHER, str(pid_file)], timeout=1)
+
+    assert time.monotonic() - start < 5, "the timeout waited for the child process"
+    deadline = time.monotonic() + 5
+    while process_exists(int(pid_file.read_text())):
+        assert time.monotonic() < deadline, "the child process ran on after the timeout"
+        time.sleep(0.05)
 
 
 @pytest.mark.asyncio

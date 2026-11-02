@@ -284,6 +284,7 @@ class ModelProvider(ABC):
                 retryable = self._is_error_retryable(exc)
                 if not retryable or attempt_number >= attempts:
                     raise
+                raise_if_cancelled()  # The client canceled the call: no retry, and no wait for one.
 
                 delay_idx = min(attempt_index, len(delays) - 1) if delays else -1
                 delay = delays[delay_idx] if delay_idx >= 0 else 0.0

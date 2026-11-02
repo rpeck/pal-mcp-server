@@ -333,7 +333,7 @@ PAL_MAX_PARALLEL_MODEL_CALLS=16
 
 Workflow tools (for example `thinkdeep`, `consensus`) and `clink` run one call at a time for each tool, because they keep
 state across steps or edit files. When a client cancels a tool call, PAL drops a queued model call, kills a running
-Codex or `clink` CLI process, and starts no retry. A running HTTP request to a provider ends by itself; PAL drops its result.
+Codex or `clink` CLI process with its child processes, and starts no retry. A running HTTP request to a provider ends by itself; PAL drops its result.
 
 A client must keep PAL's stdin open until it reads the answer. When stdin closes, the MCP SDK cancels every call that
 still runs, so a script that writes its requests and then closes stdin gets no answer.
