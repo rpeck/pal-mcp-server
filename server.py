@@ -20,6 +20,7 @@ as defined by the MCP protocol.
 
 import asyncio
 import atexit
+import copy
 import logging
 import os
 import sys
@@ -69,6 +70,7 @@ from tools import (  # noqa: E402
 )
 from tools.models import ToolOutput  # noqa: E402
 from tools.shared.exceptions import ToolExecutionError  # noqa: E402
+from tools.simple.base import SimpleTool  # noqa: E402
 from utils.env import env_override_enabled, get_env, get_env_bool  # noqa: E402
 
 # Configure logging for server operations
@@ -280,6 +282,23 @@ TOOLS = {
     "version": VersionTool(),  # Display server version and system information
 }
 TOOLS = filter_disabled_tools(TOOLS)
+
+# One lock per stateful tool. Workflow tools keep state across steps on their shared instance.
+_TOOL_LOCKS: dict[str, asyncio.Lock] = {}
+
+
+async def run_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
+    """Run a tool so that calls from one client can overlap.
+
+    A simple tool keeps only per-call state, so each call runs on its own shallow copy.
+    Any other tool keeps state across calls on its one instance, so its calls run one at a time.
+    """
+    tool = TOOLS[name]
+    if isinstance(tool, SimpleTool):
+        return await copy.copy(tool).execute(arguments)
+    async with _TOOL_LOCKS.setdefault(name, asyncio.Lock()):
+        return await tool.execute(arguments)
+
 
 # Rich prompt templates for all tools
 PROMPT_TEMPLATES = {
@@ -925,7 +944,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
         if not tool.requires_model():
             logger.debug(f"Tool {name} doesn't require model resolution - skipping model validation")
             # Execute tool directly without model context
-            return await tool.execute(arguments)
+            return await run_tool(name, arguments)
 
         # Handle auto mode at MCP boundary - resolve to specific model
         if model_name.lower() == "auto":
@@ -980,7 +999,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
                 raise ToolExecutionError(ToolOutput(**file_size_check).model_dump_json())
 
         # Execute tool with pre-resolved model context
-        result = await tool.execute(arguments)
+        result = await run_tool(name, arguments)
         logger.info(f"Tool '{name}' execution completed")
 
         # Log completion to activity file

@@ -10,6 +10,10 @@
   `op read` on first use and keeps it until it stops. If 1Password is locked, `op` shows a Touch ID prompt. PAL
   waits up to `PAL_OP_TIMEOUT_SECONDS` (default 60) for it. If the read fails, PAL logs one warning and treats the
   key as not set. See [1Password Secret References](docs/1password.md).
+- Tool calls from one client run at the same time. Each model call runs in a worker thread, so a slow model does
+  not stop other calls. Each call of `chat`, `challenge`, `apilookup` or `clink` runs on its own copy of the tool.
+  A workflow tool (for example `thinkdeep` or `consensus`) keeps its state across steps, so it runs one call at a
+  time; different tools run in parallel.
 
 ### Bug Fixes
 
