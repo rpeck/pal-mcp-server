@@ -27,6 +27,7 @@ if TYPE_CHECKING:
 
 from utils.env import get_env
 from utils.image_utils import validate_image
+from utils.model_calls import run_cancellable
 
 from .base import ModelProvider
 from .registries.chatgpt import ChatGPTModelRegistry
@@ -215,14 +216,12 @@ class ChatGPTModelProvider(RegistryBackedProviderMixin, ModelProvider):
         logger.debug("ChatGPT: running %s", " ".join(_redact_command(command)))
         start = time.monotonic()
         try:
-            completed = subprocess.run(
+            completed = run_cancellable(
                 command,
                 input=prompt.encode("utf-8"),
-                capture_output=True,
                 cwd=workspace,
                 env=_child_environment(),
                 timeout=self._timeout_seconds,
-                check=False,
             )
         except subprocess.TimeoutExpired as exc:
             raise ChatGPTCLIError(

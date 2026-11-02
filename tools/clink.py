@@ -85,6 +85,10 @@ class CLinkTool(SimpleTool):
     def get_annotations(self) -> dict[str, Any]:
         return {"readOnlyHint": True}
 
+    def supports_parallel_calls(self) -> bool:
+        """The CLIs run with approvals bypassed and can edit files in the working directory, so one call at a time."""
+        return False
+
     def requires_model(self) -> bool:
         return False
 

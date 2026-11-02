@@ -126,6 +126,10 @@ class BaseCLIAgent:
                 process.communicate(prompt.encode("utf-8")),
                 timeout=self.client.timeout_seconds,
             )
+        except asyncio.CancelledError:
+            # The client canceled the tool call: stop the CLI, which may be editing files.
+            process.kill()
+            raise
         except asyncio.TimeoutError as exc:
             process.kill()
             await process.communicate()

@@ -11,9 +11,16 @@
   waits up to `PAL_OP_TIMEOUT_SECONDS` (default 60) for it. If the read fails, PAL logs one warning and treats the
   key as not set. See [1Password Secret References](docs/1password.md).
 - Tool calls from one client run at the same time. Each model call runs in a worker thread, so a slow model does
-  not stop other calls. Each call of `chat`, `challenge`, `apilookup` or `clink` runs on its own copy of the tool.
-  A workflow tool (for example `thinkdeep` or `consensus`) keeps its state across steps, so it runs one call at a
-  time; different tools run in parallel.
+  not stop other calls. Up to `PAL_MAX_PARALLEL_MODEL_CALLS` (default 16) model calls run at once; more wait in a
+  queue. `chat`, `challenge` and `apilookup` run each call on their own copy of the tool. A workflow tool (for
+  example `thinkdeep` or `consensus`) keeps its state across steps, and the `clink` CLIs edit files, so each of
+  these tools runs one call at a time; different tools run in parallel. Set `PAL_PARALLEL_TOOL_CALLS=false` to run
+  one tool call at a time, as before.
+- When a client cancels a tool call, PAL drops a queued model call, kills a running Codex or `clink` CLI process,
+  and starts no retry.
+- Each log line carries the 8-character ID of its tool call, for example `[3f9a1c2e]`.
+- `chat` saves generated code to `pal_generated.<id>.code`, one file per call, so that parallel calls in the same
+  directory do not overwrite each other's file. Before, every call wrote `pal_generated.code`.
 
 ### Bug Fixes
 

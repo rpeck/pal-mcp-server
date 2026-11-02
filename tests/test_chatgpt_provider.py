@@ -1,6 +1,6 @@
 """Tests for the ChatGPT provider, which runs ChatGPT-plan models through ``codex exec``.
 
-Every test replaces ``subprocess.run``; none starts the Codex CLI or touches the network.
+Every test replaces ``run_cancellable``; none starts the Codex CLI or touches the network.
 """
 
 import base64
@@ -46,7 +46,7 @@ def _reply(text="OK", usage=None) -> bytes:
 
 
 class FakeCodex:
-    """Stands in for ``subprocess.run`` and records each call."""
+    """Stands in for ``run_cancellable`` and records each call."""
 
     def __init__(self, *results):
         self.results = list(results)
@@ -79,7 +79,7 @@ def provider(monkeypatch):
 
 def _use(monkeypatch, *results) -> FakeCodex:
     fake = FakeCodex(*results)
-    monkeypatch.setattr(chatgpt_module.subprocess, "run", fake)
+    monkeypatch.setattr(chatgpt_module, "run_cancellable", fake)
     return fake
 
 

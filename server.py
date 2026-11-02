@@ -25,6 +25,7 @@ import logging
 import os
 import sys
 import time
+import uuid
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Any, Optional
@@ -70,8 +71,8 @@ from tools import (  # noqa: E402
 )
 from tools.models import ToolOutput  # noqa: E402
 from tools.shared.exceptions import ToolExecutionError  # noqa: E402
-from tools.simple.base import SimpleTool  # noqa: E402
 from utils.env import env_override_enabled, get_env, get_env_bool  # noqa: E402
+from utils.model_calls import request_id_var  # noqa: E402
 
 # Configure logging for server operations
 # Can be controlled via LOG_LEVEL environment variable (DEBUG, INFO, WARNING, ERROR)
@@ -81,6 +82,11 @@ log_level = (get_env("LOG_LEVEL", "DEBUG") or "DEBUG").upper()
 
 
 class LocalTimeFormatter(logging.Formatter):
+    def format(self, record):
+        """Add the ID of the tool call that logged the record (``-`` outside a tool call)."""
+        record.request_id = request_id_var.get()
+        return super().format(record)
+
     def formatTime(self, record, datefmt=None):
         """Override to use local timezone instead of UTC"""
         ct = self.converter(record.created)
@@ -93,7 +99,7 @@ class LocalTimeFormatter(logging.Formatter):
 
 
 # Configure both console and file logging
-log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+log_format = "%(asctime)s - %(name)s - %(levelname)s - [%(request_id)s] %(message)s"
 
 # Clear any existing handlers first
 root_logger = logging.getLogger()
@@ -140,7 +146,7 @@ try:
         encoding="utf-8",
     )
     mcp_file_handler.setLevel(logging.INFO)
-    mcp_file_handler.setFormatter(LocalTimeFormatter("%(asctime)s - %(message)s"))
+    mcp_file_handler.setFormatter(LocalTimeFormatter("%(asctime)s - [%(request_id)s] %(message)s"))
     mcp_logger.addHandler(mcp_file_handler)
     mcp_logger.setLevel(logging.INFO)
     # Ensure MCP activity also goes to stderr
@@ -283,18 +289,24 @@ TOOLS = {
 }
 TOOLS = filter_disabled_tools(TOOLS)
 
-# One lock per stateful tool. Workflow tools keep state across steps on their shared instance.
+# Kill switch: PAL_PARALLEL_TOOL_CALLS=false runs one tool call at a time, as before parallel calls.
+PARALLEL_TOOL_CALLS = get_env_bool("PAL_PARALLEL_TOOL_CALLS", True)
+
+# One lock per tool that runs one call at a time; the key "*" serializes every call when the kill switch is off.
 _TOOL_LOCKS: dict[str, asyncio.Lock] = {}
 
 
 async def run_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
     """Run a tool so that calls from one client can overlap.
 
-    A simple tool keeps only per-call state, so each call runs on its own shallow copy.
-    Any other tool keeps state across calls on its one instance, so its calls run one at a time.
+    A tool that supports parallel calls runs each call on its own shallow copy. Any other tool keeps state
+    across calls on its one instance, or edits files, so its calls run one at a time.
     """
     tool = TOOLS[name]
-    if isinstance(tool, SimpleTool):
+    if not PARALLEL_TOOL_CALLS:
+        async with _TOOL_LOCKS.setdefault("*", asyncio.Lock()):
+            return await tool.execute(arguments)
+    if tool.supports_parallel_calls():
         return await copy.copy(tool).execute(arguments)
     async with _TOOL_LOCKS.setdefault(name, asyncio.Lock()):
         return await tool.execute(arguments)
@@ -883,6 +895,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
         3. The CLI continues with codereview tool + continuation_id → full context preserved
         4. Multiple tools can collaborate using same thread ID
     """
+    request_id_var.set(uuid.uuid4().hex[:8])
     logger.info(f"MCP tool call: {name}")
     logger.debug(f"MCP tool arguments: {list(arguments.keys())}")
 

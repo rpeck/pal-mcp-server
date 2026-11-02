@@ -133,7 +133,7 @@ class TestChatTool:
         assert "Evaluate this perspective" in formatted
 
     def test_format_response_multiple_generated_code_blocks(self, tmp_path):
-        """All generated-code blocks should be combined and saved to pal_generated.code."""
+        """All generated-code blocks should be combined and saved to one pal_generated.<id>.code file."""
         tool = ChatTool()
         tool._model_context = SimpleNamespace(capabilities=SimpleNamespace(allow_code_generation=True))
 
@@ -148,7 +148,7 @@ class TestChatTool:
 
         formatted = tool.format_response(response, request)
 
-        saved_path = tmp_path / "pal_generated.code"
+        (saved_path,) = tmp_path.glob("pal_generated.*.code")
         saved_content = saved_path.read_text(encoding="utf-8")
 
         assert "print('world')" in saved_content
@@ -172,7 +172,7 @@ class TestChatTool:
 
         formatted = tool.format_response(response, request)
 
-        saved_path = tmp_path / "pal_generated.code"
+        (saved_path,) = tmp_path.glob("pal_generated.*.code")
         saved_content = saved_path.read_text(encoding="utf-8")
 
         assert "print('only-once')" in saved_content
@@ -191,8 +191,7 @@ class TestChatTool:
 
         formatted = tool.format_response(response, request)
 
-        saved_path = tmp_path / "pal_generated.code"
-        assert not saved_path.exists()
+        assert not list(tmp_path.glob("pal_generated.*.code"))
         assert "print('oops')" in formatted
 
     def test_format_response_ignores_orphaned_closing_tag(self, tmp_path):
@@ -206,8 +205,7 @@ class TestChatTool:
 
         formatted = tool.format_response(response, request)
 
-        saved_path = tmp_path / "pal_generated.code"
-        assert not saved_path.exists()
+        assert not list(tmp_path.glob("pal_generated.*.code"))
         assert "</GENERATED-CODE> just text" in formatted
 
     def test_format_response_preserves_narrative_after_generated_code(self, tmp_path):

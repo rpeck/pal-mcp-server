@@ -9,6 +9,7 @@ images, and conversation continuation for seamless multi-turn interactions.
 import logging
 import os
 import re
+import uuid
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 
@@ -21,6 +22,7 @@ if TYPE_CHECKING:
 from config import TEMPERATURE_BALANCED
 from systemprompts import CHAT_PROMPT, GENERATE_CODE_PROMPT
 from tools.shared.base_models import COMMON_FIELD_DESCRIPTIONS, ToolRequest
+from utils.model_calls import request_id_var
 
 from .simple.base import SimpleTool
 
@@ -251,7 +253,7 @@ class ChatTool(SimpleTool):
                 except Exception as exc:  # pragma: no cover - rare filesystem failures
                     logger.error("Failed to persist generated code block: %s", exc, exc_info=True)
                     warning = (
-                        f"WARNING: Unable to write pal_generated.code inside '{target_directory}'. "
+                        f"WARNING: Unable to write the generated code file inside '{target_directory}'. "
                         "Check the path permissions and re-run. The generated code block is included below for manual handling."
                     )
 
@@ -264,7 +266,7 @@ class ChatTool(SimpleTool):
                 else:
                     if not sanitized_text:
                         base_message = (
-                            "Generated code saved to pal_generated.code.\n"
+                            f"Generated code saved to {artifact_path.name}.\n"
                             "\n"
                             "CRITICAL: Contains mixed instructions + partial snippets - NOT complete code to copy as-is!\n"
                             "\n"
@@ -339,12 +341,11 @@ class ChatTool(SimpleTool):
         if not target_dir.is_dir():
             raise FileNotFoundError(f"Absolute working directory path '{working_directory}' does not exist")
 
-        target_file = target_dir / "pal_generated.code"
-        if target_file.exists():
-            try:
-                target_file.unlink()
-            except OSError as exc:
-                logger.warning("Unable to remove existing pal_generated.code: %s", exc)
+        # One file per call, so parallel calls in the same directory never write to the same file.
+        call_id = request_id_var.get()
+        if call_id == "-":
+            call_id = uuid.uuid4().hex[:8]
+        target_file = target_dir / f"pal_generated.{call_id}.code"
 
         content = block if block.endswith("\n") else f"{block}\n"
         target_file.write_text(content, encoding="utf-8")

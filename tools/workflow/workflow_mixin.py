@@ -20,7 +20,6 @@ Features:
 - Comprehensive type annotations for IDE support
 """
 
-import asyncio
 import json
 import logging
 import os
@@ -32,6 +31,7 @@ from mcp.types import TextContent
 
 from config import MCP_PROMPT_SIZE_LIMIT
 from utils.conversation_memory import add_turn, create_thread
+from utils.model_calls import run_model_call
 
 from ..shared.base_models import ConsolidatedFindings
 from ..shared.exceptions import ToolExecutionError
@@ -1491,7 +1491,7 @@ class BaseWorkflowMixin(ABC):
                 logger.warning(warning)
 
             # Generate AI response - use request parameters if available
-            model_response = await asyncio.to_thread(
+            model_response = await run_model_call(
                 provider.generate_content,
                 prompt=prompt,
                 model_name=model_name,

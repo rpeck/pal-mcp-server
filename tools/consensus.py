@@ -15,7 +15,6 @@ Key features:
 
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 from typing import TYPE_CHECKING, Any
@@ -31,6 +30,7 @@ from config import TEMPERATURE_ANALYTICAL
 from systemprompts import CONSENSUS_PROMPT
 from tools.shared.base_models import ConsolidatedFindings, WorkflowRequest
 from utils.conversation_memory import MAX_CONVERSATION_TURNS, create_thread, get_thread
+from utils.model_calls import run_model_call
 
 from .workflow.base import WorkflowTool
 
@@ -616,7 +616,7 @@ of the evidence, even when it strongly points in one direction.""",
                 logger.warning(warning)
 
             # Call the model with validated temperature
-            response = await asyncio.to_thread(
+            response = await run_model_call(
                 provider.generate_content,
                 prompt=prompt,
                 model_name=model_name,

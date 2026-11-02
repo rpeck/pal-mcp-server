@@ -185,7 +185,7 @@ The `allow_code_generation` capability enables models to generate complete, prod
 1. Only enable for models significantly more capable than your primary CLI to ensure high-quality generated code
 2. The capability triggers structured code output (`<GENERATED-CODE>` blocks) for substantial implementation requests
 3. Minor code changes still use inline code blocks regardless of this setting
-4. Generated code is saved to `pal_generated.code` in the user's working directory
+4. Generated code is saved to `pal_generated.<id>.code` (one file per call) in the user's working directory
 5. Your CLI receives instructions to review and apply the generated code systematically
 
 **Example Configuration:**
@@ -213,7 +213,7 @@ The `allow_code_generation` capability enables models to generate complete, prod
 **Typical Workflow:**
 1. You ask your AI agent to implement a complex new feature using `chat` with a higher-reasoning model such as **gpt-5.2-pro**
 2. GPT-5.2-Pro generates structured implementation and shares the complete implementation with PAL
-3. PAL saves the code to `pal_generated.code` and asks AI agent to implement the plan
+3. PAL saves the code to `pal_generated.<id>.code` (one file per call) and asks AI agent to implement the plan
 4. AI agent continues from the previous context, reads the file, applies the implementation
 
 ### Thinking Mode Configuration
@@ -320,6 +320,20 @@ MAX_CONVERSATION_TURNS=20
 # Logging level: DEBUG, INFO, WARNING, ERROR
 LOG_LEVEL=DEBUG  # Default: shows detailed operational messages
 ```
+
+Each log line carries the 8-character ID of the tool call that wrote it, for example `[3f9a1c2e]` (`[-]` outside a tool call).
+
+**Parallel Tool Calls:**
+```env
+# Run tool calls from one client at the same time (default true). Set to false to run one at a time.
+PAL_PARALLEL_TOOL_CALLS=true
+# Most model calls that run at the same time; more calls wait in a queue (default 16)
+PAL_MAX_PARALLEL_MODEL_CALLS=16
+```
+
+Workflow tools (for example `thinkdeep`, `consensus`) and `clink` run one call at a time for each tool, because they keep
+state across steps or edit files. When a client cancels a tool call, PAL drops a queued model call, kills a running
+Codex or `clink` CLI process, and starts no retry. A running HTTP request to a provider ends by itself; PAL drops its result.
 
 ## Configuration Examples
 
