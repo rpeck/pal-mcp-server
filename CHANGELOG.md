@@ -26,6 +26,13 @@
 
 ### Bug Fixes
 
+- A tool call with invalid arguments fails before anything runs, with one error that lists every problem: each
+  missing, unknown or wrong parameter by name, with the start of its description, and the instruction to fix them
+  and call the tool again. Before, the error named only the first problem, did not name the parameter for a type
+  error, or was a raw pydantic dump. A call to an unknown tool is an error that lists the available tools.
+- OpenRouter: the `pro`, `gemini-pro`, `gemini`, `gemini3` and `pro-openrouter` aliases point to
+  `google/gemini-3.1-pro-preview`. OpenRouter does not serve `google/gemini-3-pro-preview` (404), so every call
+  through these aliases failed. The entry for that model is removed.
 - `python server.py` no longer writes most lines of `mcp_activity.log` twice. A lazy `import server` ran the file a
   second time, which added a second log handler.
 - A Codex timeout now also kills the processes that Codex starts, so the timeout holds when Codex runs through a
