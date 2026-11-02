@@ -9,6 +9,7 @@ Tests that verify OpenRouter functionality including:
 - Error handling when models are not available
 """
 
+import json
 
 from .base_test import BaseSimulatorTest
 
@@ -51,6 +52,7 @@ class OpenRouterModelsTest(BaseSimulatorTest):
                     "prompt": "Say 'Hello from Flash model!' and nothing else.",
                     "model": "flash",
                     "temperature": 0.1,
+                    "working_directory_absolute_path": self.test_dir,
                 },
             )
 
@@ -71,6 +73,7 @@ class OpenRouterModelsTest(BaseSimulatorTest):
                     "prompt": "Say 'Hello from Pro model!' and nothing else.",
                     "model": "pro",
                     "temperature": 0.1,
+                    "working_directory_absolute_path": self.test_dir,
                 },
             )
 
@@ -89,6 +92,7 @@ class OpenRouterModelsTest(BaseSimulatorTest):
                     "prompt": "Say 'Hello from O3 model!' and nothing else.",
                     "model": "o3",
                     "temperature": 0.1,
+                    "working_directory_absolute_path": self.test_dir,
                 },
             )
 
@@ -107,6 +111,7 @@ class OpenRouterModelsTest(BaseSimulatorTest):
                     "prompt": "Say 'Hello from Claude Haiku!' and nothing else.",
                     "model": "anthropic/claude-3-haiku",
                     "temperature": 0.1,
+                    "working_directory_absolute_path": self.test_dir,
                 },
             )
 
@@ -125,6 +130,7 @@ class OpenRouterModelsTest(BaseSimulatorTest):
                     "prompt": "Say 'Hello from Opus!' and nothing else.",
                     "model": "opus",
                     "temperature": 0.1,
+                    "working_directory_absolute_path": self.test_dir,
                 },
             )
 
@@ -134,42 +140,45 @@ class OpenRouterModelsTest(BaseSimulatorTest):
 
             self.logger.info("  ✅ OpenRouter alias call completed")
 
-            # Test 6: Conversation continuity with OpenRouter models
+            # Test 6: Conversation continuity with OpenRouter models. Conversation memory lives in the server
+            # process, so both calls go to one server session.
             self.logger.info("  6: Testing conversation continuity with OpenRouter")
 
-            response6, new_continuation_id = self.call_mcp_tool(
-                "chat",
-                {
-                    "prompt": "Remember this number: 42. What number did I just tell you?",
-                    "model": "sonnet",  # Claude Sonnet via OpenRouter
-                    "temperature": 0.1,
-                },
-            )
+            with self.mcp_session():
+                response6, new_continuation_id = self.call_mcp_tool(
+                    "chat",
+                    {
+                        "prompt": "Remember this number: 42. Reply with only the word OK.",
+                        "model": "sonnet",  # Claude Sonnet via OpenRouter
+                        "temperature": 0.1,
+                        "working_directory_absolute_path": self.test_dir,
+                    },
+                )
 
-            if not response6 or not new_continuation_id:
-                self.logger.error("  ❌ Failed to start conversation with continuation_id")
+                if self._error_in(response6) or not new_continuation_id:
+                    self.logger.error(f"  ❌ Failed to start conversation: {self._error_in(response6)}")
+                    return False
+
+                # Continue the conversation
+                response7, _ = self.call_mcp_tool(
+                    "chat",
+                    {
+                        "prompt": "What was the number I told you earlier? Reply with only the number.",
+                        "model": "sonnet",
+                        "continuation_id": new_continuation_id,
+                        "temperature": 0.1,
+                        "working_directory_absolute_path": self.test_dir,
+                    },
+                )
+
+            if self._error_in(response7):
+                self.logger.error(f"  ❌ Failed to continue conversation: {self._error_in(response7)}")
                 return False
 
-            # Continue the conversation
-            response7, _ = self.call_mcp_tool(
-                "chat",
-                {
-                    "prompt": "What was the number I told you earlier?",
-                    "model": "sonnet",
-                    "continuation_id": new_continuation_id,
-                    "temperature": 0.1,
-                },
-            )
-
-            if not response7:
-                self.logger.error("  ❌ Failed to continue conversation")
+            if "42" not in json.loads(response7).get("content", ""):
+                self.logger.error("  ❌ The model did not remember the number from the earlier turn")
                 return False
-
-            # Check if the model remembered the number
-            if "42" in response7:
-                self.logger.info("  ✅ Conversation continuity working with OpenRouter")
-            else:
-                self.logger.warning("  ⚠️  Model may not have remembered the number")
+            self.logger.info("  ✅ Conversation continuity working with OpenRouter")
 
             # Test 7: Validate OpenRouter API usage from logs
             self.logger.info("  7: Validating OpenRouter API usage in logs")
@@ -235,6 +244,17 @@ class OpenRouterModelsTest(BaseSimulatorTest):
             return False
         finally:
             self.cleanup_test_files()
+
+    @staticmethod
+    def _error_in(response):
+        """The problem with a chat response, or None when it is a normal answer."""
+        if not response:
+            return "no response"
+        try:
+            data = json.loads(response)
+        except ValueError:
+            return response[:200]
+        return data.get("content", "error")[:200] if data.get("status") == "error" else None
 
 
 def main():
