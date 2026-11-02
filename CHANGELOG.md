@@ -17,7 +17,8 @@
   these tools runs one call at a time; different tools run in parallel. Set `PAL_PARALLEL_TOOL_CALLS=false` to run
   one tool call at a time, as before.
 - When a client cancels a tool call, PAL drops a queued model call, kills a running Codex or `clink` CLI process,
-  and starts no retry.
+  and starts no retry. When stdin closes, the MCP SDK cancels every call that still runs, so a client must keep
+  stdin open until it reads the answer. The simulator harness now does this.
 - Each log line carries the 8-character ID of its tool call, for example `[3f9a1c2e]`.
 - `chat` saves generated code to `pal_generated.<id>.code`, one file per call, so that parallel calls in the same
   directory do not overwrite each other's file. Before, every call wrote `pal_generated.code`.

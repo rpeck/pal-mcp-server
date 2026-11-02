@@ -9,6 +9,8 @@ import json
 import logging
 import os
 import subprocess
+import tempfile
+import threading
 from typing import Optional
 
 from .log_utils import LogUtils
@@ -163,26 +165,45 @@ class Calculator:
 
             self.logger.debug(f"Calling MCP tool {tool_name} with proper initialization")
 
-            # Execute the command with proper handling for async responses
-            # For consensus tool and other long-running tools, we need to ensure
-            # the subprocess doesn't close prematurely
-            result = subprocess.run(
-                server_cmd,
-                input=input_data,
-                text=True,
-                capture_output=True,
-                timeout=3600,  # 1 hour timeout
-                check=False,  # Don't raise on non-zero exit code
-            )
+            # Keep stdin open until the tool call answers, as a real MCP client does: when stdin closes, the
+            # MCP SDK cancels every request that still runs. Stderr goes to a file so a full pipe cannot block.
+            timed_out = threading.Event()
+            with tempfile.TemporaryFile(mode="w+") as stderr_file:
+                process = subprocess.Popen(
+                    server_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=stderr_file, text=True
+                )
+                timer = threading.Timer(3600, lambda: (timed_out.set(), process.kill()))  # 1 hour timeout
+                timer.start()
+                stdout_lines = []
+                try:
+                    process.stdin.write(input_data)
+                    process.stdin.flush()
+                    for line in process.stdout:
+                        stdout_lines.append(line)
+                        if self._is_response_to(line, expected_id=2):
+                            break
+                    process.stdin.close()
+                    try:
+                        process.wait(timeout=30)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.wait()
+                finally:
+                    timer.cancel()
+                stderr_file.seek(0)
+                stderr = stderr_file.read()
+            stdout = "".join(stdout_lines)
 
-            if result.returncode != 0:
-                self.logger.error(f"Standalone server failed with return code {result.returncode}")
-                self.logger.error(f"Stderr: {result.stderr}")
+            if timed_out.is_set():
+                raise subprocess.TimeoutExpired(server_cmd, 3600)
+            if process.returncode != 0:
+                self.logger.error(f"Standalone server failed with return code {process.returncode}")
+                self.logger.error(f"Stderr: {stderr}")
                 # Still try to parse stdout as the response might have been written before the error
-                self.logger.debug(f"Attempting to parse stdout despite error: {result.stdout[:500]}")
+                self.logger.debug(f"Attempting to parse stdout despite error: {stdout[:500]}")
 
             # Parse the response - look for the tool call response
-            response_data = self._parse_mcp_response(result.stdout, expected_id=2)
+            response_data = self._parse_mcp_response(stdout, expected_id=2)
             if not response_data:
                 return None, None
 
@@ -197,6 +218,15 @@ class Calculator:
         except Exception as e:
             self.logger.error(f"MCP tool call failed: {e}")
             return None, None
+
+    @staticmethod
+    def _is_response_to(line: str, expected_id: int) -> bool:
+        """Whether one stdout line is the JSON-RPC response with the given ID."""
+        try:
+            message = json.loads(line)
+        except ValueError:
+            return False
+        return isinstance(message, dict) and message.get("id") == expected_id
 
     def _parse_mcp_response(self, stdout: str, expected_id: int = 2) -> Optional[str]:
         """Parse MCP JSON-RPC response from stdout"""
