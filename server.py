@@ -75,7 +75,7 @@ from tools import (  # noqa: E402
     VersionTool,
 )
 from tools.models import ToolOutput  # noqa: E402
-from tools.shared.argument_errors import invalid_arguments_error, schema_problems  # noqa: E402
+from tools.shared.argument_errors import invalid_arguments_error, path_problems, schema_problems  # noqa: E402
 from tools.shared.exceptions import ToolExecutionError  # noqa: E402
 from utils.env import env_override_enabled, get_env, get_env_bool  # noqa: E402
 from utils.model_calls import request_id_var  # noqa: E402
@@ -914,7 +914,8 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
             metadata={"tool_name": name, "error_type": "unknown_tool"},
         )
         raise ToolExecutionError(unknown.model_dump_json())
-    problems = schema_problems(TOOLS[name].get_input_schema(), arguments)
+    schema = TOOLS[name].get_input_schema()
+    problems = schema_problems(schema, arguments) + path_problems(schema, arguments)
     if problems:
         logger.info(f"Invalid arguments for {name}: {len(problems)} problem(s)")
         raise invalid_arguments_error(name, problems)

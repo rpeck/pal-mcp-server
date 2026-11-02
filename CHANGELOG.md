@@ -30,6 +30,12 @@
   missing, unknown or wrong parameter by name, with the start of its description, and the instruction to fix them
   and call the tool again. Before, the error named only the first problem, did not name the parameter for a type
   error, or was a raw pydantic dump. A call to an unknown tool is an error that lists the available tools.
+- A path that PAL must read or work in is checked before anything runs: `absolute_file_paths`, `path` and
+  `style_guide_examples` must exist, and `working_directory_absolute_path` must be an existing directory. Before,
+  a missing file went to the model unread.
+- OpenRouter: 12 more catalog entries that OpenRouter no longer serves are removed. `haiku`, `mistral`,
+  `mistral-large`, `llama`, `codex`, `grok`, `qwen` and `qwen3.8-max` point to the closest live model in the
+  catalog; aliases of one retired version (for example `o3-mini`, `o4-mini`, `sonnet4.1`, `grok4`) are gone.
 - OpenRouter: the `pro`, `gemini-pro`, `gemini`, `gemini3` and `pro-openrouter` aliases point to
   `google/gemini-3.1-pro-preview`. OpenRouter does not serve `google/gemini-3-pro-preview` (404), so every call
   through these aliases failed. The entry for that model is removed.

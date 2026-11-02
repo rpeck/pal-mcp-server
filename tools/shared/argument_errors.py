@@ -4,6 +4,7 @@ The error lists every problem at once (not only the first), names each parameter
 description, so the agent can correct all of them in one retry.
 """
 
+import os
 import re
 from typing import Any
 
@@ -15,6 +16,11 @@ from tools.models import ToolOutput
 from .exceptions import ToolExecutionError
 
 _DESCRIPTION_LIMIT = 160
+
+# Parameters that name paths PAL itself reads or works in, so each path must exist where PAL runs. Agent-reported
+# lists (files_checked, relevant_files) are not here: a review of a change can name a file that the change deletes.
+EXISTING_PATH_PARAMETERS = ("absolute_file_paths", "path", "style_guide_examples")
+EXISTING_DIRECTORY_PARAMETERS = ("working_directory_absolute_path",)
 
 
 def _short(description: str) -> str:
@@ -51,6 +57,50 @@ def schema_problems(schema: dict[str, Any], arguments: dict[str, Any]) -> list[s
                 problems.append(_line(field, f"{error.message}.", properties))
             else:
                 problems.append(f"- arguments: {error.message}.")
+    return problems
+
+
+def _quoted(paths: list[str]) -> str:
+    return ", ".join(f"'{path}'" for path in paths)
+
+
+def path_problems(schema: dict[str, Any], arguments: dict[str, Any]) -> list[str]:
+    """Paths that are relative, do not exist, or are not a directory where a directory is needed."""
+    properties = schema.get("properties", {})
+    problems = []
+    for field in EXISTING_DIRECTORY_PARAMETERS + EXISTING_PATH_PARAMETERS:
+        if field not in properties or not arguments.get(field):
+            continue
+        value = arguments[field]
+        relative, missing, not_directory = [], [], []
+        for path in value if isinstance(value, list) else [value]:
+            if not isinstance(path, str) or not path:
+                continue
+            # A working directory may start with "~"; file paths must already be absolute (as validate_file_paths
+            # in the tools requires).
+            full = os.path.expanduser(path) if field in EXISTING_DIRECTORY_PARAMETERS else path
+            if not os.path.isabs(full):
+                relative.append(path)
+            elif not os.path.exists(full):
+                missing.append(path)
+            elif field in EXISTING_DIRECTORY_PARAMETERS and not os.path.isdir(full):
+                not_directory.append(path)
+        if relative:
+            problems.append(
+                _line(field, f"not an absolute path: {_quoted(relative)}. Pass full absolute paths.", properties)
+            )
+        if missing:
+            problems.append(
+                _line(
+                    field,
+                    f"does not exist: {_quoted(missing)}. Pass only paths that exist on the machine where PAL runs.",
+                    properties,
+                )
+            )
+        if not_directory:
+            problems.append(
+                _line(field, f"not a directory: {_quoted(not_directory)}. Pass an existing directory.", properties)
+            )
     return problems
 
 
