@@ -98,7 +98,7 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
-| Mistral Large 4 | 14 | default 25 | openrouter: `mistralai/mistral-large-4-0` | `mistral-large-4`, `mistral-large-4-0` |  |
+| Mistral Large 4 | 14 | default 25 | openrouter: `mistralai/mistral-large-4-0` | `mistral`, `mistral-large-4`, `mistral-large-4-0` |  |
 
 ## NVIDIA
 

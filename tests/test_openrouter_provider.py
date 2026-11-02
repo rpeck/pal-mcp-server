@@ -88,7 +88,7 @@ class TestOpenRouterProvider:
         assert provider._resolve_model_name("o3pro") == "openai/o3-pro"
         assert provider._resolve_model_name("codex-mini") == "openai/gpt-5.1-codex-mini"
         assert provider._resolve_model_name("haiku") == "anthropic/claude-haiku-5.5"
-        assert provider._resolve_model_name("mistral") == "mistralai/mistral-large-2512"
+        assert provider._resolve_model_name("mistral") == "mistralai/mistral-large-4-0"
         assert provider._resolve_model_name("grok") == "x-ai/grok-4.7"
         assert provider._resolve_model_name("codex") == "openai/gpt-5.1-codex"
         assert provider._resolve_model_name("llama") == "meta-llama/llama-4-maverick"
@@ -100,7 +100,7 @@ class TestOpenRouterProvider:
         assert provider._resolve_model_name("OPUS") == "anthropic/claude-opus-5.5"
         assert provider._resolve_model_name("SONNET") == "anthropic/claude-sonnet-4.5"
         assert provider._resolve_model_name("O3") == "openai/o3"
-        assert provider._resolve_model_name("Mistral") == "mistralai/mistral-large-2512"
+        assert provider._resolve_model_name("Mistral") == "mistralai/mistral-large-4-0"
 
         # Test direct model names (should pass through unchanged)
         assert provider._resolve_model_name("anthropic/claude-opus-4.1") == "anthropic/claude-opus-4.1"
