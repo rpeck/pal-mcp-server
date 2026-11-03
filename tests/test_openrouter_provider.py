@@ -47,7 +47,7 @@ class TestOpenRouterProvider:
         assert provider.validate_model_name("anthropic/claude-3-opus") is True
         assert provider.validate_model_name("google/any-model-name") is True
         assert provider.validate_model_name("groq/llama-3.1-8b") is True
-        assert provider.validate_model_name("grok-4") is True
+        assert provider.validate_model_name("grok") is True
 
         # Unknown models without provider prefix are rejected
         assert provider.validate_model_name("gpt-4") is False
@@ -83,17 +83,16 @@ class TestOpenRouterProvider:
         assert provider._resolve_model_name("opus4.5") == "anthropic/claude-opus-4.5"
         assert provider._resolve_model_name("opus4.1") == "anthropic/claude-opus-4.1"
         assert provider._resolve_model_name("sonnet") == "anthropic/claude-sonnet-4.5"
-        assert provider._resolve_model_name("sonnet4.1") == "anthropic/claude-sonnet-4.1"
+        assert provider._resolve_model_name("sonnet4.5") == "anthropic/claude-sonnet-4.5"
         assert provider._resolve_model_name("o3") == "openai/o3"
-        assert provider._resolve_model_name("o3-mini") == "openai/o3-mini"
-        assert provider._resolve_model_name("o3mini") == "openai/o3-mini"
-        assert provider._resolve_model_name("o4-mini") == "openai/o4-mini"
-        assert provider._resolve_model_name("o4-mini") == "openai/o4-mini"
-        assert provider._resolve_model_name("haiku") == "anthropic/claude-3.5-haiku"
-        assert provider._resolve_model_name("mistral") == "mistralai/mistral-large-2411"
-        assert provider._resolve_model_name("grok-4") == "x-ai/grok-4"
-        assert provider._resolve_model_name("grok4") == "x-ai/grok-4"
-        assert provider._resolve_model_name("grok") == "x-ai/grok-4"
+        assert provider._resolve_model_name("o3pro") == "openai/o3-pro"
+        assert provider._resolve_model_name("codex-mini") == "openai/gpt-5.1-codex-mini"
+        assert provider._resolve_model_name("haiku") == "anthropic/claude-haiku-5.5"
+        assert provider._resolve_model_name("mistral") == "mistralai/mistral-large-4-0"
+        assert provider._resolve_model_name("grok") == "x-ai/grok-4.7"
+        assert provider._resolve_model_name("codex") == "openai/gpt-5.1-codex"
+        assert provider._resolve_model_name("llama") == "meta-llama/llama-4-maverick"
+        assert provider._resolve_model_name("qwen") == "qwen/qwen3.8-max-0902"
         assert provider._resolve_model_name("deepseek") == "deepseek/deepseek-v4.1-flash-1017"
         assert provider._resolve_model_name("r1") == "deepseek/deepseek-r1-0528"
 
@@ -101,7 +100,7 @@ class TestOpenRouterProvider:
         assert provider._resolve_model_name("OPUS") == "anthropic/claude-opus-5.5"
         assert provider._resolve_model_name("SONNET") == "anthropic/claude-sonnet-4.5"
         assert provider._resolve_model_name("O3") == "openai/o3"
-        assert provider._resolve_model_name("Mistral") == "mistralai/mistral-large-2411"
+        assert provider._resolve_model_name("Mistral") == "mistralai/mistral-large-4-0"
 
         # Test direct model names (should pass through unchanged)
         assert provider._resolve_model_name("anthropic/claude-opus-4.1") == "anthropic/claude-opus-4.1"
@@ -350,10 +349,11 @@ class TestOpenRouterRegistry:
             assert config is not None
             assert config.model_name == "anthropic/claude-sonnet-4.5"
 
-        # Test Sonnet 4.1 alias
-        config = registry.resolve("sonnet4.1")
-        assert config is not None
-        assert config.model_name == "anthropic/claude-sonnet-4.1"
+        # The family alias claude-sonnet and the versioned sonnet-5.5 both reach Claude Sonnet 5.5
+        for alias in ["claude-sonnet", "sonnet-5.5"]:
+            config = registry.resolve(alias)
+            assert config is not None
+            assert config.model_name == "anthropic/claude-sonnet-5.5"
 
 
 class TestOpenRouterFunctionality:

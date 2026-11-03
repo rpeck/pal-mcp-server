@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from tools.models import ToolModelCategory
 
 from config import TEMPERATURE_ANALYTICAL
+from tools.shared.argument_errors import build_request
 from tools.shared.base_models import ToolRequest
 from tools.shared.exceptions import ToolExecutionError
 
@@ -119,7 +120,7 @@ class ChallengeTool(SimpleTool):
 
         try:
             # Validate request
-            request = self.get_request_model()(**arguments)
+            request = build_request(self.get_name(), self.get_request_model(), arguments)
 
             # Wrap the prompt in challenge instructions
             wrapped_prompt = self._wrap_prompt_for_challenge(request.prompt)

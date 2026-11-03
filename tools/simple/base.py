@@ -15,10 +15,12 @@ capabilities from BaseTool.
 from abc import abstractmethod
 from typing import Any, Optional
 
+from tools.shared.argument_errors import build_request
 from tools.shared.base_models import ToolRequest
 from tools.shared.base_tool import BaseTool
 from tools.shared.exceptions import ToolExecutionError
 from tools.shared.schema_builders import SchemaBuilder
+from utils.model_calls import run_model_call
 
 
 class SimpleTool(BaseTool):
@@ -100,6 +102,10 @@ class SimpleTool(BaseTool):
             List of required field names
         """
         return []
+
+    def supports_parallel_calls(self) -> bool:
+        """A simple tool keeps its state per call, so each call can run on its own shallow copy."""
+        return True
 
     def get_annotations(self) -> Optional[dict[str, Any]]:
         """
@@ -288,7 +294,7 @@ class SimpleTool(BaseTool):
 
             # Validate request using the tool's Pydantic model
             request_model = self.get_request_model()
-            request = request_model(**arguments)
+            request = build_request(self.get_name(), request_model, arguments)
             logger.debug(f"Request validation successful for {self.get_name()}")
 
             # Validate file paths for security
@@ -441,7 +447,8 @@ class SimpleTool(BaseTool):
             supports_thinking = capabilities.supports_extended_thinking
 
             # Generate content with provider abstraction
-            model_response = provider.generate_content(
+            model_response = await run_model_call(
+                provider.generate_content,
                 prompt=prompt,
                 model_name=self._current_model_name,
                 system_prompt=system_prompt,
@@ -498,7 +505,8 @@ class SimpleTool(BaseTool):
                         retry_prompt = f"{original_prompt}\n\nIMPORTANT: Please provide a substantive response. If you cannot respond to the above request, please explain why and suggest alternatives."
 
                         try:
-                            retry_response = provider.generate_content(
+                            retry_response = await run_model_call(
+                                provider.generate_content,
                                 prompt=retry_prompt,
                                 model_name=self._current_model_name,
                                 system_prompt=system_prompt,

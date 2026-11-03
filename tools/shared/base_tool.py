@@ -202,6 +202,13 @@ class BaseTool(ABC):
         suffix = "" if base_prompt.endswith("\n\n") else "\n\n"
         return f"{base_prompt}{suffix}{addition_text}"
 
+    def supports_parallel_calls(self) -> bool:
+        """Whether calls of this tool can run at the same time, each on a shallow copy of the tool.
+
+        True only for a tool that keeps all its state per call and edits no files that another call can use.
+        """
+        return False
+
     def get_annotations(self) -> Optional[dict[str, Any]]:
         """
         Return optional annotations for this tool.

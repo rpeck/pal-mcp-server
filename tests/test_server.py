@@ -2,6 +2,7 @@
 Tests for the main server functionality
 """
 
+import json
 import logging
 import os
 from logging.handlers import RotatingFileHandler
@@ -10,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from server import handle_call_tool
+from tools.shared.exceptions import ToolExecutionError
 
 
 def test_unit_tests_write_server_logs_to_a_temporary_directory():
@@ -32,13 +34,15 @@ class TestServerTools:
 
     @pytest.mark.asyncio
     async def test_handle_call_tool_unknown(self):
-        """Test calling an unknown tool"""
-        result = await handle_call_tool("unknown_tool", {})
-        assert len(result) == 1
-        assert "Unknown tool: unknown_tool" in result[0].text
+        """An unknown tool fails (isError) and names the tools that exist."""
+        with pytest.raises(ToolExecutionError) as raised:
+            await handle_call_tool("unknown_tool", {})
+        content = json.loads(raised.value.payload)["content"]
+        assert "Unknown tool 'unknown_tool'. Nothing ran. Call one of these tools:" in content
+        assert "chat" in content
 
     @pytest.mark.asyncio
-    async def test_handle_chat(self):
+    async def test_handle_chat(self, tmp_path):
         """Test chat functionality using real integration testing"""
         import importlib
         import os
@@ -71,7 +75,10 @@ class TestServerTools:
 
             # Test with real provider resolution
             try:
-                result = await handle_call_tool("chat", {"prompt": "Hello Gemini", "model": "o3-mini"})
+                result = await handle_call_tool(
+                    "chat",
+                    {"prompt": "Hello Gemini", "model": "o3-mini", "working_directory_absolute_path": str(tmp_path)},
+                )
 
                 # If we get here, check the response format
                 assert len(result) == 1

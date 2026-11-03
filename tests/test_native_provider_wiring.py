@@ -34,7 +34,6 @@ SCORE_PINS = [
     ("deepseek_models.json", "deepseek-v4-pro", "deepseek/deepseek-v4-pro"),
     ("deepseek_models.json", "deepseek-v4-flash", "deepseek/deepseek-v4-flash"),
     ("deepseek_models.json", "deepseek-reasoner", "deepseek/deepseek-r1-0528"),
-    ("qwen_models.json", "qwen3.8-max", "qwen/qwen3.8-max"),
     ("qwen_models.json", "qwen3.8-flash", "qwen/qwen3.8-flash"),
     ("zai_models.json", "glm-5.3", "z-ai/glm-5.3"),
     ("zai_models.json", "glm-5.3-flash", "z-ai/glm-5.3-flash"),
@@ -278,7 +277,9 @@ def test_qwen38_max_0902_openrouter_mirror():
     assert "qwen/qwen3.8-max-0902" in orm
     assert orm["qwen/qwen3.8-max-0902"]["intelligence_score"] == 17
     assert "qwen-max" in orm["qwen/qwen3.8-max-0902"]["aliases"]
-    assert "qwen-max" not in orm["qwen/qwen3.8-max"]["aliases"]
+    # OpenRouter does not serve qwen/qwen3.8-max, so its aliases point to the 0902 snapshot.
+    assert {"qwen", "qwen3.8-max"} <= set(orm["qwen/qwen3.8-max-0902"]["aliases"])
+    assert "qwen/qwen3.8-max" not in orm
 
 
 def test_reanchor_top_of_catalog():
@@ -451,9 +452,11 @@ def test_october_releases():
     # AA has no v5 value for Qwen3.8 2.4T, so it keeps its v4.3-based score and has no AA fields.
     assert orm["qwen/qwen3.8-2.4t-a95b"]["intelligence_score"] == 15
     assert "aa_index" not in orm["qwen/qwen3.8-2.4t-a95b"]
-    # The upstream-owned OpenRouter "haiku" alias moves only under DYNAMIC_MODEL_SELECTION.
+    # OpenRouter does not serve anthropic/claude-3.5-haiku, so "haiku" points to Haiku 5.5 with or without
+    # DYNAMIC_MODEL_SELECTION.
     assert orm["anthropic/claude-haiku-5.5"]["dynamic_aliases"] == ["haiku"]
-    assert "haiku" in orm["anthropic/claude-3.5-haiku"]["aliases"]
+    assert "haiku" in orm["anthropic/claude-haiku-5.5"]["aliases"]
+    assert "anthropic/claude-3.5-haiku" not in orm
     # Pro presets stay explicit-only.
     assert orm["openai/gpt-6-luna-pro"]["auto_selectable"] is False
 

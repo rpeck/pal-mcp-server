@@ -74,56 +74,6 @@
       "intelligence_score": 11
     },
     {
-      "model_name": "anthropic/claude-sonnet-4.1",
-      "aliases": [
-        "sonnet4.1"
-      ],
-      "context_window": 200000,
-      "max_output_tokens": 64000,
-      "supports_extended_thinking": false,
-      "supports_json_mode": false,
-      "supports_function_calling": false,
-      "supports_images": true,
-      "max_image_size_mb": 5.0,
-      "description": "Claude Sonnet 4.1 - Last generation high-performance model with exceptional reasoning and efficiency",
-      "intelligence_score": 8
-    },
-    {
-      "model_name": "anthropic/claude-3.5-haiku",
-      "aliases": [
-        "haiku"
-      ],
-      "context_window": 200000,
-      "max_output_tokens": 64000,
-      "supports_extended_thinking": false,
-      "supports_json_mode": false,
-      "supports_function_calling": false,
-      "supports_images": true,
-      "max_image_size_mb": 5.0,
-      "description": "Claude 3 Haiku - Fast and efficient with vision",
-      "intelligence_score": 8
-    },
-    {
-      "model_name": "google/gemini-3-pro-preview",
-      "aliases": [
-        "pro",
-        "gemini-pro",
-        "gemini",
-        "gemini3",
-        "pro-openrouter"
-      ],
-      "context_window": 1048576,
-      "max_output_tokens": 65536,
-      "supports_extended_thinking": true,
-      "supports_json_mode": true,
-      "supports_function_calling": true,
-      "supports_images": true,
-      "max_image_size_mb": 20.0,
-      "allow_code_generation": true,
-      "description": "Google's Gemini 3.0 Pro via OpenRouter with vision",
-      "intelligence_score": 14
-    },
-    {
       "model_name": "google/gemini-2.5-pro",
       "aliases": [
         "gemini-2.5",
@@ -157,41 +107,6 @@
       "intelligence_score": 8
     },
     {
-      "model_name": "mistralai/mistral-large-2411",
-      "aliases": [
-        "mistral-large",
-        "mistral"
-      ],
-      "context_window": 128000,
-      "max_output_tokens": 32000,
-      "supports_extended_thinking": false,
-      "supports_json_mode": true,
-      "supports_function_calling": true,
-      "supports_images": false,
-      "max_image_size_mb": 0.0,
-      "description": "Mistral's largest model (text-only)",
-      "intelligence_score": 9
-    },
-    {
-      "model_name": "meta-llama/llama-3-70b",
-      "aliases": [
-        "llama",
-        "llama3",
-        "llama3-70b",
-        "llama-70b",
-        "llama3-openrouter"
-      ],
-      "context_window": 8192,
-      "max_output_tokens": 8192,
-      "supports_extended_thinking": false,
-      "supports_json_mode": false,
-      "supports_function_calling": false,
-      "supports_images": false,
-      "max_image_size_mb": 0.0,
-      "description": "Meta's Llama 3 70B model (text-only)",
-      "intelligence_score": 9
-    },
-    {
       "model_name": "deepseek/deepseek-r1-0528",
       "aliases": [
         "deepseek-r1",
@@ -207,23 +122,6 @@
       "max_image_size_mb": 0.0,
       "description": "DeepSeek R1 with thinking mode - advanced reasoning capabilities (text-only)",
       "intelligence_score": 11
-    },
-    {
-      "model_name": "perplexity/llama-3-sonar-large-32k-online",
-      "aliases": [
-        "perplexity",
-        "sonar",
-        "perplexity-online"
-      ],
-      "context_window": 32768,
-      "max_output_tokens": 32768,
-      "supports_extended_thinking": false,
-      "supports_json_mode": false,
-      "supports_function_calling": false,
-      "supports_images": false,
-      "max_image_size_mb": 0.0,
-      "description": "Perplexity's online model with web search (text-only)",
-      "intelligence_score": 9
     },
     {
       "model_name": "openai/o3",
@@ -243,42 +141,6 @@
       "intelligence_score": 11
     },
     {
-      "model_name": "openai/o3-mini",
-      "aliases": [
-        "o3-mini",
-        "o3mini"
-      ],
-      "context_window": 200000,
-      "max_output_tokens": 100000,
-      "supports_extended_thinking": false,
-      "supports_json_mode": true,
-      "supports_function_calling": true,
-      "supports_images": true,
-      "max_image_size_mb": 20.0,
-      "supports_temperature": false,
-      "temperature_constraint": "fixed",
-      "description": "OpenAI's o3-mini model - balanced performance and speed with vision",
-      "intelligence_score": 10
-    },
-    {
-      "model_name": "openai/o3-mini-high",
-      "aliases": [
-        "o3-mini-high",
-        "o3mini-high"
-      ],
-      "context_window": 200000,
-      "max_output_tokens": 100000,
-      "supports_extended_thinking": false,
-      "supports_json_mode": true,
-      "supports_function_calling": true,
-      "supports_images": true,
-      "max_image_size_mb": 20.0,
-      "supports_temperature": false,
-      "temperature_constraint": "fixed",
-      "description": "OpenAI's o3-mini with high reasoning effort - optimized for complex problems with vision",
-      "intelligence_score": 11
-    },
-    {
       "model_name": "openai/o3-pro",
       "aliases": [
         "o3pro"
@@ -294,24 +156,6 @@
       "temperature_constraint": "fixed",
       "description": "OpenAI's o3-pro model - professional-grade reasoning and analysis with vision",
       "intelligence_score": 11
-    },
-    {
-      "model_name": "openai/o4-mini",
-      "aliases": [
-        "o4-mini",
-        "o4mini"
-      ],
-      "context_window": 200000,
-      "max_output_tokens": 100000,
-      "supports_extended_thinking": false,
-      "supports_json_mode": true,
-      "supports_function_calling": true,
-      "supports_images": true,
-      "max_image_size_mb": 20.0,
-      "supports_temperature": false,
-      "temperature_constraint": "fixed",
-      "description": "OpenAI's o4-mini model - optimized for shorter contexts with rapid reasoning and vision",
-      "intelligence_score": 9
     },
     {
       "model_name": "openai/gpt-5",
@@ -350,22 +194,6 @@
       "allow_code_generation": true,
       "description": "GPT-5.2 Pro - Advanced reasoning model with highest quality responses (text+image input, text output only)",
       "intelligence_score": 14
-    },
-    {
-      "model_name": "openai/gpt-5-codex",
-      "aliases": [
-        "codex",
-        "gpt5codex"
-      ],
-      "context_window": 400000,
-      "max_output_tokens": 128000,
-      "supports_extended_thinking": false,
-      "supports_json_mode": true,
-      "supports_function_calling": false,
-      "supports_images": false,
-      "max_image_size_mb": 0.0,
-      "description": "GPT-5-Codex is a specialized version of GPT-5 optimized for software engineering and coding workflows",
-      "intelligence_score": 13
     },
     {
       "model_name": "openai/gpt-5-mini",
@@ -429,7 +257,8 @@
         "gpt-5.1-codex",
         "gpt5.1code",
         "gpt-5.1-code",
-        "codex-5.1"
+        "codex-5.1",
+        "codex"
       ],
       "context_window": 400000,
       "max_output_tokens": 128000,
@@ -471,7 +300,8 @@
       "model_name": "x-ai/grok-4.7",
       "aliases": [
         "grok-4.7",
-        "grok4.7"
+        "grok4.7",
+        "grok"
       ],
       "context_window": 500000,
       "max_output_tokens": 128000,
@@ -493,43 +323,6 @@
       "dynamic_aliases": [
         "grok"
       ]
-    },
-    {
-      "model_name": "x-ai/grok-4",
-      "aliases": [
-        "grok-4",
-        "grok4",
-        "grok"
-      ],
-      "context_window": 256000,
-      "max_output_tokens": 256000,
-      "supports_extended_thinking": true,
-      "supports_json_mode": true,
-      "supports_function_calling": true,
-      "supports_images": true,
-      "max_image_size_mb": 20.0,
-      "supports_temperature": true,
-      "temperature_constraint": "range",
-      "description": "xAI's Grok 4 via OpenRouter with vision and advanced reasoning",
-      "intelligence_score": 11
-    },
-    {
-      "model_name": "x-ai/grok-4.1-fast",
-      "aliases": [
-        "grok-4.1-fast-openrouter",
-        "grok-4.1-openrouter"
-      ],
-      "context_window": 2000000,
-      "max_output_tokens": 2000000,
-      "supports_extended_thinking": true,
-      "supports_json_mode": true,
-      "supports_function_calling": true,
-      "supports_images": true,
-      "max_image_size_mb": 20.0,
-      "supports_temperature": true,
-      "temperature_constraint": "range",
-      "description": "xAI's Grok 4.1 Fast Reasoning via OpenRouter (2M context) with vision and advanced reasoning",
-      "intelligence_score": 11
     },
     {
       "model_name": "openai/gpt-5.5",
@@ -916,16 +709,22 @@
     {
       "model_name": "google/gemini-3.1-pro-preview",
       "aliases": [
+        "pro",
+        "gemini-pro",
+        "gemini",
+        "gemini3",
+        "pro-openrouter",
         "or-gemini-pro"
       ],
       "context_window": 1048576,
       "max_output_tokens": 65536,
-      "supports_extended_thinking": false,
-      "supports_json_mode": false,
-      "supports_function_calling": false,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
       "supports_images": true,
-      "max_image_size_mb": 5.0,
-      "description": "Gemini 3.1 Pro Preview via OpenRouter (backup route). AA has no v5 value; the score keeps the AA v4.3 value (30).",
+      "max_image_size_mb": 20.0,
+      "allow_code_generation": true,
+      "description": "Gemini 3.1 Pro Preview via OpenRouter, with vision. The bare pro and gemini aliases point here because OpenRouter does not serve google/gemini-3-pro-preview (404 on 2026-11-02). AA has no v5 value; the score keeps the AA v4.3 value (30).",
       "intelligence_score": 12
     },
     {
@@ -1064,7 +863,9 @@
       "aliases": [
         "qwen-max",
         "qwen3-max",
-        "qwen3.8-max-0902"
+        "qwen3.8-max-0902",
+        "qwen",
+        "qwen3.8-max"
       ],
       "context_window": 1000000,
       "max_output_tokens": 65536,
@@ -1079,22 +880,6 @@
       "aa_index_by_effort": {
         "default": 34
       }
-    },
-    {
-      "model_name": "qwen/qwen3.8-max",
-      "aliases": [
-        "qwen",
-        "qwen3.8-max"
-      ],
-      "context_window": 1000000,
-      "max_output_tokens": 131072,
-      "supports_extended_thinking": true,
-      "supports_json_mode": true,
-      "supports_function_calling": true,
-      "supports_images": true,
-      "max_image_size_mb": 20.0,
-      "description": "Alibaba Qwen3.8 Max via OpenRouter - flagship multimodal reasoning (1M context, AA Intelligence Index v4.3 40, no v5 value).",
-      "intelligence_score": 14
     },
     {
       "model_name": "qwen/qwen3.8-flash",
@@ -1496,7 +1281,8 @@
       "aliases": [
         "claude-haiku-5.5",
         "haiku-5.5",
-        "or-claude-haiku"
+        "or-claude-haiku",
+        "haiku"
       ],
       "dynamic_aliases": [
         "haiku"
@@ -1745,7 +1531,8 @@
       "model_name": "mistralai/mistral-large-4-0",
       "aliases": [
         "mistral-large-4",
-        "mistral-large-4-0"
+        "mistral-large-4-0",
+        "mistral"
       ],
       "context_window": 1048576,
       "max_output_tokens": 262144,
@@ -1772,7 +1559,8 @@
       "model_name": "mistralai/mistral-large-2512",
       "aliases": [
         "mistral-large-3",
-        "mistral-large-2512"
+        "mistral-large-2512",
+        "mistral-large"
       ],
       "context_window": 262144,
       "max_output_tokens": 32768,
@@ -1923,7 +1711,8 @@
       "model_name": "meta-llama/llama-4-maverick",
       "aliases": [
         "llama4",
-        "llama4-maverick"
+        "llama4-maverick",
+        "llama"
       ],
       "context_window": 1048576,
       "max_output_tokens": 16384,

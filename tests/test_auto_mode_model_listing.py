@@ -57,7 +57,7 @@ def _register_core_providers(*, include_xai: bool = False):
 
 
 @pytest.mark.no_mock_provider
-def test_error_listing_respects_env_restrictions(monkeypatch, reset_registry):
+def test_error_listing_respects_env_restrictions(monkeypatch, reset_registry, tmp_path):
     """Error payload should surface only the allowed models for each provider."""
 
     monkeypatch.setenv("DEFAULT_MODEL", "auto")
@@ -131,6 +131,7 @@ def test_error_listing_respects_env_restrictions(monkeypatch, reset_registry):
                 {
                     "model": "gpt5mini",
                     "prompt": "Tell me about your strengths",
+                    "working_directory_absolute_path": str(tmp_path),
                 },
             )
         )
@@ -143,7 +144,7 @@ def test_error_listing_respects_env_restrictions(monkeypatch, reset_registry):
 
 
 @pytest.mark.no_mock_provider
-def test_error_listing_without_restrictions_shows_full_catalog(monkeypatch, reset_registry):
+def test_error_listing_without_restrictions_shows_full_catalog(monkeypatch, reset_registry, tmp_path):
     """When no restrictions are set, the full high-capability catalogue should appear."""
 
     monkeypatch.setenv("DEFAULT_MODEL", "auto")
@@ -216,6 +217,7 @@ def test_error_listing_without_restrictions_shows_full_catalog(monkeypatch, rese
                 {
                     "model": "dummymodel",
                     "prompt": "Hi there",
+                    "working_directory_absolute_path": str(tmp_path),
                 },
             )
         )

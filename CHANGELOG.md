@@ -10,9 +10,40 @@
   `op read` on first use and keeps it until it stops. If 1Password is locked, `op` shows a Touch ID prompt. PAL
   waits up to `PAL_OP_TIMEOUT_SECONDS` (default 60) for it. If the read fails, PAL logs one warning and treats the
   key as not set. See [1Password Secret References](docs/1password.md).
+- Tool calls from one client run at the same time. Each model call runs in a worker thread, so a slow model does
+  not stop other calls. Up to `PAL_MAX_PARALLEL_MODEL_CALLS` (default 16) model calls run at once; more wait in a
+  queue. `chat`, `challenge` and `apilookup` run each call on their own copy of the tool. A workflow tool (for
+  example `thinkdeep` or `consensus`) keeps its state across steps, and the `clink` CLIs edit files, so each of
+  these tools runs one call at a time; different tools run in parallel. Set `PAL_PARALLEL_TOOL_CALLS=false` to run
+  one tool call at a time, as before.
+- When a client cancels a tool call, PAL drops a queued model call, kills a running Codex or `clink` CLI process
+  with its child processes, and starts no retry. When stdin closes, the MCP SDK cancels every call that still
+  runs, so a client must keep stdin open until it reads the answer. The simulator harness now does this.
+- Each log line carries the 8-character ID of its tool call, for example `[3f9a1c2e]`.
+- `chat` saves generated code to `pal_generated.<id>.code`, one file per call, so that parallel calls in the same
+  directory do not overwrite each other's file. Before, every call wrote `pal_generated.code`.
+- `clink` declares `readOnlyHint: false`: its CLIs can edit files in the working directory.
 
 ### Bug Fixes
 
+- A tool call with invalid arguments fails before anything runs, with one error that lists every problem: each
+  missing, unknown or wrong parameter by name, with the start of its description, and the instruction to fix them
+  and call the tool again. Before, the error named only the first problem, did not name the parameter for a type
+  error, or was a raw pydantic dump. A call to an unknown tool is an error that lists the available tools.
+- A path that PAL must read or work in is checked before anything runs: `absolute_file_paths`, `path` and
+  `style_guide_examples` must exist, and `working_directory_absolute_path` must be an existing directory. Before,
+  a missing file went to the model unread.
+- OpenRouter: 12 more catalog entries that OpenRouter no longer serves are removed. `haiku`, `mistral`,
+  `mistral-large`, `llama`, `codex`, `grok`, `qwen` and `qwen3.8-max` point to the closest live model in the
+  catalog (`mistral` to Mistral Large 4). Aliases of one retired version (for example `o3-mini`, `o4-mini`,
+  `sonnet4.1`, `grok4`) are gone.
+- OpenRouter: the `pro`, `gemini-pro`, `gemini`, `gemini3` and `pro-openrouter` aliases point to
+  `google/gemini-3.1-pro-preview`. OpenRouter does not serve `google/gemini-3-pro-preview` (404), so every call
+  through these aliases failed. The entry for that model is removed.
+- `python server.py` no longer writes most lines of `mcp_activity.log` twice. A lazy `import server` ran the file a
+  second time, which added a second log handler.
+- A Codex timeout now also kills the processes that Codex starts, so the timeout holds when Codex runs through a
+  launcher (for example the npm package).
 - `run-server.sh`: when it makes a new `.env` from shell variables, it now copies each key as plain text. Before,
   `sed` stopped the script for a value with `/` (every `op://` reference), and changed a value with `&` or `\`.
 

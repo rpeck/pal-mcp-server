@@ -100,7 +100,9 @@ class TestThinkingModes:
                 except Exception:
                     parsed = None
 
-                if isinstance(parsed, dict) and parsed.get("status", "").endswith("_failed"):
+                if isinstance(parsed, dict) and parsed.get("metadata", {}).get("error_type") == "invalid_arguments":
+                    assert "Invalid arguments for tool" in parsed.get("content", "")
+                elif isinstance(parsed, dict) and parsed.get("status", "").endswith("_failed"):
                     assert "validation errors" in parsed.get("error", "")
                 else:
                     assert any(
@@ -179,7 +181,9 @@ class TestThinkingModes:
                 except Exception:
                     parsed = None
 
-                if isinstance(parsed, dict) and parsed.get("status", "").endswith("_failed"):
+                if isinstance(parsed, dict) and parsed.get("metadata", {}).get("error_type") == "invalid_arguments":
+                    assert "Invalid arguments for tool" in parsed.get("content", "")
+                elif isinstance(parsed, dict) and parsed.get("status", "").endswith("_failed"):
                     assert "validation errors" in parsed.get("error", "")
                 else:
                     assert any(
@@ -259,7 +263,9 @@ class TestThinkingModes:
                 except Exception:
                     parsed = None
 
-                if isinstance(parsed, dict) and parsed.get("status", "").endswith("_failed"):
+                if isinstance(parsed, dict) and parsed.get("metadata", {}).get("error_type") == "invalid_arguments":
+                    assert "Invalid arguments for tool" in parsed.get("content", "")
+                elif isinstance(parsed, dict) and parsed.get("status", "").endswith("_failed"):
                     assert "validation errors" in parsed.get("error", "")
                 else:
                     assert any(
@@ -338,7 +344,9 @@ class TestThinkingModes:
                 except Exception:
                     parsed = None
 
-                if isinstance(parsed, dict) and parsed.get("status", "").endswith("_failed"):
+                if isinstance(parsed, dict) and parsed.get("metadata", {}).get("error_type") == "invalid_arguments":
+                    assert "Invalid arguments for tool" in parsed.get("content", "")
+                elif isinstance(parsed, dict) and parsed.get("status", "").endswith("_failed"):
                     assert "validation errors" in parsed.get("error", "")
                 else:
                     assert any(
@@ -420,7 +428,9 @@ class TestThinkingModes:
                 except Exception:
                     parsed = None
 
-                if isinstance(parsed, dict) and parsed.get("status", "").endswith("_failed"):
+                if isinstance(parsed, dict) and parsed.get("metadata", {}).get("error_type") == "invalid_arguments":
+                    assert "Invalid arguments for tool" in parsed.get("content", "")
+                elif isinstance(parsed, dict) and parsed.get("status", "").endswith("_failed"):
                     assert "validation errors" in parsed.get("error", "")
                 else:
                     assert any(

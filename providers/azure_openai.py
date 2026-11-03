@@ -10,7 +10,7 @@ try:  # pragma: no cover - optional dependency
 except ImportError:  # pragma: no cover
     AzureOpenAI = None  # type: ignore[assignment]
 
-from utils.env import get_env, get_env_bool, suppress_env_vars
+from utils.env import get_env, get_env_bool
 
 from .azure_entra import build_entra_token_provider
 from .openai import OpenAIModelProvider
@@ -248,46 +248,47 @@ class AzureOpenAIProvider(OpenAICompatibleProvider):
 
             import httpx
 
-            proxy_env_vars = ["HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"]
+            try:
+                timeout_config = self.timeout_config
 
-            with suppress_env_vars(*proxy_env_vars):
-                try:
-                    timeout_config = self.timeout_config
+                # An explicit transport stops httpx from reading the proxy environment variables, without changing
+                # os.environ, which other threads read at the same time.
+                http_client = httpx.Client(
+                    transport=httpx.HTTPTransport(), timeout=timeout_config, follow_redirects=True
+                )
 
-                    http_client = httpx.Client(timeout=timeout_config, follow_redirects=True)
+                if self._use_entra:
+                    client_kwargs = {
+                        "azure_ad_token_provider": self._get_entra_token_provider(),
+                        "azure_endpoint": self.azure_endpoint,
+                        "api_version": self.api_version,
+                        "http_client": http_client,
+                    }
+                else:
+                    client_kwargs = {
+                        "api_key": self.api_key,
+                        "azure_endpoint": self.azure_endpoint,
+                        "api_version": self.api_version,
+                        "http_client": http_client,
+                    }
 
-                    if self._use_entra:
-                        client_kwargs = {
-                            "azure_ad_token_provider": self._get_entra_token_provider(),
-                            "azure_endpoint": self.azure_endpoint,
-                            "api_version": self.api_version,
-                            "http_client": http_client,
-                        }
-                    else:
-                        client_kwargs = {
-                            "api_key": self.api_key,
-                            "azure_endpoint": self.azure_endpoint,
-                            "api_version": self.api_version,
-                            "http_client": http_client,
-                        }
+                if self.DEFAULT_HEADERS:
+                    client_kwargs["default_headers"] = self.DEFAULT_HEADERS.copy()
 
-                    if self.DEFAULT_HEADERS:
-                        client_kwargs["default_headers"] = self.DEFAULT_HEADERS.copy()
+                logger.debug(
+                    "Initializing Azure OpenAI client endpoint=%s api_version=%s timeouts=%s",
+                    self.azure_endpoint,
+                    self.api_version,
+                    timeout_config,
+                )
+                if self._use_entra:
+                    logger.info("Azure OpenAI authenticating with Entra ID (DefaultAzureCredential)")
 
-                    logger.debug(
-                        "Initializing Azure OpenAI client endpoint=%s api_version=%s timeouts=%s",
-                        self.azure_endpoint,
-                        self.api_version,
-                        timeout_config,
-                    )
-                    if self._use_entra:
-                        logger.info("Azure OpenAI authenticating with Entra ID (DefaultAzureCredential)")
+                self._client = AzureOpenAI(**client_kwargs)
 
-                    self._client = AzureOpenAI(**client_kwargs)
-
-                except Exception as exc:
-                    logger.error("Failed to create Azure OpenAI client: %s", exc)
-                    raise
+            except Exception as exc:
+                logger.error("Failed to create Azure OpenAI client: %s", exc)
+                raise
 
         return self._client
 

@@ -17,6 +17,7 @@ from clink.constants import DEFAULT_STREAM_LIMIT
 from clink.models import ResolvedCLIClient, ResolvedCLIRole
 from clink.parsers import BaseParser, ParsedCLIResponse, ParserError, get_parser
 from utils.env import OP_REFERENCE_PREFIX, get_env
+from utils.model_calls import kill_process_tree
 
 logger = logging.getLogger("clink.agent")
 
@@ -117,6 +118,7 @@ class BaseCLIAgent:
                 cwd=cwd,
                 limit=limit,
                 env=env,
+                start_new_session=True,  # its own process group, so a kill reaches the CLI's child processes
             )
         except FileNotFoundError as exc:
             raise CLIAgentError(f"Executable not found for CLI '{self.client.name}': {exc}") from exc
@@ -126,9 +128,17 @@ class BaseCLIAgent:
                 process.communicate(prompt.encode("utf-8")),
                 timeout=self.client.timeout_seconds,
             )
+        except asyncio.CancelledError:
+            # The client canceled the tool call: stop the CLI and its child processes, which may be editing files.
+            kill_process_tree(process)
+            if output_file_path:
+                output_file_path.unlink(missing_ok=True)
+            raise
         except asyncio.TimeoutError as exc:
-            process.kill()
+            kill_process_tree(process)
             await process.communicate()
+            if output_file_path:
+                output_file_path.unlink(missing_ok=True)
             raise CLIAgentError(
                 f"CLI '{self.client.name}' timed out after {self.client.timeout_seconds} seconds",
                 returncode=None,

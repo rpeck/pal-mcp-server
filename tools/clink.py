@@ -16,6 +16,7 @@ from clink.agents import AgentOutput, CLIAgentError, create_agent
 from clink.models import ResolvedCLIClient, ResolvedCLIRole
 from config import TEMPERATURE_BALANCED
 from tools.models import ToolModelCategory, ToolOutput
+from tools.shared.argument_errors import build_request
 from tools.shared.base_models import COMMON_FIELD_DESCRIPTIONS
 from tools.shared.exceptions import ToolExecutionError
 from tools.simple.base import SchemaBuilder, SimpleTool
@@ -83,7 +84,12 @@ class CLinkTool(SimpleTool):
         )
 
     def get_annotations(self) -> dict[str, Any]:
-        return {"readOnlyHint": True}
+        # The CLIs run with approvals bypassed and can edit files in the working directory.
+        return {"readOnlyHint": False}
+
+    def supports_parallel_calls(self) -> bool:
+        """The CLIs run with approvals bypassed and can edit files in the working directory, so one call at a time."""
+        return False
 
     def requires_model(self) -> bool:
         return False
@@ -163,7 +169,7 @@ class CLinkTool(SimpleTool):
 
     async def execute(self, arguments: dict[str, Any]) -> list[TextContent]:
         self._current_arguments = arguments
-        request = self.get_request_model()(**arguments)
+        request = build_request(self.get_name(), self.get_request_model(), arguments)
 
         path_error = self._validate_file_paths(request)
         if path_error:

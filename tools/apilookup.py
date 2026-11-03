@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 from pydantic import Field
 
 from config import TEMPERATURE_ANALYTICAL
+from tools.shared.argument_errors import build_request
 from tools.shared.base_models import ToolRequest
 from tools.simple.base import SimpleTool
 
@@ -122,7 +123,7 @@ class LookupTool(SimpleTool):
     async def execute(self, arguments: dict[str, Any]) -> list:
         from mcp.types import TextContent
 
-        request = self.get_request_model()(**arguments)
+        request = build_request(self.get_name(), self.get_request_model(), arguments)
         response = {
             "status": "web_lookup_needed",
             "instructions": LOOKUP_PROMPT,

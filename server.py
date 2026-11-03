@@ -20,13 +20,20 @@ as defined by the MCP protocol.
 
 import asyncio
 import atexit
+import copy
 import logging
 import os
 import sys
 import time
+import uuid
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Any, Optional
+
+# Tools import "server" lazily. When this file runs as a script, make that import return this module; otherwise
+# Python runs the file a second time, which adds duplicate log handlers and a second set of tools.
+if __name__ == "__main__":
+    sys.modules.setdefault("server", sys.modules[__name__])
 
 from mcp.server import Server  # noqa: E402
 from mcp.server.models import InitializationOptions  # noqa: E402
@@ -68,8 +75,10 @@ from tools import (  # noqa: E402
     VersionTool,
 )
 from tools.models import ToolOutput  # noqa: E402
+from tools.shared.argument_errors import invalid_arguments_error, path_problems, schema_problems  # noqa: E402
 from tools.shared.exceptions import ToolExecutionError  # noqa: E402
 from utils.env import env_override_enabled, get_env, get_env_bool  # noqa: E402
+from utils.model_calls import request_id_var  # noqa: E402
 
 # Configure logging for server operations
 # Can be controlled via LOG_LEVEL environment variable (DEBUG, INFO, WARNING, ERROR)
@@ -79,6 +88,11 @@ log_level = (get_env("LOG_LEVEL", "DEBUG") or "DEBUG").upper()
 
 
 class LocalTimeFormatter(logging.Formatter):
+    def format(self, record):
+        """Add the ID of the tool call that logged the record (``-`` outside a tool call)."""
+        record.request_id = request_id_var.get()
+        return super().format(record)
+
     def formatTime(self, record, datefmt=None):
         """Override to use local timezone instead of UTC"""
         ct = self.converter(record.created)
@@ -91,7 +105,7 @@ class LocalTimeFormatter(logging.Formatter):
 
 
 # Configure both console and file logging
-log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+log_format = "%(asctime)s - %(name)s - %(levelname)s - [%(request_id)s] %(message)s"
 
 # Clear any existing handlers first
 root_logger = logging.getLogger()
@@ -138,7 +152,7 @@ try:
         encoding="utf-8",
     )
     mcp_file_handler.setLevel(logging.INFO)
-    mcp_file_handler.setFormatter(LocalTimeFormatter("%(asctime)s - %(message)s"))
+    mcp_file_handler.setFormatter(LocalTimeFormatter("%(asctime)s - [%(request_id)s] %(message)s"))
     mcp_logger.addHandler(mcp_file_handler)
     mcp_logger.setLevel(logging.INFO)
     # Ensure MCP activity also goes to stderr
@@ -280,6 +294,29 @@ TOOLS = {
     "version": VersionTool(),  # Display server version and system information
 }
 TOOLS = filter_disabled_tools(TOOLS)
+
+# Kill switch: PAL_PARALLEL_TOOL_CALLS=false runs one tool call at a time, as before parallel calls.
+PARALLEL_TOOL_CALLS = get_env_bool("PAL_PARALLEL_TOOL_CALLS", True)
+
+# One lock per tool that runs one call at a time; the key "*" serializes every call when the kill switch is off.
+_TOOL_LOCKS: dict[str, asyncio.Lock] = {}
+
+
+async def run_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
+    """Run a tool so that calls from one client can overlap.
+
+    A tool that supports parallel calls runs each call on its own shallow copy. Any other tool keeps state
+    across calls on its one instance, or edits files, so its calls run one at a time.
+    """
+    tool = TOOLS[name]
+    if not PARALLEL_TOOL_CALLS:
+        async with _TOOL_LOCKS.setdefault("*", asyncio.Lock()):
+            return await tool.execute(arguments)
+    if tool.supports_parallel_calls():
+        return await copy.copy(tool).execute(arguments)
+    async with _TOOL_LOCKS.setdefault(name, asyncio.Lock()):
+        return await tool.execute(arguments)
+
 
 # Rich prompt templates for all tools
 PROMPT_TEMPLATES = {
@@ -807,7 +844,8 @@ async def handle_list_tools() -> list[Tool]:
     return tools
 
 
-@server.call_tool()
+# PAL validates the arguments itself (handle_call_tool), so that one error lists every problem with its parameter.
+@server.call_tool(validate_input=False)
 async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
     """
     Handle incoming tool execution requests from MCP clients.
@@ -864,7 +902,23 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
         3. The CLI continues with codereview tool + continuation_id → full context preserved
         4. Multiple tools can collaborate using same thread ID
     """
+    request_id_var.set(uuid.uuid4().hex[:8])
     logger.info(f"MCP tool call: {name}")
+
+    # Reject a call that cannot run before anything else, with an error that says exactly what to fix.
+    if name not in TOOLS:
+        unknown = ToolOutput(
+            status="error",
+            content=f"Unknown tool '{name}'. Nothing ran. Call one of these tools: {', '.join(sorted(TOOLS))}.",
+            content_type="text",
+            metadata={"tool_name": name, "error_type": "unknown_tool"},
+        )
+        raise ToolExecutionError(unknown.model_dump_json())
+    schema = TOOLS[name].get_input_schema()
+    problems = schema_problems(schema, arguments) + path_problems(schema, arguments)
+    if problems:
+        logger.info(f"Invalid arguments for {name}: {len(problems)} problem(s)")
+        raise invalid_arguments_error(name, problems)
     logger.debug(f"MCP tool arguments: {list(arguments.keys())}")
 
     # Log to activity file for monitoring
@@ -925,7 +979,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
         if not tool.requires_model():
             logger.debug(f"Tool {name} doesn't require model resolution - skipping model validation")
             # Execute tool directly without model context
-            return await tool.execute(arguments)
+            return await run_tool(name, arguments)
 
         # Handle auto mode at MCP boundary - resolve to specific model
         if model_name.lower() == "auto":
@@ -980,7 +1034,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
                 raise ToolExecutionError(ToolOutput(**file_size_check).model_dump_json())
 
         # Execute tool with pre-resolved model context
-        result = await tool.execute(arguments)
+        result = await run_tool(name, arguments)
         logger.info(f"Tool '{name}' execution completed")
 
         # Log completion to activity file
@@ -990,10 +1044,6 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
         except Exception:
             pass
         return result
-
-    # Handle unknown tool requests gracefully
-    else:
-        return [TextContent(type="text", text=f"Unknown tool: {name}")]
 
 
 def parse_model_option(model_string: str) -> tuple[str, Optional[str]]:

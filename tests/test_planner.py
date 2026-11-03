@@ -348,8 +348,11 @@ class TestPlannerTool:
 
         parsed_response = json.loads(exc_info.value.payload)
 
-        assert parsed_response["status"] == "planner_failed"
-        assert "error" in parsed_response
+        # The error names every missing field and tells the caller to fix them and call again.
+        assert parsed_response["status"] == "error"
+        assert parsed_response["metadata"]["error_type"] == "invalid_arguments"
+        for field in ("step_number", "total_steps", "next_step_required"):
+            assert f"- `{field}`: missing. This parameter is required." in parsed_response["content"]
 
     @pytest.mark.asyncio
     async def test_execute_step_history_tracking(self):

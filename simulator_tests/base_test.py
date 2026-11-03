@@ -5,10 +5,13 @@ Base Test Class for Communication Simulator Tests
 Provides common functionality and utilities for all simulator tests.
 """
 
+import contextlib
 import json
 import logging
 import os
 import subprocess
+import tempfile
+import threading
 from typing import Optional
 
 from .log_utils import LogUtils
@@ -21,6 +24,7 @@ class BaseSimulatorTest:
         self.verbose = verbose
         self.test_files = {}
         self.test_dir = None
+        self._session = None  # the server process that mcp_session() keeps open
 
         # Configure logging first
         log_level = logging.DEBUG if verbose else logging.INFO
@@ -124,79 +128,51 @@ class Calculator:
         self.test_files = {"python": os.path.abspath(test_py), "config": os.path.abspath(test_config)}
         self.logger.debug(f"Created test files with absolute paths: {list(self.test_files.values())}")
 
+    @contextlib.contextmanager
+    def mcp_session(self):
+        """Send every call_mcp_tool inside the block to one server process.
+
+        Conversation memory lives in the server process, so a continuation_id works only within one session.
+        Outside the block, each call_mcp_tool starts its own server process.
+        """
+        session = _ServerSession(self.python_path)
+        self._session = session
+        try:
+            yield
+        finally:
+            self._session = None
+            returncode, stderr = session.close()
+            if returncode not in (0, None):
+                self.logger.error(f"Standalone server failed with return code {returncode}")
+                self.logger.error(f"Stderr: {stderr}")
+
     def call_mcp_tool(self, tool_name: str, params: dict) -> tuple[Optional[str], Optional[str]]:
         """Call an MCP tool via standalone server"""
         try:
-            # Prepare the MCP initialization and tool call sequence
-            init_request = {
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "initialize",
-                "params": {
-                    "protocolVersion": "2024-11-05",
-                    "capabilities": {"tools": {}},
-                    "clientInfo": {"name": "communication-simulator", "version": "1.0.0"},
-                },
-            }
-
-            # Send initialized notification
-            initialized_notification = {"jsonrpc": "2.0", "method": "notifications/initialized"}
-
-            # Prepare the tool call request
-            tool_request = {
-                "jsonrpc": "2.0",
-                "id": 2,
-                "method": "tools/call",
-                "params": {"name": tool_name, "arguments": params},
-            }  # Combine all messages
-            messages = [
-                json.dumps(init_request, ensure_ascii=False),
-                json.dumps(initialized_notification, ensure_ascii=False),
-                json.dumps(tool_request, ensure_ascii=False),
-            ]
-
-            # Join with newlines as MCP expects
-            input_data = "\n".join(messages) + "\n"
-
-            # Call the standalone MCP server directly
-            server_cmd = [self.python_path, "server.py"]
-
-            self.logger.debug(f"Calling MCP tool {tool_name} with proper initialization")
-
-            # Execute the command with proper handling for async responses
-            # For consensus tool and other long-running tools, we need to ensure
-            # the subprocess doesn't close prematurely
-            result = subprocess.run(
-                server_cmd,
-                input=input_data,
-                text=True,
-                capture_output=True,
-                timeout=3600,  # 1 hour timeout
-                check=False,  # Don't raise on non-zero exit code
-            )
-
-            if result.returncode != 0:
-                self.logger.error(f"Standalone server failed with return code {result.returncode}")
-                self.logger.error(f"Stderr: {result.stderr}")
-                # Still try to parse stdout as the response might have been written before the error
-                self.logger.debug(f"Attempting to parse stdout despite error: {result.stdout[:500]}")
-
-            # Parse the response - look for the tool call response
-            response_data = self._parse_mcp_response(result.stdout, expected_id=2)
-            if not response_data:
-                return None, None
-
-            # Extract continuation_id if present
-            continuation_id = self._extract_continuation_id(response_data)
-
-            return response_data, continuation_id
-
+            if self._session is None:
+                with self.mcp_session():
+                    return self._call_in_session(tool_name, params)
+            return self._call_in_session(tool_name, params)
         except subprocess.TimeoutExpired:
             self.logger.error(f"MCP tool call timed out after 1 hour: {tool_name}")
             return None, None
         except Exception as e:
             self.logger.error(f"MCP tool call failed: {e}")
             return None, None
+
+    def _call_in_session(self, tool_name: str, params: dict) -> tuple[Optional[str], Optional[str]]:
+        self.logger.debug(f"Calling MCP tool {tool_name}")
+        request_id, stdout = self._session.request("tools/call", {"name": tool_name, "arguments": params})
+
+        # Parse the response - look for the tool call response
+        response_data = self._parse_mcp_response(stdout, expected_id=request_id)
+        if not response_data:
+            return None, None
+
+        # Extract continuation_id if present
+        continuation_id = self._extract_continuation_id(response_data)
+
+        return response_data, continuation_id
 
     def _parse_mcp_response(self, stdout: str, expected_id: int = 2) -> Optional[str]:
         """Parse MCP JSON-RPC response from stdout"""
@@ -357,3 +333,75 @@ class Calculator:
     def test_description(self) -> str:
         """Get the test description - to be implemented by subclasses"""
         raise NotImplementedError("Subclasses must implement test_description property")
+
+
+class _ServerSession:
+    """One PAL server process over stdio.
+
+    Stdin stays open until close(), as a real MCP client keeps it: when stdin closes, the MCP SDK cancels every
+    request that still runs. Stderr goes to a file, so a full pipe cannot block the server.
+    """
+
+    TIMEOUT_SECONDS = 3600  # for one request
+
+    def __init__(self, python_path: str):
+        self._stderr = tempfile.TemporaryFile(mode="w+")
+        self.process = subprocess.Popen(
+            [python_path, "server.py"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=self._stderr, text=True
+        )
+        self._next_id = 1
+        self.request(
+            "initialize",
+            {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {"tools": {}},
+                "clientInfo": {"name": "communication-simulator", "version": "1.0.0"},
+            },
+        )
+        self._send({"jsonrpc": "2.0", "method": "notifications/initialized"})
+
+    def _send(self, message: dict) -> None:
+        self.process.stdin.write(json.dumps(message, ensure_ascii=False) + "\n")
+        self.process.stdin.flush()
+
+    def request(self, method: str, params: dict) -> tuple[int, str]:
+        """Send one request; return its ID and the stdout lines up to and including its response."""
+        request_id = self._next_id
+        self._next_id += 1
+        self._send({"jsonrpc": "2.0", "id": request_id, "method": method, "params": params})
+        timed_out = threading.Event()
+        timer = threading.Timer(self.TIMEOUT_SECONDS, lambda: (timed_out.set(), self.process.kill()))
+        timer.start()
+        lines = []
+        try:
+            for line in self.process.stdout:
+                lines.append(line)
+                if _is_response_to(line, request_id):
+                    break
+        finally:
+            timer.cancel()
+        if timed_out.is_set():
+            raise subprocess.TimeoutExpired(self.process.args, self.TIMEOUT_SECONDS)
+        return request_id, "".join(lines)
+
+    def close(self) -> tuple[Optional[int], str]:
+        """Close stdin, let the server exit, and return its exit code and stderr."""
+        try:
+            self.process.stdin.close()
+            self.process.wait(timeout=30)
+        except (OSError, subprocess.TimeoutExpired):
+            self.process.kill()
+            self.process.wait()
+        self._stderr.seek(0)
+        stderr = self._stderr.read()
+        self._stderr.close()
+        return self.process.returncode, stderr
+
+
+def _is_response_to(line: str, expected_id: int) -> bool:
+    """Whether one stdout line is the JSON-RPC response with the given ID."""
+    try:
+        message = json.loads(line)
+    except ValueError:
+        return False
+    return isinstance(message, dict) and message.get("id") == expected_id

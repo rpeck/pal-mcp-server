@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, Any, Callable, Optional
 if TYPE_CHECKING:
     from tools.models import ToolModelCategory
 
+from utils.model_calls import raise_if_cancelled
+
 from .shared import ModelCapabilities, ModelResponse, ProviderType
 
 logger = logging.getLogger(__name__)
@@ -270,6 +272,8 @@ class ModelProvider(ABC):
         last_exc: Optional[Exception] = None
 
         for attempt_index in range(attempts):
+            if attempt_index:
+                raise_if_cancelled()  # The client canceled the call during the previous attempt.
             try:
                 return operation()
             except Exception as exc:  # noqa: BLE001 - bubble exact provider errors
@@ -280,6 +284,7 @@ class ModelProvider(ABC):
                 retryable = self._is_error_retryable(exc)
                 if not retryable or attempt_number >= attempts:
                     raise
+                raise_if_cancelled()  # The client canceled the call: no retry, and no wait for one.
 
                 delay_idx = min(attempt_index, len(delays) - 1) if delays else -1
                 delay = delays[delay_idx] if delay_idx >= 0 else 0.0

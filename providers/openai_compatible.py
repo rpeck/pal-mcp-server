@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 
 from openai import OpenAI
 
-from utils.env import get_env, suppress_env_vars
+from utils.env import get_env
 from utils.image_utils import validate_image
 
 from .base import ModelProvider
@@ -264,72 +264,75 @@ class OpenAICompatibleProvider(ModelProvider):
         if self._client is None:
             import httpx
 
-            proxy_env_vars = ["HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"]
+            try:
+                # Create a custom httpx client that explicitly avoids proxy parameters
+                timeout_config = (
+                    self.timeout_config
+                    if hasattr(self, "timeout_config") and self.timeout_config
+                    else httpx.Timeout(30.0)
+                )
 
-            with suppress_env_vars(*proxy_env_vars):
+                # Create httpx client with minimal config to avoid proxy conflicts
+                # Note: proxies parameter was removed in httpx 0.28.0
+                # Check for test transport injection
+                if hasattr(self, "_test_transport"):
+                    # Use custom transport for testing (HTTP recording/replay)
+                    http_client = httpx.Client(
+                        transport=self._test_transport,
+                        timeout=timeout_config,
+                        follow_redirects=True,
+                    )
+                else:
+                    # Normal production client.
+                    # An explicit transport stops httpx from reading the proxy environment variables, without changing
+                    # os.environ, which other threads read at the same time.
+                    http_client = httpx.Client(
+                        transport=httpx.HTTPTransport(),
+                        timeout=timeout_config,
+                        follow_redirects=True,
+                    )
+
+                # Keep client initialization minimal to avoid proxy parameter conflicts
+                client_kwargs = {
+                    "api_key": self.api_key,
+                    "http_client": http_client,
+                }
+
+                if self.base_url:
+                    client_kwargs["base_url"] = self.base_url
+
+                if self.organization:
+                    client_kwargs["organization"] = self.organization
+
+                # Add default headers if any
+                if self.DEFAULT_HEADERS:
+                    client_kwargs["default_headers"] = self.DEFAULT_HEADERS.copy()
+
+                logging.debug(
+                    "OpenAI client initialized with custom httpx client and timeout: %s",
+                    timeout_config,
+                )
+
+                # Create OpenAI client with custom httpx client
+                self._client = OpenAI(**client_kwargs)
+
+            except Exception as e:
+                # If all else fails, try absolute minimal client without custom httpx
+                logging.warning(
+                    "Failed to create client with custom httpx, falling back to minimal config: %s",
+                    e,
+                )
                 try:
-                    # Create a custom httpx client that explicitly avoids proxy parameters
-                    timeout_config = (
-                        self.timeout_config
-                        if hasattr(self, "timeout_config") and self.timeout_config
-                        else httpx.Timeout(30.0)
-                    )
-
-                    # Create httpx client with minimal config to avoid proxy conflicts
-                    # Note: proxies parameter was removed in httpx 0.28.0
-                    # Check for test transport injection
-                    if hasattr(self, "_test_transport"):
-                        # Use custom transport for testing (HTTP recording/replay)
-                        http_client = httpx.Client(
-                            transport=self._test_transport,
-                            timeout=timeout_config,
-                            follow_redirects=True,
-                        )
-                    else:
-                        # Normal production client
-                        http_client = httpx.Client(
-                            timeout=timeout_config,
-                            follow_redirects=True,
-                        )
-
-                    # Keep client initialization minimal to avoid proxy parameter conflicts
-                    client_kwargs = {
+                    minimal_kwargs = {
                         "api_key": self.api_key,
-                        "http_client": http_client,
+                        "http_client": httpx.Client(transport=httpx.HTTPTransport()),
                     }
-
                     if self.base_url:
-                        client_kwargs["base_url"] = self.base_url
-
-                    if self.organization:
-                        client_kwargs["organization"] = self.organization
-
-                    # Add default headers if any
-                    if self.DEFAULT_HEADERS:
-                        client_kwargs["default_headers"] = self.DEFAULT_HEADERS.copy()
-
-                    logging.debug(
-                        "OpenAI client initialized with custom httpx client and timeout: %s",
-                        timeout_config,
-                    )
-
-                    # Create OpenAI client with custom httpx client
-                    self._client = OpenAI(**client_kwargs)
-
-                except Exception as e:
-                    # If all else fails, try absolute minimal client without custom httpx
-                    logging.warning(
-                        "Failed to create client with custom httpx, falling back to minimal config: %s",
-                        e,
-                    )
-                    try:
-                        minimal_kwargs = {"api_key": self.api_key}
-                        if self.base_url:
-                            minimal_kwargs["base_url"] = self.base_url
-                        self._client = OpenAI(**minimal_kwargs)
-                    except Exception as fallback_error:
-                        logging.error("Even minimal OpenAI client creation failed: %s", fallback_error)
-                        raise
+                        minimal_kwargs["base_url"] = self.base_url
+                    self._client = OpenAI(**minimal_kwargs)
+                except Exception as fallback_error:
+                    logging.error("Even minimal OpenAI client creation failed: %s", fallback_error)
+                    raise
 
         return self._client
 
