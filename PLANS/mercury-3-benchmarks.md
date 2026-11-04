@@ -7,41 +7,23 @@ Read this whole file before you start. It is self-contained: the session that wr
 
 ## 0. Status (2026-11-04)
 
-No run has started. Two prerequisites are open. Raymond decides each one.
+No run has started. One prerequisite is open: the VM.
 
-1. **Keys for Haiku 5.5 and Luna.** The Anthropic and OpenAI keys in `~/.config/secrets/` belong to a client
-   project. The options:
-   - Dedicated Anthropic and OpenAI keys (§5).
-   - All three models through OpenRouter, each pinned to its own lab's provider (see "OpenRouter route" below).
-2. **The VM.** A team admin must turn on standalone VMs on the work exe.dev team before you can create the VM (§7).
-   Only SWE-bench Verified and SWE-smith need an x86 machine (see "Without the VM" below).
+1. **Keys: decided.** Raymond approved the work Anthropic and OpenAI keys for this benchmark (2026-11-04).
+   - The keys are in a client project's 1Password vault. Read them with `op read` (§5).
+   - Both keys load from the Bash tool (checked 2026-11-04).
+   - The routes in §5 stay as written: Haiku 5.5 and Luna direct, Mercury 3 through OpenRouter.
+2. **The VM: open.** Raymond's exe.dev login has no VM and is not a team admin (`team` is "command not
+   available"). Outside a pool, the Work plan gives each user only 2 vCPU and 8 GB in total.
+   - A team admin can make a team pool on request. A pool can grow to 512 vCPU.
+   - The next step: ask a team admin for a pool for this benchmark (§7).
 
-Done: the plan, the speed benchmark, the cause of the key-loading problem (§5), and the PAL conf entries for
-Mercury 3, Haiku 5.5, and Luna.
+Done: the plan, the speed benchmark, the cause of the key-loading problem (§5), the PAL conf entries for
+Mercury 3, Haiku 5.5, and Luna, and the key check.
 
-**OpenRouter route.** OpenRouter's endpoint list on 2026-11-04 shows each model on its own lab's provider:
-
-| Model | Provider tag | Input / cached input / output, $ per M tokens | `reasoning_effort` |
-|---|---|---|---|
-| Mercury 3 | `inception` (the only provider) | 0.10 / 0.01 / 0.35 | Accepted |
-| Claude Haiku 5.5 | `anthropic` | 0.10 / 0.01 / 0.50. Cache writes 0.125 | Accepted |
-| GPT-6 Luna | `openai` | 0.10 / 0.01 / 0.50 | Accepted |
-
-- **For:**
-  - No client key and no new work key.
-  - The same route for all three models. This removes the timing bias in §5.
-  - The prices are the same as the direct APIs.
-- **Against:**
-  - Raymond pays all API costs: about $30–$85 (estimate, §12), not $5–$25. This exceeds the $30 limit in §12.
-  - OpenRouter does not list implicit caching for Haiku. The cache-control option must send cache breakpoints.
-    The pilot check of cached tokens (§9) shows whether it works.
-  - Luna through Chat Completions possibly does not keep its reasoning between steps. Harbor uses the Responses
-    API for direct OpenAI reasoning models. This can lower Luna's pass rate. Record it in the report limits.
-  - Phase 3 still needs the work ChatGPT plan (Codex) and an Anthropic key (Claude Code), or other routes.
-- **How:** put `extra_body: {provider: {order: [<tag>], allow_fallbacks: false}}` in `model.model_kwargs` of a
-  mini-swe-agent config file, and give the file to Harbor with `--ak config_file=<path>`. Confirm the provider
-  in the route checks (§9). The `openai` tag does not name the tier in the response, so also check the cost per
-  call: the `openai/fast` tier costs twice as much.
+**Not chosen: all three models through OpenRouter.** OpenRouter has each model on its own lab's provider, at the
+direct prices, with `reasoning_effort`. It removes the timing bias in §5. But Raymond's personal key pays for all
+three models, and Luna through Chat Completions possibly does not keep its reasoning between steps.
 
 **Without the VM.** This laptop is Apple arm64, with Docker (16 GB of memory for containers).
 - **The laptop can run:**
@@ -51,11 +33,9 @@ Mercury 3, Haiku 5.5, and Luna.
 - **An x86 machine is necessary for:** SWE-bench Verified and SWE-smith. Their task images are x86_64 only.
   Emulation on arm64 is slow, and it changes the times.
 - **Timed runs for the report:** run all of them on one machine (§6). Laptop runs are checks only.
-- **Other x86 options:** Harbor also supports cloud sandboxes (for example Modal) and an `ssh` environment.
-  Each needs an account decision from Raymond.
 
 **Next step, when Raymond approves:** a smoke test on the laptop. Its results do not count.
-1. Route checks: 3 models × 2 efforts = 6 short calls through OpenRouter. Cost: less than $0.05.
+1. Route checks: 3 models × 2 efforts = 6 short calls. Cost: less than $0.05.
 2. Harbor with mini-swe-agent on 3 Aider Polyglot tasks × 3 models × 2 efforts = 18 trials, with a cost limit
    of $0.30 per trial. Expected cost: $0.20–$1.10 (estimate). The limits stop it at $5.40.
 
@@ -85,9 +65,9 @@ The goal is evidence for all three models. It is not a claim for one model.
 | Harness | mini-swe-agent through Harbor, the same for all models |
 | Harness checks | 48 tasks through Codex CLI (all three models); the same 48 through Claude Code (Haiku only) |
 | Mercury 3 route | OpenRouter, pinned to the `inception` provider, with Raymond's personal key |
-| Haiku 5.5 route | Anthropic API, with a work key (which key is open, see §0) |
-| Luna route | OpenAI API, with a work key (which key is open, see §0). Codex check only: the work ChatGPT plan |
-| Compute | One standalone x86 VM on the work exe.dev account: 16 vCPU, 32 GiB |
+| Haiku 5.5 route | Anthropic API, with the work key (§5) |
+| Luna route | OpenAI API, with the work key (§5). Codex check only: the work ChatGPT plan |
+| Compute | One x86 VM in a team pool on the work exe.dev account: 16 vCPU, 32 GiB |
 | Output | `benchmarks/mercury-3/output/` in this repository |
 | Not in scope | Terminal-Bench 4.0, SciCode, IFBench (see §4) |
 
@@ -194,16 +174,15 @@ bugs are synthetic, so memorization is less likely. Compare the two suites (§11
   each file starts with `case $- in *i*) ;; *) return 0 ;; esac`. In a non-interactive shell (a script, or
   Claude Code's Bash tool) the file stops there, so these keys are not set and you get no error. This was the
   cause of the "not set" results on 2026-10-24, not the `op` sign-in.
-- **Do not use those keys for this benchmark unless Raymond approves.** They belong to a client project.
-- **Dedicated keys:** Raymond creates one Anthropic key and one OpenAI key, each with a spend limit, and stores
-  them in 1Password. The run script reads them with `op read '<op:// reference>'`. Raymond gives you the
-  references. Never write a reference or a key into this repository.
+- **Raymond approved those keys for this benchmark** (2026-11-04). They belong to a client project's 1Password
+  vault. The run script reads each one with `op read '<op:// reference>'`. The references are in the `*.keys`
+  files. Never write a reference or a key into this repository.
 - **`op` from Claude Code:** the 1Password app integration with the CLI works from the Bash tool, outside the
   sandbox. Raymond approves each new session with Touch ID. `op whoami` reports "not signed in" even when `op`
   works, so do not use it as a check.
 - **The VM:** `op` does not work on the VM. The run script reads the keys on the laptop and copies them into a
-  file with mode 600 on the VM. Harbor passes each key into every task container. Delete the file and revoke the
-  dedicated keys when the runs end.
+  file with mode 600 on the VM. Harbor passes each key into every task container. Delete the file when the runs
+  end.
 - **Never print a key.** Print only "set" or "not set".
 
 **Effort:** send `low` or `high` as the reasoning effort to every model.
@@ -238,21 +217,23 @@ because of the infrastructure (for example, an image pull error). Record each of
 
 ## 7. Compute
 
-- **VM:** create one standalone VM on the work exe.dev account. Use the `using-exe-dev` skill:
+- **VM:** create one VM in a team pool on the work exe.dev account. Use the `using-exe-dev` skill:
   - 16 vCPU and 32 GiB of memory.
   - The `exeuntu` image, which can run Docker.
   - Enough disk for the SWE-bench images, about 150–250 GB (estimate). Alternatively, remove the images after
     each batch.
-- **Do not put the VM in any current pool.** Those pools belong to other work.
-- **Team setting:** on a Work team, standalone VMs are off until a team admin turns them on
-  (`team settings standalone admins-only` or `all-users`). Sizes up to 32 vCPU need no approval from exe.dev
-  support. Raymond's login is probably not a team admin: on 2026-10-25, `ssh exe.dev team` returned "command
-  not available". Ask Raymond before you create the VM.
+- **Pool:** a team admin makes a pool for this benchmark, with 16 vCPU and 32 GB. Raymond's login is not a team
+  admin. Then create the VM with `new --pool=<pool> --cpu=16 --memory=32GB --disk=<size>`.
+  - **Do not put the VM in any other pool.** Those pools belong to other work.
+  - The other route is a standalone VM. A team admin must turn those on (`team settings standalone`).
+  - Ask Raymond before you create the VM.
+- **Caution:** the team rule is that no client data goes on exe.dev VMs. The tasks are public. The work API keys
+  go on the VM in a file with mode 600 (§5). Raymond confirms that this is acceptable before the first run.
 - **CPU architecture:** run `uname -m` on the new VM. It must show `x86_64`. If it shows `aarch64`, stop and
   report to Raymond.
 - **Concurrency:** each task needs 1 CPU and 4 GB of memory. Start with 6 trials in parallel. Do not overload the
   VM, because an overloaded VM changes the times. Keep the same value for every configuration, and record it.
-- **Cost:** $0.84 per hour.
+- **Cost:** $0.84 per hour for a standalone VM. A pool is billed to the team; ask the admin for the price.
 - **At the end:** delete the VM after you copy the raw data from it.
 
 ## 8. Prerequisites (stop if one fails)
@@ -436,7 +417,7 @@ only.
 - Never print or log an API key.
 - Do not commit, push, or open PRs unless Raymond asks.
 - Ask Raymond before you create any cloud resource. The VM in §7 also needs Raymond's approval.
-- Delete the VM and revoke the dedicated keys when the runs end.
+- Delete the VM and the key file on it when the runs end.
 - Before you report a number, check it against the raw data. Mark every estimate as an estimate.
 - If a step fails, report the failure with its output. Do not skip it silently.
 
