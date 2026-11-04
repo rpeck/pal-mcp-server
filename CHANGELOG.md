@@ -35,8 +35,8 @@
   a missing file went to the model unread.
 - OpenRouter: 12 more catalog entries that OpenRouter no longer serves are removed. `haiku`, `mistral`,
   `mistral-large`, `llama`, `codex`, `grok`, `qwen` and `qwen3.8-max` point to the closest live model in the
-  catalog (`mistral` to Mistral Large 4). Aliases of one retired version (for example `o3-mini`, `o4-mini`,
-  `sonnet4.1`, `grok4`) are gone.
+  catalog (`mistral` and `mistral-large` to Mistral Large 4). Aliases of one retired version (for example
+  `o3-mini`, `o4-mini`, `sonnet4.1`, `grok4`) are gone.
 - OpenRouter: the `pro`, `gemini-pro`, `gemini`, `gemini3` and `pro-openrouter` aliases point to
   `google/gemini-3.1-pro-preview`. OpenRouter does not serve `google/gemini-3-pro-preview` (404), so every call
   through these aliases failed. The entry for that model is removed.
