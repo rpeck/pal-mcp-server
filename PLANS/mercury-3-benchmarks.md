@@ -1,20 +1,63 @@
 # Plan: small coding task benchmarks for Mercury 3, Claude Haiku 5.5, and GPT-6 Luna
 
-**Owner:** Raymond Peck. **Written:** 2026-10-22. **Revised:** 2026-10-28. **Runs on:** a work laptop and one
+**Owner:** Raymond Peck. **Written:** 2026-10-22. **Revised:** 2026-11-04. **Runs on:** a work laptop and one
 exe.dev VM on a work account, with Claude Code.
 
 Read this whole file before you start. It is self-contained: the session that wrote it is not available to you.
 
-## 0. Status (2026-10-28)
+## 0. Status (2026-11-04)
 
-No run has started. Two prerequisites are open:
+No run has started. Two prerequisites are open. Raymond decides each one.
 
 1. **Keys for Haiku 5.5 and Luna.** The Anthropic and OpenAI keys in `~/.config/secrets/` belong to a client
-   project. Raymond decides whether this benchmark may use them, or whether to create dedicated keys (§5).
+   project. The options:
+   - Dedicated Anthropic and OpenAI keys (§5).
+   - All three models through OpenRouter, each pinned to its own lab's provider (see "OpenRouter route" below).
 2. **The VM.** A team admin must turn on standalone VMs on the work exe.dev team before you can create the VM (§7).
+   Only SWE-bench Verified and SWE-smith need an x86 machine (see "Without the VM" below).
 
 Done: the plan, the speed benchmark, the cause of the key-loading problem (§5), and the PAL conf entries for
 Mercury 3, Haiku 5.5, and Luna.
+
+**OpenRouter route.** OpenRouter's endpoint list on 2026-11-04 shows each model on its own lab's provider:
+
+| Model | Provider tag | Input / cached input / output, $ per M tokens | `reasoning_effort` |
+|---|---|---|---|
+| Mercury 3 | `inception` (the only provider) | 0.10 / 0.01 / 0.35 | Accepted |
+| Claude Haiku 5.5 | `anthropic` | 0.10 / 0.01 / 0.50. Cache writes 0.125 | Accepted |
+| GPT-6 Luna | `openai` | 0.10 / 0.01 / 0.50 | Accepted |
+
+- **For:**
+  - No client key and no new work key.
+  - The same route for all three models. This removes the timing bias in §5.
+  - The prices are the same as the direct APIs.
+- **Against:**
+  - Raymond pays all API costs: about $30–$85 (estimate, §12), not $5–$25. This exceeds the $30 limit in §12.
+  - OpenRouter does not list implicit caching for Haiku. The cache-control option must send cache breakpoints.
+    The pilot check of cached tokens (§9) shows whether it works.
+  - Luna through Chat Completions possibly does not keep its reasoning between steps. Harbor uses the Responses
+    API for direct OpenAI reasoning models. This can lower Luna's pass rate. Record it in the report limits.
+  - Phase 3 still needs the work ChatGPT plan (Codex) and an Anthropic key (Claude Code), or other routes.
+- **How:** put `extra_body: {provider: {order: [<tag>], allow_fallbacks: false}}` in `model.model_kwargs` of a
+  mini-swe-agent config file, and give the file to Harbor with `--ak config_file=<path>`. Confirm the provider
+  in the route checks (§9). The `openai` tag does not name the tier in the response, so also check the cost per
+  call: the `openai/fast` tier costs twice as much.
+
+**Without the VM.** This laptop is Apple arm64, with Docker (16 GB of memory for containers).
+- **The laptop can run:**
+  - the route checks and the OpenRouter overhead check (§9);
+  - the Aider Polyglot oracle check and trials. Its images build from `buildpack-deps:jammy`, which has arm64
+    builds.
+- **An x86 machine is necessary for:** SWE-bench Verified and SWE-smith. Their task images are x86_64 only.
+  Emulation on arm64 is slow, and it changes the times.
+- **Timed runs for the report:** run all of them on one machine (§6). Laptop runs are checks only.
+- **Other x86 options:** Harbor also supports cloud sandboxes (for example Modal) and an `ssh` environment.
+  Each needs an account decision from Raymond.
+
+**Next step, when Raymond approves:** a smoke test on the laptop. Its results do not count.
+1. Route checks: 3 models × 2 efforts = 6 short calls through OpenRouter. Cost: less than $0.05.
+2. Harbor with mini-swe-agent on 3 Aider Polyglot tasks × 3 models × 2 efforts = 18 trials, with a cost limit
+   of $0.30 per trial. Expected cost: $0.20–$1.10 (estimate). The limits stop it at $5.40.
 
 ## 1. Goal
 
