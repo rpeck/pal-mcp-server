@@ -43,7 +43,7 @@
       ],
       "intelligence_score": 18,
       "aa_index": 42,
-      "description": "gpt-6.1-terra through a ChatGPT plan via the Codex CLI (500K context in Codex, per the 2026-10-26 release notes) - balanced intelligence/cost tier of the GPT-6.1 family, the successor of GPT-5.6 Terra; AA Intelligence Index v5 42 at high (51 at max); replaces Luna for triage. Not yet enabled on this ChatGPT plan as of 2026-10-27 (Codex 0.164.0 returns model_not_found); check `codex debug models`.",
+      "description": "gpt-6.1-terra through a ChatGPT plan via the Codex CLI (500K context in Codex, per the 2026-10-26 release notes) - balanced intelligence/cost tier of the GPT-6.1 family, the successor of GPT-5.6 Terra; AA Intelligence Index v5 42 at high (51 at max); replaces Luna for triage. Served on this ChatGPT plan since 2026-10-30 (verified 2026-11-03 with one call through Codex 0.164.0).",
       "context_window": 500000,
       "max_output_tokens": 128000,
       "supports_extended_thinking": true,
