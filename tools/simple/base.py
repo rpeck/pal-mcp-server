@@ -336,12 +336,10 @@ class SimpleTool(BaseTool):
 
             # Handle conversation history and prompt preparation
             if continuation_id:
-                # Check if conversation history is already embedded
-                field_value = self.get_request_prompt(request)
-                if "=== CONVERSATION HISTORY ===" in field_value:
-                    # Use pre-embedded history
-                    prompt = field_value
-                    logger.debug(f"{self.get_name()}: Using pre-embedded conversation history")
+                if self._history_embedded_by_server():
+                    # server.reconstruct_thread_context() stored the user turn and put the history in the prompt.
+                    prompt = await self.prepare_prompt(request)
+                    logger.debug(f"{self.get_name()}: Using the conversation history that the server embedded")
                 else:
                     # No embedded history - reconstruct it (for in-process calls)
                     logger.debug(f"{self.get_name()}: No embedded history found, reconstructing conversation")
@@ -836,6 +834,15 @@ class SimpleTool(BaseTool):
 Please provide a thoughtful, comprehensive response:"""
 
         return full_prompt
+
+    def _history_embedded_by_server(self) -> bool:
+        """Whether server.reconstruct_thread_context() prepared this call.
+
+        It then stored the user turn and put the conversation history in the prompt, and it kept the prompt that the
+        agent sent in ``_original_user_prompt``.
+        """
+        current_args = getattr(self, "_current_arguments", None) or {}
+        return "_original_user_prompt" in current_args
 
     def get_prompt_content_for_size_validation(self, user_content: str) -> str:
         """
