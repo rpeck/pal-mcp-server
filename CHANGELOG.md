@@ -26,6 +26,12 @@
 
 ### Bug Fixes
 
+- A continued call of a simple tool (for example `chat`) stores one user turn and one assistant turn. Before, it
+  also stored the full prompt, with the conversation history in it, as a second user turn, and it sent the history
+  twice. So the prompt grew to about twice its size on each turn, and each exchange used 3 of the
+  `MAX_CONVERSATION_TURNS`.
+- Step 1 of a workflow tool (for example `thinkdeep`) starts with no steps. Before, a new run kept the steps of
+  the tool's previous run, and sent their findings to the expert analysis.
 - A tool call with invalid arguments fails before anything runs, with one error that lists every problem: each
   missing, unknown or wrong parameter by name, with the start of its description, and the instruction to fix them
   and call the tool again. Before, the error named only the first problem, did not name the parameter for a type

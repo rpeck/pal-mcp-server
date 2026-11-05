@@ -671,6 +671,12 @@ class BaseWorkflowMixin(ABC):
             # Handle continuation
             continuation_id = request.continuation_id
 
+            # Step 1 starts a run: the steps of an earlier run on this instance do not carry over.
+            if request.step_number == 1:
+                self.work_history = []
+                self.consolidated_findings = ConsolidatedFindings()
+                self.initial_request = None
+
             # Restore workflow state on continuation
             if continuation_id:
                 from utils.conversation_memory import get_thread

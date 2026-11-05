@@ -661,8 +661,10 @@ class TestLargePromptHandling:
 
             # Simulate continuation by having the request contain embedded conversation history
             # This mimics what server.py does when it embeds conversation history
+            # server.reconstruct_thread_context() keeps the agent's own prompt in _original_user_prompt.
             request_with_history = {
                 "prompt": f"{huge_conversation_history}\n\n=== CURRENT REQUEST ===\n{small_continuation_prompt}",
+                "_original_user_prompt": small_continuation_prompt,
                 "model": "flash",
                 "continuation_id": "test_thread_123",
                 "working_directory_absolute_path": temp_dir,
