@@ -153,9 +153,13 @@ Answer these with throwaway scripts and write the answers into this file:
 
 ## 7. Tests
 
-- Unit tests with a fake cache backend; no real keychain in CI (CI runs on Linux). Cover: off by default (a test
-  that fails if the default ever changes, and that checks PAL then never touches a keychain); cache hit; locked keychain → `op read`; expired item → `op read`; missing item → `op read`; a backend error →
-  `op read` with one warning; no value ever in a log line.
+- Unit tests with a fake cache backend; no real keychain in CI (CI runs on Linux). Cover:
+  - off by default: a test that fails if the default ever changes, and that checks that PAL then never touches
+    a keychain;
+  - a cache hit;
+  - a locked keychain, an expired item and a missing item: each falls back to `op read`;
+  - a backend error: falls back to `op read` with one warning;
+  - no value ever in a log line.
 - Tests for `pal-secrets`: reference collection from `.env` and from a sample `~/.claude.json`, expiry writing,
   `expire` and `clear`.
 - A manual checklist on macOS: init, refresh (one Touch ID), a new session without a prompt, `expire` after a
