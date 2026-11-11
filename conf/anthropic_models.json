@@ -42,9 +42,9 @@
         "medium": 48,
         "high": 52,
         "xhigh": 57,
-        "max": 58
+        "max": 59
       },
-      "description": "Anthropic flagship (1M context, released 2026-09-22) - AA Intelligence Index v5 58 at max effort and 52 at high, above Fable 5.1 (49 at max); at or above Fable 5.1 on most work for $4/$20, a fifth below Opus 5. The API default effort is Medium, which scores 48.",
+      "description": "Anthropic flagship (1M context, released 2026-09-22) - AA Intelligence Index v5 59 at max effort and 52 at high, above Fable 5.1 (49 at max); at or above Fable 5.1 on most work for $4/$20, a fifth below Opus 5. The API default effort is Medium, which scores 48.",
       "context_window": 1000000,
       "max_output_tokens": 128000,
       "supports_extended_thinking": true,
@@ -123,10 +123,46 @@
       "allow_code_generation": true
     },
     {
+      "model_name": "claude-fable-5-2",
+      "friendly_name": "Claude Fable 5.2",
+      "aliases": [
+        "fable",
+        "fable-5.2"
+      ],
+      "intelligence_score": 20,
+      "aa_index": 62,
+      "aa_index_by_effort": {
+        "low": 54,
+        "medium": 56,
+        "high": 62,
+        "xhigh": 62,
+        "max": 65
+      },
+      "description": "Claude Fable 5.2 (released 2026-11-09, 1M context, 128K output) - Anthropic's Mythos-class model for autonomous long-horizon coding and knowledge work, the successor of Fable 5.1. It leads the AA Intelligence Index v5 at 62 at high (65 at max), above Gemini 4 Carbon (60 at high) and Opus 5.5 (52 at high). $8/$40 per M (Fable 5.1 was $10/$50); fast mode $16/$80. Anthropic reports fewer tokens than Fable 5.1 at medium effort and about 55% fewer safeguard blocks. Effort levels low to max (Anthropic launch post); the native route is not live-tested.",
+      "context_window": 1000000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "effort_levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "max_image_size_mb": 20.0,
+      "max_thinking_tokens": 32768,
+      "allow_code_generation": true
+    },
+    {
       "model_name": "claude-fable-5-1",
       "friendly_name": "Claude Fable 5.1",
       "aliases": [
-        "fable",
         "fable-5.1"
       ],
       "intelligence_score": 19,
@@ -138,7 +174,7 @@
         "xhigh": 50,
         "max": 49
       },
-      "description": "Anthropic Mythos-class model (1M context) - AA Intelligence Index v5 47 at high and 50 at xhigh, below Opus 5.5 (52 at high); autonomous long-horizon coding and knowledge work. Premium pricing ($10/$50).",
+      "description": "Anthropic Mythos-class model (1M context) - AA Intelligence Index v5 47 at high and 50 at xhigh, below Opus 5.5 (52 at high); autonomous long-horizon coding and knowledge work. Premium pricing ($10/$50). Superseded by Fable 5.2 (2026-11-09); AA no longer lists Fable 5.1 in the default leaderboard view, so the values are from the 2026-10-28 read.",
       "context_window": 1000000,
       "max_output_tokens": 128000,
       "supports_extended_thinking": true,
@@ -196,15 +232,15 @@
         "claude-sonnet"
       ],
       "intelligence_score": 18,
-      "aa_index": 41,
+      "aa_index": 42,
       "aa_index_by_effort": {
-        "low": 25,
-        "medium": 30,
-        "high": 41,
+        "low": 26,
+        "medium": 31,
+        "high": 42,
         "xhigh": 50,
-        "max": 54
+        "max": 55
       },
-      "description": "Claude Sonnet 5.5 (released 2026-09-28, 1M context, 128K output) - AA Intelligence Index v5 54 at max effort and 41 at high, above Fable 5.1 (49 at max) and below Opus 5.5 (58 at max). $2/$10 per M. Adaptive thinking, default effort high.",
+      "description": "Claude Sonnet 5.5 (released 2026-09-28, 1M context, 128K output) - AA Intelligence Index v5 55 at max effort and 42 at high, above Fable 5.1 (49 at max) and below Opus 5.5 (59 at max). $2/$10 per M. Adaptive thinking, default effort high.",
       "context_window": 1000000,
       "max_output_tokens": 128000,
       "supports_extended_thinking": true,
@@ -302,7 +338,7 @@
         "low": 19,
         "medium": 25,
         "high": 30,
-        "xhigh": 34,
+        "xhigh": 35,
         "max": 36
       },
       "effort_levels": [

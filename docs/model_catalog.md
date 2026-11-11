@@ -1,6 +1,6 @@
 # Model catalog (measured models and explicit-only presets)
 
-Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-11-04. Do not edit by hand; run the script after a catalog change.
+Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-11-10. Do not edit by hand; run the script after a catalog change.
 
 - **Scope:** every model with a measured Artificial Analysis (AA) Intelligence Index value, plus the explicit-only presets. Older and unmeasured entries are in the conf files only.
 - **Score:** the 1-20 `intelligence_score` that auto mode ranks by. See [model_ranking.md](model_ranking.md) for how it is anchored to the AA Index.
@@ -13,10 +13,11 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
-| Claude Opus 5.5 | 20 | low 35, medium 48, high 52, xhigh 57, max 58 | native: `claude-opus-5-5`<br>openrouter: `anthropic/claude-opus-5.5` | `claude-opus`, `claude-opus-5.5`, `opus`, `opus-5.5` |  |
-| Claude Fable 5.1 | 19 | low 39, medium 43, high 47, xhigh 50, max 49 | native: `claude-fable-5-1`<br>openrouter: `anthropic/claude-fable-5.1` | `claude-fable-5.1`, `fable`, `fable-5.1` |  |
-| Claude Sonnet 5.5 | 18 | low 25, medium 30, high 41, xhigh 50, max 54 | native: `claude-sonnet-5-5`<br>openrouter: `anthropic/claude-sonnet-5.5` | `claude-sonnet`, `claude-sonnet-5.5`, `sonnet`, `sonnet-5.5` |  |
-| Claude Haiku 5.5 | 16 | low 19, medium 25, high 30, xhigh 34, max 36 | native: `claude-haiku-5-5`<br>openrouter: `anthropic/claude-haiku-5.5` | `claude-haiku`, `claude-haiku-5.5`, `haiku`, `haiku-5.5`, `or-claude-haiku` |  |
+| Claude Fable 5.2 | 20 | low 54, medium 56, high 62, xhigh 62, max 65 | native: `claude-fable-5-2`<br>openrouter: `anthropic/claude-fable-5.2` | `claude-fable-5.2`, `fable`, `fable-5.2` |  |
+| Claude Opus 5.5 | 20 | low 35, medium 48, high 52, xhigh 57, max 59 | native: `claude-opus-5-5`<br>openrouter: `anthropic/claude-opus-5.5` | `claude-opus`, `claude-opus-5.5`, `opus`, `opus-5.5` |  |
+| Claude Fable 5.1 | 19 | low 39, medium 43, high 47, xhigh 50, max 49 | native: `claude-fable-5-1`<br>openrouter: `anthropic/claude-fable-5.1` | `claude-fable-5.1`, `fable-5.1` |  |
+| Claude Sonnet 5.5 | 18 | low 26, medium 31, high 42, xhigh 50, max 55 | native: `claude-sonnet-5-5`<br>openrouter: `anthropic/claude-sonnet-5.5` | `claude-sonnet`, `claude-sonnet-5.5`, `sonnet`, `sonnet-5.5` |  |
+| Claude Haiku 5.5 | 16 | low 19, medium 25, high 30, xhigh 35, max 36 | native: `claude-haiku-5-5`<br>openrouter: `anthropic/claude-haiku-5.5` | `claude-haiku`, `claude-haiku-5.5`, `haiku`, `haiku-5.5`, `or-claude-haiku` |  |
 
 ## OpenAI
 
@@ -26,52 +27,56 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 | GPT-6.1 Sol Pro | 20 | not measured | openrouter: `openai/gpt-6.1-sol-pro` | `gpt-6.1-sol-pro`, `or-gpt6.1-sol-pro` | explicit-only, provisional score |
 | OpenAI (GPT-6 Astra) | 20 | low 43, medium 52, high 55, xhigh 55, max 57 | native: `gpt-6-astra`<br>openrouter: `openai/gpt-6-astra`<br>chatgpt: `chatgpt/gpt-6-astra` | `astra`, `gpt6-astra`, `gpt6astra`, `or-gpt6-astra` |  |
 | GPT-6 Astra Pro | 20 | not measured | openrouter: `openai/gpt-6-astra-pro` | `astra-pro`, `gpt6-astra-pro`, `or-gpt6-astra-pro` | explicit-only, provisional score |
-| OpenAI (GPT-6.1 Terra) | 18 | non-reasoning 30, low 29, medium 38, high 42, xhigh 45, max 51 | native: `gpt-6.1-terra`<br>openrouter: `openai/gpt-6.1-terra`<br>chatgpt: `chatgpt/gpt-6.1-terra` | `gpt6.1-terra`, `gpt6.1terra`, `or-gpt6.1-terra`, `terra` |  |
+| OpenAI (GPT-6.1 Terra) | 18 | non-reasoning 31, low 29, medium 38, high 42, xhigh 45, max 51 | native: `gpt-6.1-terra`<br>openrouter: `openai/gpt-6.1-terra`<br>chatgpt: `chatgpt/gpt-6.1-terra` | `gpt6.1-terra`, `gpt6.1terra`, `or-gpt6.1-terra`, `terra` |  |
 | GPT-6.1 Terra Pro | 18 | not measured | openrouter: `openai/gpt-6.1-terra-pro` | `gpt-6.1-terra-pro`, `or-gpt6.1-terra-pro` | explicit-only, provisional score |
 | OpenAI (GPT-6 Luna) | 13 | non-reasoning 9, low 10, medium 18, high 21, xhigh 23, max 28 | native: `gpt-6-luna`<br>openrouter: `openai/gpt-6-luna`<br>chatgpt: `chatgpt/gpt-6-luna` | `gpt6-luna`, `gpt6luna`, `luna`, `or-gpt6-luna` |  |
 | GPT-6 Luna Pro | 13 | not measured | openrouter: `openai/gpt-6-luna-pro` | `gpt-6-luna-pro`, `or-gpt6-luna-pro` | explicit-only, provisional score |
+| GPT-OSS 120B | 5 | high 4 | openrouter: `openai/gpt-oss-120b` | `gpt-oss`, `gpt-oss-120b` |  |
 
 ## Google
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
 | Gemini (4 Argon) | 20 | high 50 | native: `gemini-4-argon`<br>openrouter: `google/gemini-4-argon` | `argon`, `gemini-4-argon-or`, `gemini-argon`, `or-gemini-4-argon` |  |
-| Gemini (4 Carbon) | 20 | high 59 | native: `gemini-4-carbon` | `carbon`, `gemini-carbon` | explicit-only |
-| Gemini 3.8 Flash | 16 | low 22, medium 30, high 31 | native: `gemini-3.8-flash`<br>openrouter: `google/gemini-3.8-flash` | `flash3.8`, `gemini-3.8-flash`, `gemini-flash-latest`; flag-only: `flash` |  |
+| Gemini (4 Carbon) | 20 | low 54, medium 58, high 60 | native: `gemini-4-carbon`<br>openrouter: `google/gemini-4-carbon` | `carbon`, `gemini-4-carbon-or`, `gemini-carbon`, `or-gemini-4-carbon` |  |
+| Gemini 3.8 Flash | 16 | low 23, medium 30, high 31 | native: `gemini-3.8-flash`<br>openrouter: `google/gemini-3.8-flash` | `flash3.8`, `gemini-3.8-flash`, `gemini-flash-latest`; flag-only: `flash` |  |
 | Gemini 3.5 Flash-Lite | 9 | default 12 | native: `gemini-3.5-flash-lite` | `flashlite3.5`, `gemini-flash-lite-latest`; flag-only: `flash-lite`, `flashlite` |  |
+| Gemma 4 31B | 5 | default 4 | openrouter: `google/gemma-4-31b-it` | `gemma`, `gemma-4`, `gemma-4-31b` |  |
 
 ## xAI
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
-| X.AI (Grok 4.7) | 17 | low 31, high 35, xhigh 34 | native: `grok-4.7`<br>openrouter: `x-ai/grok-4.7` | `grok`, `grok-4.7`, `grok4.7` |  |
+| X.AI (Grok 4.7) | 17 | low 31, high 35, xhigh 35 | native: `grok-4.7`<br>openrouter: `x-ai/grok-4.7` | `grok`, `grok-4.7`, `grok4.7` |  |
 
 ## Meta
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
-| Muse Wonder | 18 | max 43 | openrouter: `meta/muse-wonder` | `muse-wonder`, `wonder` |  |
+| Muse Wonder | 18 | high 41, max 44 | openrouter: `meta/muse-wonder` | `muse-wonder`, `wonder` |  |
+| Muse Ember | 17 | xhigh 34, max 36 | openrouter: `meta/muse-ember` | `ember`, `muse-ember` |  |
 | Muse Spark Open | 13 | xhigh 25 | openrouter: `meta/muse-spark-open` | `muse-open`, `muse-spark-open` |  |
 
 ## DeepSeek
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
-| DeepSeek V4.1 Flash | 15 | max 33 | native: `deepseek-flash`<br>openrouter: `deepseek/deepseek-v4.1-flash-1017` | `deepseek`, `deepseek-flash`, `deepseek-v4.1-flash`, `deepseek-v4.1-flash-1017`, `v4.1-flash` |  |
-| DeepSeek V4 Pro | 11 | max 23 | native: `deepseek-v4-pro`<br>openrouter: `deepseek/deepseek-v4-pro` | `deepseek-v4`, `deepseek-v4-pro` |  |
+| DeepSeek V4.1 Flash | 16 | non-reasoning 19, high 29, max 33 | native: `deepseek-flash`<br>openrouter: `deepseek/deepseek-v4.1-flash-1017` | `deepseek`, `deepseek-flash`, `deepseek-v4.1-flash`, `deepseek-v4.1-flash-1017`, `v4.1-flash` |  |
+| DeepSeek V4 Pro | 11 | non-reasoning 13, max 23 | native: `deepseek-v4-pro`<br>openrouter: `deepseek/deepseek-v4-pro` | `deepseek-v4`, `deepseek-v4-pro` |  |
 
 ## Alibaba (Qwen)
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
 | Qwen3.8 Max 0902 | 17 | default 34 | native: `qwen3.8-max-0902`<br>openrouter: `qwen/qwen3.8-max-0902` | `qwen`, `qwen-max`, `qwen3-max`, `qwen3.8-max`, `qwen3.8-max-0902`, `qwen3.8-max-2026-09-02` |  |
-| Qwen3.8 27B | 11 | xhigh 20 | openrouter: `qwen/qwen3.8-27b` | `qwen3.8-27b` |  |
+| Qwen3.8 27B | 12 | non-reasoning 10, low 16, medium 17, xhigh 20 | openrouter: `qwen/qwen3.8-27b` | `qwen3.8-27b` |  |
 
 ## Z.ai (GLM)
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
 | GLM-5.3 | 15 | low 23, max 32 | native: `glm-5.3`<br>openrouter: `z-ai/glm-5.3` | `glm`, `glm-5.3`, `glm5` |  |
+| GLM-5.3 Flash | 15 | default 28 | native: `glm-5.3-flash`<br>openrouter: `z-ai/glm-5.3-flash` | `glm-5.3-flash`, `glm-flash` |  |
 
 ## Moonshot (Kimi)
 
@@ -98,7 +103,8 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
-| Mistral Large 4 | 14 | default 25 | openrouter: `mistralai/mistral-large-4-0` | `mistral`, `mistral-large`, `mistral-large-4`, `mistral-large-4-0` |  |
+| Mistral Large 4 | 15 | medium 23, high 26 | openrouter: `mistralai/mistral-large-4-0` | `mistral`, `mistral-large`, `mistral-large-4`, `mistral-large-4-0` |  |
+| Mistral Small 4 | 5 | default 4 | openrouter: `mistralai/mistral-small-2603` | `ministral`, `mistral-small` |  |
 
 ## NVIDIA
 
@@ -124,3 +130,15 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
 | Beam 1.0 501B A23B | 12 | default 18 | openrouter: `reflection/beam-1.0-501b-a23b` | `beam`, `beam-1.0`, `reflection-beam` |  |
+
+## Inception
+
+| Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
+|---|---|---|---|---|---|
+| Mercury 3 | 12 | not measured | openrouter: `inception/mercury-3` | `mercury`, `mercury-3`, `mercury3` | explicit-only, provisional score |
+
+## Tencent
+
+| Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
+|---|---|---|---|---|---|
+| Hy4 | 17 | default 35 | openrouter: `tencent/hy4` | `hy4`, `tencent-hy4` |  |

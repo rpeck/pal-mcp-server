@@ -37,9 +37,9 @@
       "aa_index_by_effort": {
         "low": 31,
         "high": 35,
-        "xhigh": 34
+        "xhigh": 35
       },
-      "description": "Grok 4.7 (released 2026-09-21, 500K context) - xAI flagship for coding, agentic tasks and knowledge work, succeeding Grok 4.6; AA Intelligence Index v5 35 at high (31 at low, 34 at xhigh). $2/$6 per M.",
+      "description": "Grok 4.7 (released 2026-09-21, 500K context) - xAI flagship for coding, agentic tasks and knowledge work, succeeding Grok 4.6; AA Intelligence Index v5 35 at high (31 at low, 35 at xhigh). $2/$6 per M.",
       "context_window": 500000,
       "max_output_tokens": 128000,
       "supports_extended_thinking": true,

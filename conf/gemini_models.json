@@ -34,10 +34,10 @@
         "gemini-carbon"
       ],
       "intelligence_score": 20,
-      "aa_index": 59,
-      "description": "Gemini 4 Carbon (released 2026-10-28, 1M context) - Google's strongest frontier model, aimed at cybersecurity and long-running agentic work; it leads the AA Intelligence Index v5 at 59 (high, the only row AA lists). Multimodal input. $4/$20 per M ($2/$10 introductory). LIMITED ACCESS: on 2026-10-28 Google gave first access only to selected cyber-defense partners, the Gemini API models list for a standard key did not include it, and OpenRouter did not list it. The model ID gemini-4-carbon is UNVERIFIED (a leak shows gemini-4-carbon-preview), and the output limits copy Gemini 4 Argon until Google publishes them. NEVER auto-selected (auto_selectable false) until the API serves it; name it explicitly.",
+      "aa_index": 60,
+      "description": "Gemini 4 Carbon (first access 2026-10-28, generally available 2026-11-10, 1M context, 65K output) - Google's strongest reasoning model, for complex software engineering, multimodal knowledge work, scientific reasoning and cybersecurity defense. AA Intelligence Index v5 60 at high (58 at medium, 54 at low), second only to Claude Fable 5.2 (62). Multimodal input (text, image, audio, video, PDF). $2/$10 per M until 2026-11-30, then $4/$20. Paid tier only: a free-tier Gemini key gets no quota for it; use a paid key or the OpenRouter route. The native route is not live-tested.",
       "context_window": 1048576,
-      "max_output_tokens": 32768,
+      "max_output_tokens": 65536,
       "supports_extended_thinking": true,
       "supports_system_prompts": true,
       "supports_streaming": true,
@@ -48,9 +48,10 @@
       "max_image_size_mb": 32.0,
       "max_thinking_tokens": 32768,
       "allow_code_generation": true,
-      "auto_selectable": false,
       "aa_index_by_effort": {
-        "high": 59
+        "low": 54,
+        "medium": 58,
+        "high": 60
       }
     },
     {
@@ -62,7 +63,7 @@
       ],
       "intelligence_score": 20,
       "aa_index": 50,
-      "description": "Gemini 4 Argon (released 2026-10-13, 1M context, 32K output) - Google's flagship reasoning model for complex software engineering, math and science, and autonomous agents. AA Intelligence Index v5 50 (high), below Gemini 4 Carbon (59). Multimodal input. A Gemini API key on the free tier gets a 429 (quota 0) for this model; it needs a paid tier, or use the OpenRouter route.",
+      "description": "Gemini 4 Argon (released 2026-10-13, 1M context, 32K output) - Google's flagship reasoning model for complex software engineering, math and science, and autonomous agents. AA Intelligence Index v5 50 (high), below Gemini 4 Carbon (60). Multimodal input. A Gemini API key on the free tier gets a 429 (quota 0) for this model; it needs a paid tier, or use the OpenRouter route.",
       "context_window": 1048576,
       "max_output_tokens": 32768,
       "supports_extended_thinking": true,
@@ -221,11 +222,11 @@
       "intelligence_score": 16,
       "aa_index": 31,
       "aa_index_by_effort": {
-        "low": 22,
+        "low": 23,
         "medium": 30,
         "high": 31
       },
-      "description": "Newest fast model (1M context) - AA Intelligence Index v5 31 (high; 22 at low, 30 at medium), newer than 3.7 Flash; accepts text, image, audio and video. Supports thinking. Developer free tier.",
+      "description": "Newest fast model (1M context) - AA Intelligence Index v5 31 (high; 23 at low, 30 at medium), newer than 3.7 Flash; accepts text, image, audio and video. Supports thinking. Developer free tier.",
       "context_window": 1048576,
       "max_output_tokens": 65536,
       "supports_extended_thinking": true,

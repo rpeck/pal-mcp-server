@@ -50,6 +50,7 @@ OR_LAB = {
     "cohere": "Cohere",
     "reflection": "Reflection",
     "inception": "Inception",
+    "tencent": "Tencent",
 }
 LAB_ORDER = [
     "Anthropic",
@@ -69,6 +70,7 @@ LAB_ORDER = [
     "Cohere",
     "Reflection",
     "Inception",
+    "Tencent",
 ]
 EFFORT_ORDER = ["non-reasoning", "low", "medium", "high", "xhigh", "max", "default"]
 
@@ -88,6 +90,7 @@ def key_of(name: str) -> str:
 
 NAME_OVERRIDES = {
     "mistralai/mistral-large-4-0": "Mistral Large 4",
+    "mistralai/mistral-small-2603": "Mistral Small 4",
     "deepseek/deepseek-v4.1-flash": "DeepSeek V4.1 Flash (2026-09-10 build)",
 }
 SPECIAL_WORDS = {"mimo": "MiMo", "minimax": "MiniMax", "deepseek": "DeepSeek", "vl": "VL"}

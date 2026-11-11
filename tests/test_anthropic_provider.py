@@ -41,8 +41,9 @@ class TestAnthropicCatalog:
         assert p._resolve_model_name("opus") == "claude-opus-5-5"
         assert p._resolve_model_name("opus-5.5") == "claude-opus-5-5"
         assert p._resolve_model_name("opus-5") == "claude-opus-5"
-        # Bare "fable" now points at the newest Fable (5.1); "fable-5" still addresses Fable 5.
-        assert p._resolve_model_name("fable") == "claude-fable-5-1"
+        # Bare "fable" now points at the newest Fable (5.2); "fable-5.1" and "fable-5" still address the older ones.
+        assert p._resolve_model_name("fable") == "claude-fable-5-2"
+        assert p._resolve_model_name("fable-5.2") == "claude-fable-5-2"
         assert p._resolve_model_name("fable-5.1") == "claude-fable-5-1"
         assert p._resolve_model_name("fable-5") == "claude-fable-5"
         # Bare "sonnet" points at the newest Sonnet (5.5); "sonnet-5" still addresses Sonnet 5.
@@ -58,11 +59,12 @@ class TestAnthropicCatalog:
     def test_preferred_model_by_category(self):
         p = _provider()
         allowed = list(p.get_all_model_capabilities())
-        # Opus 5.5 (AA 58), Sonnet 5.5 (AA 56) and Fable 5.1 (AA 53) all sit at 20, the top of the 1-20
-        # scale. The raw aa_index orders the tie, so Opus 5.5 wins on its Index value; without it, the
-        # name tie-break would pick Sonnet 5.5.
-        assert p.get_preferred_model(ToolModelCategory.EXTENDED_REASONING, allowed) == "claude-opus-5-5"
-        assert p.get_preferred_model(ToolModelCategory.BALANCED, allowed) == "claude-opus-5-5"
+        # Fable 5.2 (AA v5 62 at high) and Opus 5.5 (52) both sit at 20, the top of the 1-20 scale. The raw
+        # aa_index orders the tie, so Fable 5.2 wins on its Index value; without Fable 5.2, Opus 5.5 wins.
+        assert p.get_preferred_model(ToolModelCategory.EXTENDED_REASONING, allowed) == "claude-fable-5-2"
+        assert p.get_preferred_model(ToolModelCategory.BALANCED, allowed) == "claude-fable-5-2"
+        without_52 = [m for m in allowed if m != "claude-fable-5-2"]
+        assert p.get_preferred_model(ToolModelCategory.BALANCED, without_52) == "claude-opus-5-5"
         assert p.get_preferred_model(ToolModelCategory.FAST_RESPONSE, allowed) == "claude-haiku-5-5"
 
     def test_score_orders_the_top_models(self):
