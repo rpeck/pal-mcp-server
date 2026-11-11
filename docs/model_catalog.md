@@ -1,6 +1,6 @@
 # Model catalog (measured models and explicit-only presets)
 
-Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-11-10. Do not edit by hand; run the script after a catalog change.
+Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-11-11. Do not edit by hand; run the script after a catalog change.
 
 - **Scope:** every model with a measured Artificial Analysis (AA) Intelligence Index value, plus the explicit-only presets. Older and unmeasured entries are in the conf files only.
 - **Score:** the 1-20 `intelligence_score` that auto mode ranks by. See [model_ranking.md](model_ranking.md) for how it is anchored to the AA Index.

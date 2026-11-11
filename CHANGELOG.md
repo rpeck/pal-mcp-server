@@ -66,6 +66,12 @@
   launcher (for example the npm package).
 - `run-server.sh`: when it makes a new `.env` from shell variables, it now copies each key as plain text. Before,
   `sed` stopped the script for a value with `/` (every `op://` reference), and changed a value with `&` or `\`.
+- Gemini 4 Carbon (issue #14): the native `gemini-4-carbon` entry now has `max_output_tokens` 32768, the
+  `output_token_limit` that the Gemini API models list gave on 2026-11-11. Before, it had 65536. The OpenRouter
+  route keeps 65536, because OpenRouter accepts that limit.
+  - The description adds FrontierCode 2.0 (40.6), Terminal-Bench 4.0 (65.2) and non-hallucination (89%).
+  - Carbon is auto-selectable since PR #16, and a new test checks that auto mode selects it for extended
+    reasoning. A free-tier Gemini key gets HTTP 429 (quota 0) for Carbon.
 
 ## v9.8.2 (2025-12-15)
 
