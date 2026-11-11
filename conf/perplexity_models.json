@@ -1,6 +1,7 @@
 {
   "_README": {
     "description": "Perplexity Sonar via its OpenAI-compatible API (native provider, PERPLEXITY_API_KEY).",
+    "aa_version": "No entry here has an Artificial Analysis Intelligence Index value. The scores are estimates on the 1-20 scale that the v5.0.1 ladder in docs/model_ranking.md keeps (leaderboard read 2026-11-11). Change this line at each AA regrade.",
     "usage": "Base URL https://api.perplexity.ai. NOTE: Sonar models are search/answer models, NOT open-weights; scores are modest and reflect general capability, not the open-model calibration used elsewhere. Verify model IDs against Perplexity docs if a call 404s."
   },
   "models": [

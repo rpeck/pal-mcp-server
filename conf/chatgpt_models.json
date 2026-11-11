@@ -1,6 +1,7 @@
 {
   "_README": {
     "description": "Models reachable with a ChatGPT plan login through the Codex CLI (`codex login`), used as plain single-turn models.",
+    "aa_version": "The aa_index and aa_index_by_effort values here come from the Artificial Analysis Intelligence Index v5.0.1 (leaderboard read 2026-11-11). Entries without them carry estimated or v4.3-based scores; each description says which. Change this line at each AA regrade.",
     "documentation": "docs/chatgpt_provider.md",
     "usage": "Enable with CHATGPT_ENABLED=true. Model names are namespaced `chatgpt/<codex model slug>`; the slug after the prefix is passed to `codex exec -m`. Aliases are case-insensitive. Override this file with CHATGPT_MODELS_CONFIG_PATH.",
     "field_notes": "Matches providers/shared/model_capabilities.py. context_window and effort_levels follow `codex debug models`; intelligence_score/aa_index mirror conf/openai_models.json. Temperature and max output tokens cannot be set through the Codex CLI, so supports_temperature is false."

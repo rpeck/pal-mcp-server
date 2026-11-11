@@ -1,10 +1,10 @@
 # Model catalog (measured models and explicit-only presets)
 
-Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-11-10. Do not edit by hand; run the script after a catalog change.
+Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-11-11. Do not edit by hand; run the script after a catalog change.
 
 - **Scope:** every model with a measured Artificial Analysis (AA) Intelligence Index value, plus the explicit-only presets. Older and unmeasured entries are in the conf files only.
 - **Score:** the 1-20 `intelligence_score` that auto mode ranks by. See [model_ranking.md](model_ranking.md) for how it is anchored to the AA Index.
-- **AA Index by effort:** the AA Intelligence Index v5 leaderboard value at each effort level (`aa_index_by_effort`). `default` means AA lists one row for the model.
+- **AA Index by effort:** the AA Intelligence Index v5.0.1 leaderboard value at each effort level (`aa_index_by_effort`). `default` means AA lists one row for the model.
 - **Routes:** `native` is the creator's own API (needs that creator's key); `openrouter` is the OpenRouter mirror (needs `OPENROUTER_API_KEY`); `chatgpt` is a ChatGPT plan through the Codex CLI (needs `CHATGPT_ENABLED=true` and `codex login`, see [chatgpt_provider.md](chatgpt_provider.md)).
 - **Explicit-only:** `auto_selectable: false`. Auto mode never picks the model; call it by name.
 - **Flag-only aliases:** these bare aliases point at the model only when `DYNAMIC_MODEL_SELECTION` is on; otherwise they keep the target that upstream PAL gives them.

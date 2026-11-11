@@ -1,6 +1,7 @@
 {
   "_README": {
     "description": "Zhipu GLM via the Z.ai OpenAI-compatible API (native provider, ZAI_API_KEY).",
+    "aa_version": "The aa_index and aa_index_by_effort values here come from the Artificial Analysis Intelligence Index v5.0.1 (leaderboard read 2026-11-11). Entries without them carry estimated or v4.3-based scores; each description says which. Change this line at each AA regrade.",
     "usage": "Base URL https://api.z.ai/api/paas/v4. GLM-5.3 is API-only (open weights delayed), so this direct route is the way to reach the latest GLM. Scores pinned to the z-ai/* OpenRouter mirrors. Verify model IDs against /models if a call 404s."
   },
   "models": [

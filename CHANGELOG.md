@@ -67,6 +67,15 @@
 - `run-server.sh`: when it makes a new `.env` from shell variables, it now copies each key as plain text. Before,
   `sed` stopped the script for a value with `/` (every `op://` reference), and changed a value with `&` or `\`.
 
+### Documentation
+
+- The model scores name their Artificial Analysis Intelligence Index version: v5.0.1 (leaderboard read
+  2026-11-11). Every `aa_index` and `aa_index_by_effort` value in `conf/` matches that read, so no score changes.
+  - Each conf file's `_README` has an `aa_version` line with the version and the read date. Change that line at
+    each AA regrade, so that the regrade shows in the diff.
+  - `docs/model_ranking.md` says why the ladder stays the same under v5.0.1: a re-fit moves the curve by less
+    than its residual SD.
+
 ## v9.8.2 (2025-12-15)
 
 ### Bug Fixes
