@@ -406,7 +406,7 @@
       "intelligence_score": 18,
       "aa_index": 42,
       "aa_index_by_effort": {
-        "non-reasoning": 30,
+        "non-reasoning": 31,
         "low": 29,
         "medium": 38,
         "high": 42,

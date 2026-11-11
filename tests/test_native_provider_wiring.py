@@ -54,6 +54,9 @@ SCORE_PINS = [
     ("openai_models.json", "gpt-6.1-terra", "openai/gpt-6.1-terra"),
     ("moonshot_models.json", "kimi-k3.1-pro", "moonshotai/kimi-k3.1-pro"),
     ("minimax_models.json", "MiniMax-M3.1-Flash", "minimax/minimax-m3.1-flash"),
+    ("anthropic_models.json", "claude-fable-5-2", "anthropic/claude-fable-5.2"),
+    ("gemini_models.json", "gemini-4-carbon", "google/gemini-4-carbon"),
+    ("zai_models.json", "glm-5.3-flash", "z-ai/glm-5.3-flash"),
 ]
 
 
@@ -148,17 +151,17 @@ def test_qwen38_flash_present_both_routes():
 
 
 def test_fable_5_1_present_both_routes():
-    # Claude Fable 5.1 (tops the current AA Index at 53): native claude-fable-5-1 + OpenRouter mirror,
-    # score 20, and the bare "fable" alias now points at 5.1 (newest-wins).
+    # Claude Fable 5.1: native claude-fable-5-1 + OpenRouter mirror, score 19. The bare "fable" alias moved to
+    # Fable 5.2 (newest-wins), so 5.1 keeps only its versioned aliases.
     a = _models("anthropic_models.json")
     assert a["claude-fable-5-1"]["intelligence_score"] == 19
-    assert "fable" in a["claude-fable-5-1"]["aliases"]
+    assert "fable" not in a["claude-fable-5-1"]["aliases"], "bare 'fable' must move to Fable 5.2"
     assert "fable" not in a["claude-fable-5"]["aliases"], "bare 'fable' must move off Fable 5"
 
     orm = {m["model_name"]: m for m in json.loads((CONF / "openrouter_models.json").read_text())["models"]}
     assert "anthropic/claude-fable-5.1" in orm
     assert orm["anthropic/claude-fable-5.1"]["intelligence_score"] == 19
-    assert "fable" in orm["anthropic/claude-fable-5.1"]["aliases"]
+    assert "fable" not in orm["anthropic/claude-fable-5.1"]["aliases"]
     assert "fable" not in orm["anthropic/claude-fable-5"]["aliases"]
 
 
@@ -254,8 +257,8 @@ def test_deepseek_flash_is_the_api_model_id_and_tracks_the_1017_build():
     flash = ds["deepseek-flash"]
     assert "deepseek-v4.1-flash" not in ds
     assert {"deepseek", "deepseek-v4.1-flash"} <= set(flash["aliases"])
-    assert flash["intelligence_score"] == 15  # AA v5 33 at max, high estimated at 26
-    assert flash["aa_index_by_effort"] == {"max": 33}
+    assert flash["intelligence_score"] == 16  # AA v5 29 at high (read 2026-11-10)
+    assert flash["aa_index_by_effort"] == {"non-reasoning": 19, "high": 29, "max": 33}
     assert flash["supports_images"] is True
     assert "deepseek" not in ds["deepseek-v4-pro"]["aliases"]
     assert "deepseek-flash" not in ds["deepseek-v4-flash"]["aliases"]
@@ -315,7 +318,7 @@ def test_gemini_38_flash_and_family_refresh():
         "google/gemini-3.8-flash": 16,
         "meta/muse-spark-1.3": 17,
         "xiaomi/mimo-v2.6-pro": 16,
-        "qwen/qwen3.8-27b": 11,
+        "qwen/qwen3.8-27b": 12,
         "moonshotai/kimi-k2.7-code": 10,
         "nvidia/nemotron-3-ultra-550b-a55b": 9,
     }
@@ -442,7 +445,7 @@ def test_october_releases():
         "anthropic/claude-haiku-5.5": 16,
         "google/gemini-4-argon": 20,
         "meta/muse-wonder": 18,
-        "mistralai/mistral-large-4-0": 14,
+        "mistralai/mistral-large-4-0": 15,
         "stepfun/step-5-preview": 16,
         "openai/gpt-6-luna-pro": 13,
     }
@@ -789,8 +792,8 @@ def test_october_19_additions():
     # Models released or listed 2026-10-13..19: AA values read 2026-10-19, scored on the high-effort ladder.
     orm = _orm()
     expected = {
-        "deepseek/deepseek-v4.1-flash-1017": 15,  # AA v5 max 33, high estimated at 26
-        "meta/muse-spark-open": 13,  # AA v5 xhigh 25, high estimated at 22
+        "deepseek/deepseek-v4.1-flash-1017": 16,  # AA v5 high 29 (high row added after 2026-10-28)
+        "meta/muse-spark-open": 13,  # AA v5 xhigh 25, high estimated at 23
         "reflection/beam-1.0-501b-a23b": 12,  # AA v5 18, one row
         "nvidia/nemotron-3.5-super-vl": 10,  # AA v5 14, one row
         "inception/mercury-3": 12,  # not measured by AA: provisional
@@ -859,14 +862,55 @@ def test_october_26_additions():
     assert "kimi" not in hs["aliases"]
 
 
-def test_gemini_4_carbon_is_catalogued_but_explicit_only():
-    # Gemini 4 Carbon (2026-10-28) leads the AA Index v5 at 59, but Google gives first access only to selected
-    # partners and has not published the API model ID. It is callable by name and never auto-selected.
+def test_gemini_4_carbon_is_generally_available():
+    # Gemini 4 Carbon had limited access from 2026-10-28 and became generally available on 2026-11-10 as
+    # gemini-4-carbon (stable, paid tier). It is auto-selectable now, with an OpenRouter mirror.
     g = _models("gemini_models.json")
     carbon = g["gemini-4-carbon"]
     assert carbon["intelligence_score"] == 20
-    assert carbon["aa_index"] == 59 and carbon["aa_index_by_effort"] == {"high": 59}
-    assert carbon["auto_selectable"] is False
+    assert carbon["aa_index"] == 60 and carbon["aa_index_by_effort"] == {"low": 54, "medium": 58, "high": 60}
+    assert "auto_selectable" not in carbon
+    assert carbon["max_output_tokens"] == 65536
     assert "carbon" in carbon["aliases"]
-    assert "LIMITED ACCESS" in carbon["description"] and "UNVERIFIED" in carbon["description"]
-    assert "gemini-4-carbon" not in _orm() and "google/gemini-4-carbon" not in _orm()
+    assert "LIMITED ACCESS" not in carbon["description"] and "UNVERIFIED" not in carbon["description"]
+    orc = _orm()["google/gemini-4-carbon"]
+    assert "carbon" not in orc["aliases"], "the bare alias belongs to the native route"
+    assert "auto_selectable" not in orc
+
+
+def test_november_10_releases():
+    # Models released or listed 2026-10-28..11-10: AA values read 2026-11-10, scored on the high-effort ladder.
+    a = _models("anthropic_models.json")
+    f52 = a["claude-fable-5-2"]
+    assert f52["intelligence_score"] == 20 and f52["aa_index"] == 62
+    assert f52["aa_index_by_effort"] == {"low": 54, "medium": 56, "high": 62, "xhigh": 62, "max": 65}
+    assert "fable" in f52["aliases"] and "fable-5.2" in f52["aliases"]
+    # Fable 5.2 has the highest aa_index of every Claude model at 20, so it wins the Anthropic tie-break.
+    assert f52["aa_index"] > a["claude-opus-5-5"]["aa_index"]
+
+    orm = _orm()
+    assert "fable" in orm["anthropic/claude-fable-5.2"]["aliases"]
+    expected = {
+        "anthropic/claude-fable-5.2": 20,  # AA v5 62 at high
+        "google/gemini-4-carbon": 20,  # AA v5 60 at high
+        "meta/muse-ember": 17,  # AA v5 xhigh 34, high estimated at 32
+        "tencent/hy4": 17,  # AA v5 35, one row
+        "meta/muse-wonder": 18,  # AA v5 high 41, measured now
+        "z-ai/glm-5.3-flash": 15,  # first v5 value: 28
+        "mistralai/mistral-small-2603": 5,  # first v5 value: 4
+        "google/gemma-4-31b-it": 5,  # first v5 value: 4
+        "openai/gpt-oss-120b": 5,  # first v5 value: 4 at high
+    }
+    for name, score in expected.items():
+        assert orm[name]["intelligence_score"] == score, name
+        assert orm[name].get("aa_index_by_effort"), name
+    assert "ESTIMATE" in orm["meta/muse-ember"]["description"]
+    assert "ESTIMATE" not in orm["meta/muse-wonder"]["description"]
+    # Hy4 has one AA row and no confirmed effort control; Muse Ember answered at low and max.
+    assert "effort_levels" not in orm["tencent/hy4"]
+    assert orm["meta/muse-ember"]["effort_levels"] == ["low", "medium", "high", "xhigh", "max"]
+
+    # OpenRouter has no provider for Mercury 3 since 2026-11-08, so auto mode must never pick it.
+    mercury = orm["inception/mercury-3"]
+    assert mercury["auto_selectable"] is False
+    assert "UNAVAILABLE" in mercury["description"]

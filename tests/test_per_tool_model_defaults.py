@@ -271,22 +271,32 @@ class TestDynamicModelSelectionFlagOn:
             assert balanced == "gpt-6.1-sol"
 
     def test_gemini_extended_reasoning_ranks_all_thinking_models_under_flag(self):
-        """With the flag on, Gemini's extended-reasoning pick is ranked, so gemini-4-argon wins
-        even though its name does not contain "pro". gemini-4-carbon scores higher but has
-        auto_selectable false, so the registry leaves it out of the candidates. The default path keeps
-        upstream's pro-first rule."""
+        """With the flag on, Gemini's extended-reasoning pick is ranked, so gemini-4-carbon wins
+        even though its name does not contain "pro". The registry leaves auto_selectable=false models
+        out of the candidates (checked below with the flag forced on Carbon). The default path keeps upstream's
+        pro-first rule."""
         from providers.gemini import GeminiModelProvider
 
         provider = GeminiModelProvider("test-key")
         allowed = ModelProviderRegistry._get_allowed_models_for_provider(provider, ProviderType.GOOGLE)
-        assert "gemini-4-carbon" not in allowed and "carbon" not in allowed
-        assert "gemini-4-argon" in allowed
+        assert "gemini-4-carbon" in allowed and "gemini-4-argon" in allowed
         with patch.dict(os.environ, {"DYNAMIC_MODEL_SELECTION": "1"}, clear=False):
-            assert provider.get_preferred_model(ToolModelCategory.EXTENDED_REASONING, allowed) == "gemini-4-argon"
+            assert provider.get_preferred_model(ToolModelCategory.EXTENDED_REASONING, allowed) == "gemini-4-carbon"
         with patch.dict(os.environ, {"DYNAMIC_MODEL_SELECTION": ""}, clear=False):
             assert (
                 provider.get_preferred_model(ToolModelCategory.EXTENDED_REASONING, allowed) == "gemini-3.1-pro-preview"
             )
+
+        # Force auto_selectable false on Carbon: the registry must drop it and its aliases, so Argon wins.
+        import dataclasses
+
+        caps = dict(provider.get_all_model_capabilities())
+        caps["gemini-4-carbon"] = dataclasses.replace(caps["gemini-4-carbon"], auto_selectable=False)
+        with patch.object(provider, "get_all_model_capabilities", return_value=caps):
+            allowed = ModelProviderRegistry._get_allowed_models_for_provider(provider, ProviderType.GOOGLE)
+        assert "gemini-4-carbon" not in allowed and "carbon" not in allowed
+        with patch.dict(os.environ, {"DYNAMIC_MODEL_SELECTION": "1"}, clear=False):
+            assert provider.get_preferred_model(ToolModelCategory.EXTENDED_REASONING, allowed) == "gemini-4-argon"
 
 
 class TestCustomProviderFallback:

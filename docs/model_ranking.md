@@ -37,7 +37,7 @@ of the work so you can enforce organisational preferences easily.
 
 The scores in this catalog come from the
 [Artificial Analysis (AA) Intelligence Index](https://artificialanalysis.ai/leaderboards/models)
-(v5), **at `high` reasoning effort** (since 2026-10-28; leaderboard read 2026-10-28). A model that AA
+(v5), **at `high` reasoning effort** (since 2026-10-28; leaderboard last read 2026-11-10). A model that AA
 measures gets its score from its `high` value, rounded to a whole number, through this ladder:
 
 | AA Index v5 | Score | | AA Index v5 | Score | | AA Index v5 | Score |
@@ -59,19 +59,22 @@ measures gets its score from its `high` value, rounded to a whole number, throug
   order of models follows v5; only the step bounds come from the fit.
 - **Effort anchor:** the score describes the model at `high` effort. PAL tools default to
   `thinking_mode: medium`, so a typical call runs one level below the anchor and can score a few Index
-  points lower (Claude Sonnet 5.5: 41 at high, 30 at medium). Ask for `thinking_mode: high` to get the
+  points lower (Claude Sonnet 5.5: 42 at high, 31 at medium). Ask for `thinking_mode: high` to get the
   scored behavior. For models that declare `effort_levels`, PAL sends the effort explicitly.
 - **No `high` row:** when AA lists one row only (no effort variants), that row is the anchor. When AA
   has rows below and above `high` but not `high` itself, the anchor is a linear interpolation between
   them. When AA has only rows above `high`, the anchor is an **estimate**: the nearest row above, minus
   the median gap between that level and `high` across the models that AA measured at both levels. Each
   interpolated or estimated entry says so in its description, with the rows it used and a range.
+  - A `non-reasoning` row is a separate mode, not an effort level below `high`. It is not used for
+    interpolation; it is only a floor for an estimate.
+  - Compute the median gaps again at each leaderboard read (2026-11-10: max to high 5.5, xhigh to high 2).
 - **Measured and estimated scores:** a model that AA does not list keeps an **estimated** score. The
   re-score to the `high` anchor lowered each such score of 12 or more by 1, the median change across
   the measured models with several effort levels; lower scores did not change. When AA publishes a
   value, the estimate is replaced.
 - **Measured on v4.3 only:** a model that AA measured on v4.3 but has no v5 value for (for example
-  Kimi K3, Qwen3.8 Flash, GLM-5.3 Flash, Gemini 3.1 Pro, GPT-5.6 Terra) keeps its v4.3-based score,
+  Kimi K3, Qwen3.8 Flash, Gemini 3.1 Pro, GPT-5.6 Terra) keeps its v4.3-based score,
   because the v5 ladder keeps the scale. It has no `aa_index` fields; its description gives the v4.3
   value. When AA publishes a v5 value, score it through the v5 ladder.
 - **Provisional scores:** a description that says PROVISIONAL marks a score that waits for an AA value,
