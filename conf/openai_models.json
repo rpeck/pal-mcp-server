@@ -71,6 +71,7 @@
       "use_openai_response_api": true,
       "default_reasoning_effort": "high",
       "allow_code_generation": true,
+      "requires_opt_in": true,
       "temperature_constraint": "fixed"
     },
     {
@@ -173,7 +174,8 @@
       "supports_temperature": false,
       "max_image_size_mb": 20.0,
       "use_openai_response_api": true,
-      "temperature_constraint": "fixed"
+      "temperature_constraint": "fixed",
+      "requires_opt_in": true
     },
     {
       "model_name": "o4-mini",
@@ -574,6 +576,7 @@
       "use_openai_response_api": true,
       "default_reasoning_effort": "high",
       "allow_code_generation": true,
+      "requires_opt_in": true,
       "temperature_constraint": "fixed"
     },
     {
@@ -620,6 +623,7 @@
       "use_openai_response_api": true,
       "default_reasoning_effort": "high",
       "allow_code_generation": true,
+      "requires_opt_in": true,
       "temperature_constraint": "fixed"
     },
     {
@@ -783,6 +787,7 @@
       "use_openai_response_api": true,
       "default_reasoning_effort": "high",
       "allow_code_generation": true,
+      "requires_opt_in": true,
       "temperature_constraint": "fixed"
     },
     {
@@ -898,7 +903,8 @@
       "supports_images": true,
       "supports_temperature": false,
       "max_image_size_mb": 20.0,
-      "use_openai_response_api": true
+      "use_openai_response_api": true,
+      "requires_opt_in": true
     },
     {
       "model_name": "gpt-4.1-mini",

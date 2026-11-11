@@ -93,6 +93,8 @@ Generate it again with `python scripts/generate_model_catalog.py` after you chan
 | `aa_index_by_effort` | The AA value at each effort level, for example `{"low": 42, "medium": 48, "high": 50, "xhigh": 51, "max": 52}`. `default` means AA lists a single row. Values that AA marks as incomplete (`*`) are left out. |
 | `effort_levels` | The reasoning-effort levels the route accepts. PAL sends the tool's `thinking_mode` as an explicit effort for these models (see [advanced usage](advanced-usage.md#thinking-modes-as-reasoning-effort)). |
 | `auto_selectable` | `false` keeps a model out of auto mode. Use it for presets that cost much more per request, such as the OpenRouter `-pro` reasoning-mode presets and the Fusion meta-routers. |
+| `requires_opt_in` | `true` refuses the model, even by explicit name, unless `ALLOW_OPT_IN_MODELS` lists it (see [Cost Guard](configuration.md#cost-guard)). Set it on every OpenAI `-pro` model and every Fusion router; a test enforces both. |
+| `input_price_per_m`, `output_price_per_m` | USD per million tokens on this route. `scripts/update_openrouter_prices.py` fills them for OpenRouter entries from OpenRouter's model list; run it at each catalog refresh. `MAX_OUTPUT_PRICE_PER_M` checks the output price. |
 | `dynamic_aliases` | Aliases that point at the model only when `DYNAMIC_MODEL_SELECTION` is on. They let a bare alias such as `haiku` follow the newest model without changing upstream defaults. |
 
 ### Known gaps

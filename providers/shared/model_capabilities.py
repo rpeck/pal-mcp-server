@@ -74,6 +74,12 @@ class ModelCapabilities:
     auto_selectable: bool = (
         True  # When False, the model is callable by explicit name but excluded from auto-mode candidates
     )
+    # Cost guard (see utils/cost_policy.py). A model with requires_opt_in is refused, even by explicit name,
+    # unless ALLOW_OPT_IN_MODELS lists it. The prices are USD per million tokens on this route; when
+    # MAX_OUTPUT_PRICE_PER_M is set, a model whose output price is above it is refused in the same way.
+    requires_opt_in: bool = False
+    input_price_per_m: Optional[float] = None
+    output_price_per_m: Optional[float] = None
 
     # Additional attributes
     max_image_size_mb: float = 0.0

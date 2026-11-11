@@ -109,10 +109,33 @@ class ListModelsTool(BaseTool):
             ProviderType.CHATGPT: {"name": "ChatGPT (via Codex CLI)", "env_key": "CHATGPT_ENABLED=true"},
         }
 
+        from utils.cost_policy import (
+            ALLOW_ENV,
+            CEILING_ENV,
+            is_opted_in,
+            needs_opt_in,
+            output_price_ceiling,
+            price_value,
+        )
+
+        def cost_labels(caps) -> list[str]:
+            """Price and cost-guard labels for one model (empty when there is nothing to say)."""
+            labels = []
+            price_in = price_value(getattr(caps, "input_price_per_m", None))
+            price_out = price_value(getattr(caps, "output_price_per_m", None))
+            if price_in is not None and price_out is not None:
+                labels.append(f"${price_in:g} in / ${price_out:g} out per M")
+            opted_in = is_opted_in(caps)
+            if needs_opt_in(caps):
+                labels.append("opt-in allowed" if opted_in else f"opt-in required ({ALLOW_ENV})")
+            ceiling = output_price_ceiling()
+            if ceiling is not None and price_out is not None and price_out > ceiling and not opted_in:
+                labels.append(f"above {CEILING_ENV}=${ceiling:g}")
+            return labels
+
         def format_model_entry(provider, display_name: str) -> list[str]:
-            try:
-                capabilities = provider.get_capabilities(display_name)
-            except ValueError:
+            capabilities = provider.describe_model(display_name)
+            if capabilities is None:
                 return [f"- `{display_name}` *(not recognized by provider)*"]
 
             canonical = capabilities.model_name
@@ -146,6 +169,9 @@ class ListModelsTool(BaseTool):
             lines = [header, f"  - {context_str}", f"  - {description}"]
             if capabilities.allow_code_generation:
                 lines.append("  - Supports structured code generation")
+            labels = cost_labels(capabilities)
+            if labels:
+                lines.append(f"  - {'; '.join(labels)}")
             return lines
 
         # Check each native provider type
@@ -195,6 +221,9 @@ class ListModelsTool(BaseTool):
                         output_lines.append(f"  - {description}")
                         if capabilities.allow_code_generation:
                             output_lines.append("  - Supports structured code generation")
+                        labels = cost_labels(capabilities)
+                        if labels:
+                            output_lines.append(f"  - {'; '.join(labels)}")
 
                         for alias in capabilities.aliases or []:
                             if alias != model_name:
@@ -242,9 +271,8 @@ class ListModelsTool(BaseTool):
                         output_lines.append("\n**Models (policy restricted)**:")
                         if restricted_names:
                             for model_name in restricted_names:
-                                try:
-                                    caps = provider.get_capabilities(model_name)
-                                except ValueError:
+                                caps = provider.describe_model(model_name)
+                                if caps is None:
                                     output_lines.append(f"- `{model_name}` *(not recognized by provider)*")
                                     continue
 
@@ -253,6 +281,7 @@ class ListModelsTool(BaseTool):
                                 suffix_parts = [f"{context_str} context"]
                                 if caps.supports_extended_thinking:
                                     suffix_parts.append("thinking")
+                                suffix_parts.extend(cost_labels(caps))
                                 suffix = ", ".join(suffix_parts)
 
                                 arrow = ""
@@ -295,6 +324,7 @@ class ListModelsTool(BaseTool):
                                     suffix_parts = [f"{context_str} context"]
                                     if getattr(config, "supports_extended_thinking", False):
                                         suffix_parts.append("thinking")
+                                    suffix_parts.extend(cost_labels(config))
                                     suffix = ", ".join(suffix_parts)
 
                                     arrow = ""

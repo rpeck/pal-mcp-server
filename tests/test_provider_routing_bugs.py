@@ -9,7 +9,7 @@ These tests specifically cover bugs that were found in production:
 """
 
 import os
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -48,6 +48,7 @@ class TestProviderRoutingBugs:
         utils.model_restrictions._restriction_service = None
 
     @pytest.mark.no_mock_provider
+    @patch.dict(os.environ, {"ALLOW_OPT_IN_MODELS": "all"})  # these tests call -pro models by name on purpose
     def test_fallback_routing_bug_reproduction(self):
         """
         CRITICAL BUG TEST: Reproduce the bug where fallback logic auto-registers
@@ -243,6 +244,7 @@ class TestOpenRouterAliasRestrictions:
         utils.model_restrictions._restriction_service = None
 
     @pytest.mark.no_mock_provider
+    @patch.dict(os.environ, {"ALLOW_OPT_IN_MODELS": "all"})  # these tests call -pro models by name on purpose
     def test_openrouter_alias_restrictions_bug_reproduction(self):
         """
         CRITICAL BUG TEST: Reproduce the bug where OpenRouter restrictions with aliases
@@ -321,6 +323,7 @@ class TestOpenRouterAliasRestrictions:
                     os.environ[key] = value
 
     @pytest.mark.no_mock_provider
+    @patch.dict(os.environ, {"ALLOW_OPT_IN_MODELS": "all"})  # these tests call -pro models by name on purpose
     def test_openrouter_mixed_alias_and_full_names(self):
         """Test OpenRouter restrictions with mix of aliases and full model names."""
         # Save original environment
