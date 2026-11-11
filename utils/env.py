@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import subprocess
+import sys
 from collections.abc import Mapping
 from contextlib import contextmanager
 from pathlib import Path
@@ -26,8 +27,10 @@ _DEFAULT_OP_TIMEOUT_SECONDS = 60
 
 _DOTENV_VALUES: dict[str, str | None] = {}
 _FORCE_ENV_OVERRIDE = False
-# Result of `op read` per reference; None records a failure so it is not tried again.
-_OP_SECRETS: dict[str, str | None] = {}
+# Result of `op read` per (account, reference); None records a failure so it is not tried again.
+_OP_SECRETS: dict[tuple[str, str], str | None] = {}
+# PAL_OP_CACHE warnings already logged, so that each one appears once per process.
+_OP_CACHE_WARNINGS: set[str] = set()
 
 
 def _read_dotenv_values() -> dict[str, str | None]:
@@ -55,6 +58,7 @@ def reload_env(dotenv_mapping: Mapping[str, str | None] | None = None) -> None:
     global _DOTENV_VALUES, _FORCE_ENV_OVERRIDE
 
     _OP_SECRETS.clear()
+    _OP_CACHE_WARNINGS.clear()
 
     if dotenv_mapping is not None:
         _DOTENV_VALUES = dict(dotenv_mapping)
@@ -90,7 +94,10 @@ def get_env(key: str, default: str | None = None) -> str | None:
 
     A value that starts with ``op://`` is a 1Password secret reference. Return the secret that
     ``op read`` gives for it, or ``default`` when it cannot be read. Each reference is read once
-    per process, on first use; a failure is also kept, so it logs one warning and is not retried.
+    per account and process, on first use; a failure is also kept, so it logs one warning and is
+    not retried. ``PAL_OP_ACCOUNT_<KEY>`` sets the account for one variable, ``PAL_OP_ACCOUNT``
+    for all others. With ``PAL_OP_CACHE=keychain`` on macOS, PAL first tries the keychain cache
+    that ``pal-secrets refresh`` writes, and runs ``op read`` only when the cache has no valid value.
     """
 
     value = _raw_env(key)
@@ -99,18 +106,76 @@ def get_env(key: str, default: str | None = None) -> str | None:
     if not value.startswith(OP_REFERENCE_PREFIX):
         return value
 
-    if value not in _OP_SECRETS:
-        _OP_SECRETS[value] = _read_op_secret(key, value)
-    secret = _OP_SECRETS[value]
+    account = op_account(key)
+    cache_key = (account or "", value)
+    if cache_key not in _OP_SECRETS:
+        secret = _read_cached_op_secret(key, value, account)
+        _OP_SECRETS[cache_key] = secret if secret is not None else _read_op_secret(key, value, account)
+    secret = _OP_SECRETS[cache_key]
     return secret if secret is not None else default
 
 
-def _read_op_secret(key: str, reference: str) -> str | None:
+def op_account(key: str) -> str | None:
+    """Return the 1Password account for the variable ``key``: PAL_OP_ACCOUNT_<KEY>, else PAL_OP_ACCOUNT."""
+
+    return _raw_env(f"PAL_OP_ACCOUNT_{key}") or _raw_env("PAL_OP_ACCOUNT") or None
+
+
+def _op_cache_enabled() -> bool:
+    """Return True when PAL_OP_CACHE=keychain is set on macOS. Unset or ``off`` is the default."""
+
+    raw = (_raw_env("PAL_OP_CACHE") or "").strip()
+    if raw.lower() in ("", "off"):
+        return False
+    if raw.lower() != "keychain":
+        _warn_op_cache_once("value", "PAL_OP_CACHE=%r is not 'off' or 'keychain'; the cache stays off", raw)
+        return False
+    if sys.platform != "darwin":
+        _warn_op_cache_once("platform", "PAL_OP_CACHE=keychain needs macOS; the cache stays off")
+        return False
+    return "error" not in _OP_CACHE_WARNINGS
+
+
+def _read_cached_op_secret(key: str, reference: str, account: str | None) -> str | None:
+    """Return the value of ``reference`` from the keychain cache, or None to fall back to ``op read``."""
+
+    if not _op_cache_enabled():
+        return None
+    if not account:
+        # The cache key includes the account, so that a reference never gives the secret of another account.
+        _warn_op_cache_once(
+            f"account:{key}",
+            "The keychain cache needs PAL_OP_ACCOUNT or PAL_OP_ACCOUNT_%s; reading %s from 1Password",
+            key,
+            key,
+        )
+        return None
+    try:
+        from utils import op_keychain_cache
+
+        secret, result = op_keychain_cache.lookup(account, reference)
+    except Exception as exc:  # noqa: BLE001 - any cache failure must fall back to op read
+        # After one error, the cache stays off for this process (see _op_cache_enabled).
+        _warn_op_cache_once("error", "Cannot read the keychain cache (%s); reading from 1Password", exc)
+        return None
+    if secret is not None:
+        logger.info("Read %s from the keychain cache", key)
+        return secret
+    logger.info("The keychain cache is %s for %s; reading from 1Password", result, key)
+    return None
+
+
+def _warn_op_cache_once(kind: str, message: str, *args) -> None:
+    if kind not in _OP_CACHE_WARNINGS:
+        _OP_CACHE_WARNINGS.add(kind)
+        logger.warning(message, *args)
+
+
+def _read_op_secret(key: str, reference: str, account: str | None = None) -> str | None:
     """Read a 1Password secret reference with ``op read``; on failure, log a warning and return None."""
 
     timeout = _op_timeout_seconds()
     command = ["op", "read", reference]
-    account = _raw_env("PAL_OP_ACCOUNT")
     if account:
         command += ["--account", account]
 

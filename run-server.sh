@@ -571,6 +571,18 @@ bootstrap_pip() {
     return 1
 }
 
+# The optional 1Password keychain cache (docs/1password.md) gives the venv a private Python copy. A rebuilt venv
+# loses that copy, so repair it here. Only users who ran `pal-secrets init` have the LaunchAgent file.
+repair_keychain_cache() {
+    local venv_python="$1"
+    [[ "$(uname)" == "Darwin" ]] || return 0
+    [[ -f "$HOME/Library/LaunchAgents/org.pal-mcp-server.pal-secrets.refresh.plist" ]] || return 0
+    print_info "Repairing the 1Password keychain cache (approve the 1Password prompt if one appears)..."
+    if ! "$venv_python" "$(get_script_dir)/scripts/pal_secrets.py" refresh --if-needed --timeout 120; then
+        print_warning "pal-secrets refresh failed; PAL reads 1Password directly until the next refresh"
+    fi
+}
+
 # Setup environment using uv-first approach
 setup_environment() {
     local venv_python=""
@@ -578,6 +590,19 @@ setup_environment() {
     # Try uv-first approach
     if command -v uv &> /dev/null; then
         print_info "Setting up environment with uv..."
+
+        # Keep a working venv that uv made. A rebuild on every run loses its state, for example the private
+        # Python copy of the 1Password keychain cache. install_dependencies skips a venv whose core packages
+        # import, so install new or changed requirements here.
+        if [[ -f "$VENV_PATH/uv_created" ]] && venv_python=$(get_venv_python_path "$VENV_PATH") \
+            && "$venv_python" -c "import sys" &> /dev/null; then
+            print_success "Using the existing environment ($("$venv_python" --version 2>&1))"
+            if ! uv pip install -q -r requirements.txt --python "$venv_python" >&2; then
+                print_warning "Could not update the packages from requirements.txt"
+            fi
+            echo "$venv_python"
+            return 0
+        fi
 
         # Only remove existing venv if it wasn't created by uv (to ensure clean uv setup)
         if [[ -d "$VENV_PATH" ]] && [[ ! -f "$VENV_PATH/uv_created" ]]; then
@@ -2685,6 +2710,7 @@ main() {
 
     # Step 6: Install dependencies
     install_dependencies "$python_cmd" || exit 1
+    repair_keychain_cache "$python_cmd"
 
     # Step 7: Get absolute server path
     local script_dir=$(get_script_dir)

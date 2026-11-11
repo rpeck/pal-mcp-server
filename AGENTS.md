@@ -12,7 +12,7 @@ Unit tests sit in `tests/`; simulator-driven scenarios and log utilities are in 
 Authoritative documentation and samples live in `docs/`, and runtime diagnostics are rotated in `logs/`.
 
 ## Build, Test, and Development Commands
-- `source .pal_venv/bin/activate` – activate the managed Python environment.
+- `source .dev_venv/bin/activate` – activate the dev venv (`requirements.txt` + `requirements-dev.txt`); `./code_quality_checks.sh` creates it on first use. The MCP server runs on `.pal_venv`, which holds only `requirements.txt`: never install dev tools there.
 - `./run-server.sh` – install dependencies, refresh `.env`, and launch the MCP server locally.
 - `./code_quality_checks.sh` – run Ruff autofix, Black, isort, and the default pytest suite.
 - `python communication_simulator_test.py --quick` – smoke-test orchestration across tools and providers.
@@ -20,14 +20,14 @@ Authoritative documentation and samples live in `docs/`, and runtime diagnostics
 
 Run code quality checks:
 ```bash
-.pal_venv/bin/activate && ./code_quality_checks.sh
+./code_quality_checks.sh
 ```
 
 For example, this is how we run an individual / all tests:
 
 ```bash
-.pal_venv/bin/activate && pytest tests/test_auto_mode_model_listing.py -q
-.pal_venv/bin/activate && pytest -q
+source .dev_venv/bin/activate && pytest tests/test_auto_mode_model_listing.py -q
+source .dev_venv/bin/activate && pytest -q
 ```
 
 ## Coding Style & Naming Conventions

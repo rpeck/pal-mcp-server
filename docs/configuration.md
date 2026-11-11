@@ -96,7 +96,9 @@ client or in `.env`:
 GEMINI_API_KEY=op://my-vault/gemini-api-key/credential
 # Optional
 PAL_OP_ACCOUNT=my-team.1password.com   # when op is signed in to more than one account
+PAL_OP_ACCOUNT_OPENAI_API_KEY=client.1password.com  # the account for one variable, if it differs
 PAL_OP_TIMEOUT_SECONDS=60              # how long to wait for op read, Touch ID prompt included
+PAL_OP_CACHE=keychain                  # macOS only, off by default: a 24-hour keychain cache (needs an account and pal-secrets init)
 ```
 
 - PAL reads the secret with `op read` when it first needs the variable, usually at startup. It keeps the

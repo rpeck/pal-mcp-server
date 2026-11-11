@@ -10,6 +10,19 @@
   `op read` on first use and keeps it until it stops. If 1Password is locked, `op` shows a Touch ID prompt. PAL
   waits up to `PAL_OP_TIMEOUT_SECONDS` (default 60) for it. If the read fails, PAL logs one warning and treats the
   key as not set. See [1Password Secret References](docs/1password.md).
+- 1Password references from more than one account: `PAL_OP_ACCOUNT_<NAME>` sets the account for one
+  variable, and `PAL_OP_ACCOUNT` stays the default. PAL keeps each secret by account and reference.
+- Optional on macOS, off by default: a keychain cache for 1Password secrets, so that one Touch ID in the morning
+  covers every PAL process for up to 24 hours. Set `PAL_OP_CACHE=keychain` and `PAL_OP_ACCOUNT`, then run
+  `.pal_venv/bin/python scripts/pal_secrets.py init` (also `pal-secrets init`).
+  - `init` gives PAL's venv a private, re-signed copy of its Python binary, so that only PAL's Python can read
+    the cache. It installs LaunchAgents that run `refresh` every morning and at login, and `expire` every 15
+    minutes. `uninstall` undoes all of it.
+  - `refresh` reads all references with one `op inject`, and writes a new keychain whose random password is
+    never stored. PAL reads the cache only while it is unlocked and not expired; in every other case it runs
+    `op read` as before.
+  - Without `PAL_OP_CACHE=keychain`, PAL does not touch a keychain. See
+    [Keychain cache](docs/1password.md#keychain-cache-macos).
 - Tool calls from one client run at the same time. Each model call runs in a worker thread, so a slow model does
   not stop other calls. Up to `PAL_MAX_PARALLEL_MODEL_CALLS` (default 16) model calls run at once; more wait in a
   queue. `chat`, `challenge` and `apilookup` run each call on their own copy of the tool. A workflow tool (for
@@ -23,6 +36,13 @@
 - `chat` saves generated code to `pal_generated.<id>.code`, one file per call, so that parallel calls in the same
   directory do not overwrite each other's file. Before, every call wrote `pal_generated.code`.
 - `clink` declares `readOnlyHint: false`: its CLIs can edit files in the working directory.
+
+- Separate venvs for the server and for development. The MCP server runs on `.pal_venv`, which holds only
+  `requirements.txt`. `./code_quality_checks.sh` and `./run_integration_tests.sh` use a dev venv, `.dev_venv`,
+  with `requirements-dev.txt` too; `code_quality_checks.sh` creates it on first use, with the Python version of
+  `.pal_venv`. Before, `code_quality_checks.sh` installed the dev tools into `.pal_venv`.
+- `./run-server.sh` keeps a working uv venv: it no longer builds `.pal_venv` again on every run. It installs new
+  or changed requirements into it with `uv pip install -r requirements.txt`.
 
 ### Bug Fixes
 

@@ -11,13 +11,13 @@ echo "=============================================="
 echo "These tests use real API calls with your configured keys"
 echo ""
 
-# Activate virtual environment
-if [[ -f ".pal_venv/bin/activate" ]]; then
-    source .pal_venv/bin/activate
-    echo "✅ Using virtual environment"
+# Activate the dev venv (.dev_venv). The runtime venv (.pal_venv) holds no test tools.
+if [[ -f ".dev_venv/bin/activate" ]]; then
+    source .dev_venv/bin/activate
+    echo "✅ Using the dev venv: .dev_venv"
 else
-    echo "❌ No virtual environment found!"
-    echo "Please run: ./run-server.sh first"
+    echo "❌ No dev venv found!"
+    echo "Please run: ./code_quality_checks.sh first (it creates .dev_venv)"
     exit 1
 fi
 
