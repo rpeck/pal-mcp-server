@@ -1,6 +1,6 @@
 # Plan: a 24-hour Keychain cache for 1Password secrets
 
-**Status:** planned, not started (2026-11-07). **Owner:** Raymond. **Runs on:** macOS only.
+**Status:** implemented on branch `feat/op-keychain-cache` (2026-11-08), not committed. The design changed after the spike and the council review: **§9 replaces §4.2–§4.6 where they differ.** **Owner:** Raymond. **Runs on:** macOS only.
 
 Read this whole file before you start. It is self-contained: the session that wrote it is not available to you.
 
@@ -35,8 +35,8 @@ Rejected options (2026-11-07):
 | | Protected | Not protected |
 |---|---|---|
 | Lost or stolen laptop (disk) | Yes: keychains are encrypted at rest | |
-| The cache after its 24 hours | Yes: the keychain is locked and the items are deleted | |
-| Malware that runs as Raymond during the 24 hours | | No: it can read the cache, as it can read an exported variable |
+| The cache after its 24 hours | Yes: PAL stops reading at the TTL; `expire` deletes the file within 15 minutes while the Mac is awake. A deleted file is cryptographically inaccessible, not erased (APFS, SSD). | |
+| Malware that runs as Raymond during the 24 hours | | No: while the cache is unlocked, any code that runs PAL's Python (the private copy, §9) can read the cache and probably replace items in it |
 | A key that leaked during the 24 hours | | No: it stays valid until rotated at the provider |
 
 Keep the cached keys narrow: restrict each key to its API, and set a spending limit where the provider allows.
@@ -151,6 +151,38 @@ Answer these with throwaway scripts and write the answers into this file:
 5. **Does one `op` process cover several `op read` calls with one Touch ID?** If not, read all references in one
    call, for example with `op inject` or `op run`.
 
+### 6.1 Spike answers (2026-11-07, macOS 15 / Darwin 24.6, on Raymond's personal Mac)
+
+Throwaway keychains in the session scratchpad, dummy values only. This Mac has no `op`, so questions 4 and 5
+stay open.
+
+1. **Inactivity.** With `-t 20`, a read every 5 s kept the keychain unlocked for 40 s. It locked about 20 s
+   after the last read. `SecKeychainGetStatus` does not reset the timer. So layers 1 and 2 of §4.2 carry the
+   24-hour limit; the timeout is only a backstop.
+2. **A read of a locked keychain always shows the unlock dialog.** These do not stop it:
+   - `SecKeychainSetUserInteractionAllowed(False)` with `SecKeychainFindGenericPassword`: the dialog stayed
+     open about 97 s, then the call returned `-128` (user canceled).
+   - `SecItemCopyMatching` with `kSecUseAuthenticationUI = kSecUseAuthenticationUIFail` and
+     `kSecMatchSearchList = [keychain]`: the call waited on a dialog.
+
+   `SecKeychainGetStatus` is silent on a locked keychain (status `2`, no unlock bit) and on a missing file
+   (`-25294`, errSecNoSuchKeychain). **Rule:** check the status first, and read only when the unlock bit is
+   set. A lock in the milliseconds between the check and the read can still show a dialog (see §4.4).
+3. **`keyring` ignores a custom keychain path** (keyring 25: "Specified keychain is ignored. See #623"). Use
+   `ctypes` with the Security framework. `SecKeychainCreate`, `SecItemAdd` and `SecItemCopyMatching` take
+   values in memory, so nothing reaches the process list.
+   - **Item access:** with the default access, only the binary that wrote an item can read it. Another Python
+     gets `-25293` without a dialog. Changing the access of an existing item (`SecKeychainItemSetAccess`)
+     shows a dialog. Setting "any application" (`SecACLSetContents` with a NULL application list) on a
+     `SecAccess` that goes into `SecItemAdd` as `kSecAttrAccess` shows no dialog, and other Python binaries
+     then read the item silently.
+   - `SecKeychainCreate` does not add the keychain to the user search list, and the new keychain is unlocked.
+   - Outside `~/Library/Keychains/`, `securityd` creates an old-style keychain. Keep the cache keychain in
+     `~/Library/Keychains/`.
+4. **Open (needs `op` and the 1Password app).** On failure, the morning job shows a notification that tells
+   Raymond to run `pal-secrets refresh` in a terminal.
+5. **Open, but avoided:** `refresh` reads all references in one `op run` process.
+
 ## 7. Tests
 
 - Unit tests with a fake cache backend; no real keychain in CI (CI runs on Linux). Cover:
@@ -172,3 +204,115 @@ Answer these with throwaway scripts and write the answers into this file:
 - After the expiry, the keychain is locked, its items are gone, and PAL asks for Touch ID again.
 - With the variable unset, behavior and logs are exactly as before.
 - No secret value appears in a log, a file outside the keychain, or a process list.
+
+## 9. Decisions and changes (2026-11-07 and 2026-11-08)
+
+### 9.1 Changes that came from the spike
+
+- **No stored keychain password.** `refresh` deletes the keychain and creates a new one with a random password
+  (`secrets.token_urlsafe(32)`) that it never stores. Once the keychain locks, nobody can unlock it. So there is
+  no 1Password item for the password, and `init` does not create a keychain.
+- **One keychain per Python binary.** New-style keychains record the writer's cdhash in a partition list, and a
+  reader with another cdhash gets a dialog. The file name holds the cdhash:
+  `~/Library/Keychains/pal-secrets-<cdhash>.keychain-db`. Items use the default (creator-only) access.
+- **`op inject`, not `op read` per reference.** One process, template on stdin, values on stdout, random markers
+  between values. Raymond chose this over the council's `op run` (which puts values in a child environment).
+
+### 9.2 Raymond's decision gates (architecture council, 2026-11-08)
+
+| Gate | Decision |
+|---|---|
+| 1. Race between the status check and the read | Sidecar state file read first, 5-minute margin (or TTL/10), lock timeout TTL + 2 h, 2-second grace before a delete. No helper subprocess. |
+| 2. Account binding | `PAL_OP_ACCOUNT` is required in cache mode. The item name hashes (service, version, account, reference) with lengths. |
+| 3. Signer policy | Refuse a Python with a team or Apple signature (partition `teamid:` or `apple:`). |
+| 4. Interpreter scope | PAL gets its own Python copy: `init` replaces `.pal_venv/bin/python` (a symlink) with a copy re-signed ad-hoc as `org.pal-mcp-server.python.<hash of venv path>`, plus a `lib/libpython3.N.dylib` link. Transparent: every launcher of `.pal_venv/bin/python` uses it. `refresh` and `run-server.sh` repair it; `uninstall` restores the link. Framework builds are refused. No Python version pin. |
+| 5. One reference fails | All-or-nothing: keep the old cache, notify with op's error, no retry. |
+| 6. Refresh at login | Yes: `RunAtLoad` with `refresh --if-needed` (skip when unlocked and more than 12 h left). |
+| 7. Work laptop facts | Not known yet: check macOS version, MDM or endpoint agent, and SSH use on the laptop. |
+| 8. Path naming | Fixed path per cdhash. |
+| 9. Expire interval | Every 15 minutes. |
+
+### 9.3 More spike answers (2026-11-08)
+
+- **Same path, held reference:** process A held a keychain reference while another process deleted and
+  re-created the keychain. A then saw the keychain as locked, also with a fresh `SecKeychainOpen` (the framework
+  caches by path per process). A new process read the new cache. Errors only, no dialog: fixed path accepted.
+- **`SecKeychainDelete` on a locked keychain and `SecKeychainSetSettings`:** no dialog.
+- **Signing information** (`SecCodeCopySigningInformation` with `kSecCSSigningInformation`): the private copy
+  gives flags `0x2` (ad-hoc) and no team; the shared uv binary `0x20002` and identifier `-`; `/usr/bin/python3`
+  gives team `59GAB85EFG`.
+- **The private copy** runs with the stdlib and the venv's site-packages, and has its own cdhash.
+- **Homebrew framework Python:** the copy starts `Python.app`, so the start check fails and `init` refuses it.
+
+### 9.4 Still open
+
+- **Tracked in issue #19** (https://github.com/rpeck/pal-mcp-server/issues/19): the manual checklist. PR #18 merged as
+  `2d358d0` on 2026-11-11.
+
+- §6 questions 4 and 5 (Touch ID from launchd; one approval for `op inject`): test on a Mac with `op`.
+- The manual checklist of §7, on the work laptop, plus: an SSH session falls back to `op read`; MDM does not
+  block `SecKeychainCreate`.
+
+### 9.5 After the guardian review (2026-11-10)
+
+- **Guardian fixes:**
+  - B: the private-copy install and restore run under the lock, with a unique temp file.
+  - A: `refresh` waits up to 30 s for the lock, then fails with a notification.
+  - C: `uninstall` restores the link text.
+  - D: no empty keychain stays after a failed create.
+  - E: an unexpected error notifies with a fixed text.
+  - G: NULL checks for Core Foundation.
+  - F: every library link is recorded.
+  - The notification text is fixed. `run-server.sh` uses `--timeout 120`. `expire` logs only when it deletes.
+- **More than one 1Password account (Raymond, 2026-11-10: "our external users may use multiple"):**
+  - `PAL_OP_ACCOUNT_<NAME>` sets the account for one variable, and `PAL_OP_ACCOUNT` is the default.
+  - PAL's reader keeps secrets by (account, reference).
+  - The state file lists (account, reference) pairs.
+  - `refresh` runs one `op inject` for each account, all-or-nothing.
+  - A variable without an account is not cached.
+- **The Mercury 3 plan (work laptop) says:** "Raymond approves each new session with Touch ID", and `op whoami`
+  reports "not signed in" while `op` works. Never use `op whoami` as a check.
+- **Runtime and dev venvs (Raymond):**
+  - `.pal_venv` holds `requirements.txt` only.
+  - `.dev_venv` holds the dev tools too. `code_quality_checks.sh` creates it, with the Python of `.pal_venv`.
+  - `run-server.sh` keeps a working uv venv.
+
+### 9.5 Where the work stopped (2026-11-10)
+
+Done on `feat/op-keychain-cache`, not committed, `./code_quality_checks.sh --check` passes (1211 tests):
+- The guardian findings A–G and the small items are fixed, with tests.
+- Per-variable accounts (`PAL_OP_ACCOUNT_<NAME>`) in `utils/env.py` and in the cache, with tests and docs.
+- The venv split: `.dev_venv` for the dev tools (created by `code_quality_checks.sh`, Python version of
+  `.pal_venv`); `run_integration_tests.sh` uses it; `run-server.sh` keeps a working `.pal_venv`; `.gitignore`,
+  black and isort skip `.dev_venv`. On Raymond's personal Mac, `.dev_venv` exists and the dev-only packages
+  were removed from `.pal_venv` (52 runtime packages plus the editable install remain). `.pal_venv/uv_created`
+  was added.
+
+Still to do:
+1. Change the developer docs from `.pal_venv` to `.dev_venv`: `CLAUDE.md` (lines 13, 243, 274), `AGENTS.md`
+   (lines 15, 23, 29, 30), `docs/troubleshooting.md` (lines 97, 104), `docs/contributions.md` (line 124). Keep
+   `.pal_venv` where a line starts the server.
+2. Add the venv split to `CHANGELOG.md`.
+3. Run the guardian council again on the final code (Raymond chose "re-run after fixes").
+4. Then ask Raymond about the commit and the PR (stage files one by one; not the PLANS docs, not
+   `#claude_config_example.json#`).
+
+### 9.6 Second guardian review (2026-11-11): CONDITIONAL-GO, conditions met
+
+- **M1:** `run-server.sh` reuses `.pal_venv` and now runs `uv pip install -r requirements.txt` on it.
+- **M2:** `refresh` and `init` refuse any venv that is not `PROJECT_ROOT/.pal_venv`.
+- **Gate 1 (Raymond: "Mirror PAL"):** `configuration_sources` returns one view per `pal` server (env block over
+  `.env`, or `.env` only with `PAL_MCP_FORCE_ENV_OVERRIDE=true`), or `.env` alone when no client config has a
+  `pal` server. Accounts resolve inside each view, as in `utils/env.py`.
+- **L1–L10 (Raymond: all):**
+  - NULL checks.
+  - `--if-needed` compares the references.
+  - The `libpython` link goes through the unresolved path.
+  - The record is removed on a failed install.
+  - `uninstall` reports a failed restore.
+  - `.dev_venv` syncs both requirements files on each run.
+  - Miss statuses count as misses.
+  - Only the first line of an `op` error is kept.
+  - Docs.
+- **Not tested live:** the `refresh` path in `.pal_venv` itself, because M2 now refuses scratch venvs, and
+  turning the cache on here would change the runtime venv. The manual checklist on a Mac with `op` covers it.
