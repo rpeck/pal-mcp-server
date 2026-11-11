@@ -9,10 +9,9 @@ This file contains essential commands and workflows for developing and maintaini
 Before making any changes or submitting PRs, always run the comprehensive quality checks:
 
 ```bash
-# Activate virtual environment first
-source venv/bin/activate
-
-# Run all quality checks (linting, formatting, tests)
+# Run all quality checks (linting, formatting, tests). The script creates and uses the dev venv .dev_venv
+# (requirements.txt + requirements-dev.txt). The MCP server runs on .pal_venv, which holds only
+# requirements.txt: never install dev tools there.
 ./code_quality_checks.sh
 ```
 
@@ -240,7 +239,7 @@ python -m pytest tests/ -v
 ### Development Workflow
 
 #### Before Making Changes
-1. Ensure virtual environment is activated: `source .pal_venv/bin/activate`
+1. Use the dev venv for development: `source .dev_venv/bin/activate` (`./code_quality_checks.sh` creates it). Do not install dev tools into `.pal_venv`, the venv that the MCP server runs on.
 2. Run quality checks: `./code_quality_checks.sh`
 3. Check logs to ensure server is healthy: `tail -n 50 logs/mcp_server.log`
 

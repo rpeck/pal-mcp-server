@@ -180,6 +180,7 @@ CLAUDE.local.md
 
 # Standalone mode files
 .pal_venv/
+.dev_venv/
 .docker_cleaned
 logs/
 *.backup
