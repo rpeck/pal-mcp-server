@@ -22,12 +22,14 @@ if TYPE_CHECKING:
 
 from config import MCP_PROMPT_SIZE_LIMIT
 from providers import ModelProvider, ModelProviderRegistry
+from providers.shared import ModelCapabilities
 from utils import estimate_tokens
 from utils.conversation_memory import (
     ConversationTurn,
     get_conversation_file_list,
     get_thread,
 )
+from utils.cost_policy import is_refused, refusal_reason
 from utils.env import get_env
 from utils.file_utils import read_file_content, read_files
 
@@ -436,7 +438,10 @@ class BaseTool(ABC):
         for rank, model_name, capabilities in ranked:
             # Meta-routers and other opt-out models stay callable by name but never appear as auto-mode
             # candidates (e.g. the OpenRouter Fusion Router, which fans out to a panel and costs ~4-5x).
+            # Models that the cost guard refuses (utils/cost_policy.py) are left out for the same reason.
             if not getattr(capabilities, "auto_selectable", True):
+                continue
+            if isinstance(capabilities, ModelCapabilities) and is_refused(capabilities, model_name):
                 continue
 
             canonical_name = getattr(capabilities, "model_name", model_name)
@@ -507,12 +512,38 @@ class BaseTool(ABC):
 
         return "Policy allows only → " + "; ".join(notes)
 
+    @staticmethod
+    def _cost_guard_reason(model_name: str) -> Optional[str]:
+        """Return the cost guard's refusal reason when a configured provider knows the model and refuses it."""
+
+        for provider_type in ModelProviderRegistry.get_available_providers():
+            provider = ModelProviderRegistry.get_provider(provider_type)
+            if provider is None:
+                continue
+            try:
+                described = provider.describe_model(model_name)
+            except Exception:  # pragma: no cover - display helper must never break error reporting
+                continue
+            if described is not None:
+                reason = refusal_reason(described, model_name)
+                if reason:
+                    return reason
+        return None
+
     def _build_model_unavailable_message(self, model_name: str) -> str:
         """Compose a consistent error message for unavailable model scenarios."""
 
         tool_category = self.get_model_category()
         suggested_model = ModelProviderRegistry.get_preferred_fallback_model(tool_category)
         available_models_text = self._format_available_models_list()
+
+        cost_reason = self._cost_guard_reason(model_name)
+        if cost_reason:
+            return (
+                f"{cost_reason} Suggested model for {self.get_name()}: '{suggested_model}' "
+                f"(category: {tool_category.value}). Do not substitute another model if the user asked for this "
+                "one; report this error back."
+            )
 
         return (
             f"Model '{model_name}' is not available with current API keys. "

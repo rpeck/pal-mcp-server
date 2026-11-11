@@ -76,6 +76,16 @@ class ModelProvider(ABC):
         self._ensure_model_allowed(capabilities, resolved_model_name, model_name)
         return self._finalise_capabilities(capabilities, resolved_model_name, model_name)
 
+    def describe_model(self, model_name: str) -> Optional[ModelCapabilities]:
+        """Resolve and look up a model WITHOUT restriction or cost-guard checks, for display only.
+
+        ``listmodels`` uses this to show models that policy refuses (with a label) instead of hiding
+        them. Never use it to choose a model for a request; use ``get_capabilities`` for that.
+        """
+
+        resolved_model_name = self._resolve_model_name(model_name)
+        return self._lookup_capabilities(resolved_model_name, model_name)
+
     def get_all_model_capabilities(self) -> dict[str, ModelCapabilities]:
         """Return statically declared capabilities when available."""
 
@@ -373,23 +383,27 @@ class ModelProvider(ABC):
         canonical_name: str,
         requested_name: str,
     ) -> None:
-        """Raise ``ValueError`` if the model violates restriction policy."""
+        """Raise ``ValueError`` if the model violates restriction policy or the cost guard."""
 
         try:
             from utils.model_restrictions import get_restriction_service
         except Exception:  # pragma: no cover - only triggered if service import breaks
-            return
+            get_restriction_service = None
 
-        restriction_service = get_restriction_service()
-        if not restriction_service:
-            return
+        restriction_service = get_restriction_service() if get_restriction_service else None
+        if restriction_service and not restriction_service.is_allowed(
+            self.get_provider_type(), canonical_name, requested_name
+        ):
+            raise ValueError(
+                f"{self.get_provider_type().value} model '{canonical_name}' is not allowed by restriction policy."
+            )
 
-        if restriction_service.is_allowed(self.get_provider_type(), canonical_name, requested_name):
-            return
+        # The cost guard applies to explicit calls too (auto_selectable only covers auto mode).
+        from utils.cost_policy import refusal_reason
 
-        raise ValueError(
-            f"{self.get_provider_type().value} model '{canonical_name}' is not allowed by restriction policy."
-        )
+        reason = refusal_reason(capabilities, canonical_name, requested_name)
+        if reason:
+            raise ValueError(reason)
 
     def _finalise_capabilities(
         self,

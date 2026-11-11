@@ -38,6 +38,7 @@ class TestOpenAIProvider:
         assert provider.api_key == "test-key"
         assert provider.base_url == "https://custom.openai.com/v1"
 
+    @patch.dict(os.environ, {"ALLOW_OPT_IN_MODELS": "all"})  # these tests call -pro models by name on purpose
     def test_model_validation(self):
         """Test model name validation."""
         provider = OpenAIModelProvider("test-key")
@@ -331,6 +332,7 @@ class TestOpenAIProvider:
         assert not provider.validate_model_name("invalid-model")
 
     @patch("providers.openai_compatible.OpenAI")
+    @patch.dict(os.environ, {"ALLOW_OPT_IN_MODELS": "all"})  # these tests call -pro models by name on purpose
     def test_o3_pro_routes_to_responses_endpoint(self, mock_openai_class):
         """Test that o3-pro model routes to the /v1/responses endpoint (mock test)."""
         # Set up mock for OpenAI client responses endpoint

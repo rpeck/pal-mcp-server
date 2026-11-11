@@ -262,6 +262,22 @@ OPENAI_DISALLOWED_MODELS=gpt-5.5-pro
 OPENROUTER_DISALLOWED_MODELS=openai/gpt-5.5-pro,openai/gpt-5.4-pro
 ```
 
+### Cost Guard
+
+Two settings refuse expensive models, **even when a caller names them explicitly**. `auto_selectable: false` only keeps a model out of auto mode; a coding agent can still call it by name. The cost guard closes that gap.
+
+- **Opt-in models.** Catalog entries with `requires_opt_in: true` are refused unless `ALLOW_OPT_IN_MODELS` lists them. All OpenAI `-pro` models (for example `openai/gpt-6-astra-pro`, `o3-pro`) and the OpenRouter Fusion routers set it, because one request can use many times the tokens of a normal call at the same per-token price.
+- **Price ceiling.** When `MAX_OUTPUT_PRICE_PER_M` is set, a model whose stored output price (USD per million tokens) is above it is refused. Prices come from `scripts/update_openrouter_prices.py` for OpenRouter entries; a model with no stored price is not checked.
+- `ALLOW_OPT_IN_MODELS` also exempts the listed models from the price ceiling. It takes model names or aliases (case-insensitive), or `all`.
+
+```env
+# Off by default: no ceiling, and opt-in models are refused.
+ALLOW_OPT_IN_MODELS=openai/gpt-6.1-sol-pro   # allow one -pro preset by name
+MAX_OUTPUT_PRICE_PER_M=20                    # refuse models above $20 per million output tokens
+```
+
+A refused call fails with a message that names the setting to change. `listmodels` labels each model with its price and with "opt-in required" or "above MAX_OUTPUT_PRICE_PER_M", and auto mode never offers a refused model.
+
 **Supported Model Names:** The names/aliases listed in the JSON manifests above are the authoritative source. Keep in mind:
 
 - Aliases are case-insensitive and defined per entry (for example, `mini` maps to `gpt-5-mini` by default, while `flash` maps to `gemini-2.5-flash`).

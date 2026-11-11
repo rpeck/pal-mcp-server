@@ -147,9 +147,11 @@ def test_augment_injects_sealed_plugins():
     assert "extra_body" not in normal
 
 
-def test_injection_seal_ignores_caller_supplied_panel():
+def test_injection_seal_ignores_caller_supplied_panel(monkeypatch):
     # The panel MUST come only from trusted conf; a caller-supplied plugins/extra_body kwarg (as could be
     # smuggled via prompt-injected tool output) must never reach the request body.
+    # Fusion needs an explicit opt-in (requires_opt_in; see utils/cost_policy.py).
+    monkeypatch.setenv("ALLOW_OPT_IN_MODELS", "openrouter/fusion-quality")
     prov = _provider()
 
     captured = {}

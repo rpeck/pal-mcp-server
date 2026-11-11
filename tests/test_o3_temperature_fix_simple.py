@@ -5,6 +5,7 @@ This test confirms that the fix properly excludes temperature parameters
 for O3 models while maintaining them for regular models.
 """
 
+import os
 from unittest.mock import Mock, patch
 
 from providers.openai import OpenAIModelProvider
@@ -173,6 +174,7 @@ class TestO3TemperatureParameterFixSimple:
         assert call_kwargs["stop"] == ["END"], "O3 should include stop parameter"
 
     @patch("utils.model_restrictions.get_restriction_service")
+    @patch.dict(os.environ, {"ALLOW_OPT_IN_MODELS": "all"})  # these tests call -pro models by name on purpose
     def test_all_o3_models_have_correct_temperature_capability(self, mock_restriction_service):
         """Test that all O3/O4 models have supports_temperature=False in their capabilities."""
         from providers.openai import OpenAIModelProvider

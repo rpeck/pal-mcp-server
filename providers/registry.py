@@ -413,10 +413,14 @@ class ModelProviderRegistry:
             supported_models = list(model_map.keys()) if isinstance(model_map, dict) else []
 
         # Models with auto_selectable false stay callable by name but must never be picked automatically.
+        # Models that the cost guard refuses (opt-in required, or above MAX_OUTPUT_PRICE_PER_M) are
+        # excluded as well, so auto mode never offers a model that a call would then refuse.
+        from utils.cost_policy import is_refused
+
         excluded: set[str] = set()
         try:
             for canonical, capabilities in provider.get_all_model_capabilities().items():
-                if not getattr(capabilities, "auto_selectable", True):
+                if not getattr(capabilities, "auto_selectable", True) or is_refused(capabilities, canonical):
                     excluded.update(name.lower() for name in [canonical, *capabilities.aliases])
         except (NotImplementedError, AttributeError):
             pass

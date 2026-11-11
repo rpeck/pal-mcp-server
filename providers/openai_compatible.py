@@ -533,7 +533,14 @@ class OpenAICompatibleProvider(ModelProvider):
         """
         # Validate model name against allow-list
         if not self.validate_model_name(model_name):
-            raise ValueError(f"Model '{model_name}' not in allowed models list. Allowed models: {self.allowed_models}")
+            # Give the cost guard's own reason when it is the cause, so the caller learns how to opt in.
+            from utils.cost_policy import refusal_reason
+
+            described = self.describe_model(model_name)
+            reason = refusal_reason(described, model_name) if described else None
+            raise ValueError(
+                reason or f"Model '{model_name}' not in allowed models list. Allowed models: {self.allowed_models}"
+            )
 
         capabilities: Optional[ModelCapabilities]
         try:
