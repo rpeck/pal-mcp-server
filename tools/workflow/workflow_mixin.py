@@ -30,6 +30,7 @@ from typing import Any, Optional
 from mcp.types import TextContent
 
 from config import MCP_PROMPT_SIZE_LIMIT
+from utils.context_report import ContextReport
 from utils.conversation_memory import add_turn, create_thread
 from utils.model_calls import run_model_call
 
@@ -124,6 +125,7 @@ class BaseWorkflowMixin(ABC):
         remaining_budget: Optional[int] = None,
         arguments: Optional[dict[str, Any]] = None,
         model_context: Optional[Any] = None,
+        context_report: Optional[ContextReport] = None,
     ) -> tuple[str, list[str]]:
         """Prepare file content for prompts. Usually provided by BaseTool."""
         pass
@@ -413,6 +415,7 @@ class BaseWorkflowMixin(ABC):
             max_tokens=max_tokens,
             reserve_tokens=1000,
             include_line_numbers=self.wants_line_numbers_by_default(),
+            report=getattr(self, "_context_report", None),
         )
 
         # Expand paths to get individual files for tracking
@@ -618,6 +621,9 @@ class BaseWorkflowMixin(ABC):
         try:
             # Store arguments for access by helper methods
             self._current_arguments = arguments
+            # Records the files that the expert model receives or misses, for the response metadata. The expert
+            # gets no conversation history, so the history that server.py built is not part of it.
+            self._context_report = ContextReport()
 
             # Validate request using tool-specific model
             request = build_request(self.get_name(), self.get_workflow_request_model(), arguments)
@@ -1140,7 +1146,8 @@ class BaseWorkflowMixin(ABC):
 
         This ensures workflow tools have the same metadata as regular tools,
         making it consistent across all tool types for tracking which provider
-        and model were used for the response.
+        and model were used for the response. It also adds embedded_files,
+        omitted_files and dropped_turns for the files that the expert model received.
 
         Args:
             response_data: The response data dictionary to modify
@@ -1161,6 +1168,7 @@ class BaseWorkflowMixin(ABC):
                     "tool_name": self.get_name(),
                     "model_used": resolved_model_name,
                     "provider_used": provider_name,
+                    **self._context_report_metadata(),
                 }
 
                 # Preserve existing metadata and add workflow metadata
@@ -1182,6 +1190,7 @@ class BaseWorkflowMixin(ABC):
                     "tool_name": self.get_name(),
                     "model_used": model_name,
                     "provider_used": "unknown",
+                    **self._context_report_metadata(),
                 }
 
                 # Preserve existing metadata and add workflow metadata
@@ -1198,7 +1207,7 @@ class BaseWorkflowMixin(ABC):
             # Don't fail the workflow if metadata addition fails
             logger.warning(f"[WORKFLOW_METADATA] {self.get_name()}: Failed to add metadata: {e}")
             # Still add basic metadata with tool name
-            response_data["metadata"] = {"tool_name": self.get_name()}
+            response_data["metadata"] = {"tool_name": self.get_name(), **self._context_report_metadata()}
 
     def _extract_clean_workflow_content_for_history(self, response_data: dict) -> str:
         """

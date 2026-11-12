@@ -24,6 +24,7 @@ from config import MCP_PROMPT_SIZE_LIMIT
 from providers import ModelProvider, ModelProviderRegistry
 from providers.shared import ModelCapabilities
 from utils import estimate_tokens
+from utils.context_report import ContextReport
 from utils.conversation_memory import (
     ConversationTurn,
     get_conversation_file_list,
@@ -1049,6 +1050,7 @@ class BaseTool(ABC):
         remaining_budget: Optional[int] = None,
         arguments: Optional[dict] = None,
         model_context: Optional[Any] = None,
+        context_report: Optional[ContextReport] = None,
     ) -> tuple[str, list[str]]:
         """
         Centralized file processing implementing dual prioritization strategy.
@@ -1064,6 +1066,8 @@ class BaseTool(ABC):
             remaining_budget: Remaining token budget after conversation history (from server.py)
             arguments: Original tool arguments (used to extract _remaining_tokens if available)
             model_context: Model context object with all model information including token allocation
+            context_report: Optional ContextReport that records each file as embedded or omitted. Pass it only
+                when the content goes to the model, so that the tool response reports what the model received.
 
         Returns:
             tuple[str, list[str]]: (formatted_file_content, actually_processed_files)
@@ -1153,6 +1157,7 @@ class BaseTool(ABC):
                     max_tokens=effective_max_tokens + reserve_tokens,
                     reserve_tokens=reserve_tokens,
                     include_line_numbers=self.wants_line_numbers_by_default(),
+                    report=context_report,
                 )
                 # Note: No need to validate against MCP_PROMPT_SIZE_LIMIT here
                 # read_files already handles token-aware truncation based on model's capabilities
@@ -1205,6 +1210,18 @@ class BaseTool(ABC):
             f"[FILES] {self.name}: _prepare_file_content_for_prompt returning {len(result)} chars, {len(actually_processed_files)} processed files"
         )
         return result, actually_processed_files
+
+    def _context_report_metadata(self) -> dict[str, Any]:
+        """
+        The `embedded_files`, `omitted_files` and `dropped_turns` fields for the response metadata.
+
+        They describe the model call of this response (issue #15). A call that sends no files and no history,
+        or no model call at all, gives empty lists and 0.
+        """
+        report = getattr(self, "_context_report", None)
+        if not isinstance(report, ContextReport):
+            report = ContextReport()
+        return report.to_metadata()
 
     def get_websearch_instruction(self, tool_specific: Optional[str] = None) -> str:
         """

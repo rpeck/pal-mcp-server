@@ -8,7 +8,7 @@ Tests the critical file embedding logic for workflow tools:
 
 import os
 import tempfile
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 
@@ -192,6 +192,7 @@ class TestWorkflowFileEmbedding:
             max_tokens=100000,
             reserve_tokens=1000,
             include_line_numbers=True,
+            report=ANY,  # the tool's ContextReport, for the response metadata
         )
 
         # Verify it expanded paths to get individual files

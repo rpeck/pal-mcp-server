@@ -20,6 +20,7 @@ from tools.shared.base_models import ToolRequest
 from tools.shared.base_tool import BaseTool
 from tools.shared.exceptions import ToolExecutionError
 from tools.shared.schema_builders import SchemaBuilder
+from utils.context_report import ContextReport
 from utils.model_calls import run_model_call
 
 
@@ -290,6 +291,9 @@ class SimpleTool(BaseTool):
             # Store arguments for access by helper methods
             self._current_arguments = arguments
 
+            # Records the files and turns that the model receives or misses, for the response metadata
+            server_context_report = self._start_context_report(arguments)
+
             logger.info(f"🔧 {self.get_name()} tool called with arguments: {list(arguments.keys())}")
 
             # Validate request using the tool's Pydantic model
@@ -364,9 +368,12 @@ class SimpleTool(BaseTool):
                                 f"{self.get_name()}: Retrieved updated thread with {len(thread_context.turns)} turns"
                             )
 
-                        # Build conversation history with updated thread context
+                        # Build conversation history with updated thread context. When server.py built the
+                        # history too, its report already covers the same files, so keep that one.
                         conversation_history, conversation_tokens = build_conversation_history(
-                            thread_context, self._model_context
+                            thread_context,
+                            self._model_context,
+                            report=None if server_context_report is not None else self._context_report,
                         )
 
                         # Get the base prompt from the tool
@@ -595,6 +602,20 @@ class SimpleTool(BaseTool):
             )
             raise ToolExecutionError(error_output.model_dump_json()) from e
 
+    def _start_context_report(self, arguments: dict[str, Any]) -> Optional[ContextReport]:
+        """
+        Start the context report of this call, from the report on the history that server.py built, if any.
+
+        On a continuation, server.py builds the conversation history into the prompt and passes its report in
+        `_context_report`. Returns that report, or None when there is none.
+        """
+        self._context_report = ContextReport()
+        server_context_report = arguments.get("_context_report")
+        if not isinstance(server_context_report, ContextReport):
+            return None
+        self._context_report.merge(server_context_report)
+        return server_context_report
+
     def _parse_response(self, raw_text: str, request, model_info: Optional[dict] = None):
         """
         Parse the raw response and format it using the hook method.
@@ -618,7 +639,7 @@ class SimpleTool(BaseTool):
             return self._create_continuation_offer_response(formatted_response, continuation_data, request, model_info)
         else:
             # Build metadata with model and provider info for success response
-            metadata = {}
+            metadata = {**self._context_report_metadata()}
             if model_info:
                 model_name = model_info.get("model_name")
                 if model_name:
@@ -639,7 +660,7 @@ class SimpleTool(BaseTool):
                 status="success",
                 content=formatted_response,
                 content_type="text",
-                metadata=metadata if metadata else None,
+                metadata=metadata,
             )
 
     def _create_continuation_offer(self, request, model_info: Optional[dict] = None):
@@ -714,7 +735,7 @@ class SimpleTool(BaseTool):
             )
 
             # Build metadata with model and provider info
-            metadata = {"tool_name": self.get_name(), "conversation_ready": True}
+            metadata = {"tool_name": self.get_name(), "conversation_ready": True, **self._context_report_metadata()}
             if model_info:
                 model_name = model_info.get("model_name")
                 if model_name:
@@ -818,6 +839,7 @@ class SimpleTool(BaseTool):
                 self.get_request_continuation_id(request),
                 "Context files",
                 model_context=getattr(self, "_model_context", None),
+                context_report=getattr(self, "_context_report", None),
             )
             self._actually_processed_files = processed_files
             if file_content:

@@ -112,6 +112,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel
 
+from utils.context_report import MISSING, NOT_ACCESSIBLE, TOKEN_LIMIT, ContextReport
 from utils.env import get_env
 
 logger = logging.getLogger(__name__)
@@ -574,7 +575,9 @@ def get_conversation_image_list(context: ThreadContext) -> list[str]:
     return image_list
 
 
-def _plan_file_inclusion_by_size(all_files: list[str], max_file_tokens: int) -> tuple[list[str], list[str], int]:
+def _plan_file_inclusion_by_size(
+    all_files: list[str], max_file_tokens: int, skip_reasons: Optional[dict[str, str]] = None
+) -> tuple[list[str], list[str], int]:
     """
     Plan which files to include based on size constraints.
 
@@ -583,6 +586,7 @@ def _plan_file_inclusion_by_size(all_files: list[str], max_file_tokens: int) -> 
     Args:
         all_files: List of files to consider for inclusion
         max_file_tokens: Maximum tokens available for file content
+        skip_reasons: Optional dict that receives the context_report reason for each skipped file
 
     Returns:
         Tuple of (files_to_include, files_to_skip, estimated_total_tokens)
@@ -593,6 +597,8 @@ def _plan_file_inclusion_by_size(all_files: list[str], max_file_tokens: int) -> 
     files_to_include = []
     files_to_skip = []
     total_tokens = 0
+    if skip_reasons is None:
+        skip_reasons = {}
 
     logger.debug(f"[FILES] Planning inclusion for {len(all_files)} files with budget {max_file_tokens:,} tokens")
 
@@ -612,6 +618,7 @@ def _plan_file_inclusion_by_size(all_files: list[str], max_file_tokens: int) -> 
                     )
                 else:
                     files_to_skip.append(file_path)
+                    skip_reasons[file_path] = TOKEN_LIMIT
                     logger.debug(
                         f"[FILES] Skipping {file_path} - would exceed budget (needs {estimated_tokens:,} tokens)"
                     )
@@ -619,14 +626,17 @@ def _plan_file_inclusion_by_size(all_files: list[str], max_file_tokens: int) -> 
                 files_to_skip.append(file_path)
                 # More descriptive message for missing files
                 if not os.path.exists(file_path):
+                    skip_reasons[file_path] = MISSING
                     logger.debug(
                         f"[FILES] Skipping {file_path} - file no longer exists (may have been moved/deleted since conversation)"
                     )
                 else:
+                    skip_reasons[file_path] = NOT_ACCESSIBLE
                     logger.debug(f"[FILES] Skipping {file_path} - file not accessible (not a regular file)")
 
         except Exception as e:
             files_to_skip.append(file_path)
+            skip_reasons[file_path] = NOT_ACCESSIBLE
             logger.debug(f"[FILES] Skipping {file_path} - error during processing: {type(e).__name__}: {e}")
 
     logger.debug(
@@ -635,7 +645,13 @@ def _plan_file_inclusion_by_size(all_files: list[str], max_file_tokens: int) -> 
     return files_to_include, files_to_skip, total_tokens
 
 
-def build_conversation_history(context: ThreadContext, model_context=None, read_files_func=None) -> tuple[str, int]:
+def build_conversation_history(
+    context: ThreadContext,
+    model_context=None,
+    read_files_func=None,
+    *,
+    report: Optional[ContextReport] = None,
+) -> tuple[str, int]:
     """
     Build formatted conversation history for tool prompts with embedded file contents.
 
@@ -683,6 +699,8 @@ def build_conversation_history(context: ThreadContext, model_context=None, read_
         context: ThreadContext containing the conversation to format
         model_context: ModelContext for token allocation (optional, uses DEFAULT_MODEL fallback)
         read_files_func: Optional function to read files (primarily for testing)
+        report: Optional ContextReport that receives the files embedded, the files omitted with their reason,
+                and the number of dropped turns, for the tool response metadata
 
     Returns:
         tuple[str, int]: (formatted_conversation_history, total_tokens_used)
@@ -811,7 +829,13 @@ def build_conversation_history(context: ThreadContext, model_context=None, read_
         # CRITICAL: all_files is already ordered by newest-first prioritization from get_conversation_file_list()
         # So when _plan_file_inclusion_by_size() hits token limits, it naturally excludes OLDER files first
         # while preserving the most recent file references - exactly what we want!
-        files_to_include, files_to_skip, estimated_tokens = _plan_file_inclusion_by_size(all_files, max_file_tokens)
+        skip_reasons: dict[str, str] = {}
+        files_to_include, files_to_skip, estimated_tokens = _plan_file_inclusion_by_size(
+            all_files, max_file_tokens, skip_reasons
+        )
+        if report is not None:
+            for file_path in files_to_skip:
+                report.omit(file_path, skip_reasons.get(file_path, NOT_ACCESSIBLE))
 
         if files_to_skip:
             logger.info(f"[FILES] Excluding {len(files_to_skip)} files from conversation history: {files_to_skip}")
@@ -833,7 +857,7 @@ def build_conversation_history(context: ThreadContext, model_context=None, read_
             )
 
             if read_files_func is None:
-                from utils.file_utils import read_file_content
+                from utils.file_utils import file_content_omission_reason, read_file_content
 
                 # Process files for embedding
                 file_contents = []
@@ -851,9 +875,18 @@ def build_conversation_history(context: ThreadContext, model_context=None, read_
                             logger.debug(
                                 f"File embedded in conversation history: {file_path} ({content_tokens:,} tokens)"
                             )
+                            if report is not None:
+                                # read_file_content returns a notice, not the file, when it cannot read it
+                                reason = file_content_omission_reason(formatted_content)
+                                if reason:
+                                    report.omit(file_path, reason)
+                                else:
+                                    report.embed(file_path)
                         else:
                             logger.debug(f"File skipped (empty content): {file_path}")
                     except Exception as e:
+                        if report is not None:
+                            report.omit(file_path, MISSING if not os.path.exists(file_path) else NOT_ACCESSIBLE)
                         # More descriptive error handling for missing files
                         try:
                             if not os.path.exists(file_path):
@@ -895,7 +928,13 @@ def build_conversation_history(context: ThreadContext, model_context=None, read_
                     within_limit, estimated_tokens = check_token_limit(files_content)
                     if within_limit:
                         history_parts.append(files_content)
+                        if report is not None:
+                            for file_path in all_files:
+                                report.embed(file_path)
                     else:
+                        if report is not None:
+                            for file_path in all_files:
+                                report.omit(file_path, TOKEN_LIMIT)
                         # Handle token limit exceeded for conversation files
                         error_message = f"ERROR: The total size of files referenced in this conversation has exceeded the context limit and cannot be displayed.\nEstimated tokens: {estimated_tokens}, but limit is {max_file_tokens}."
                         history_parts.append(error_message)
@@ -990,6 +1029,8 @@ def build_conversation_history(context: ThreadContext, model_context=None, read_
     # Log what we included
     included_turns = len(turn_entries)
     total_turns = len(all_turns)
+    if report is not None:
+        report.dropped_turns = total_turns - included_turns
     if included_turns < total_turns:
         logger.info(f"[HISTORY] Included {included_turns}/{total_turns} turns due to token limit")
         history_parts.append(f"\n[Note: Showing {included_turns} most recent turns out of {total_turns} total]")

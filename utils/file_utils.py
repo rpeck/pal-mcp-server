@@ -44,6 +44,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
+from .context_report import MISSING, NOT_ACCESSIBLE, TOKEN_LIMIT, ContextReport
 from .file_types import BINARY_EXTENSIONS, CODE_EXTENSIONS, IMAGE_EXTENSIONS, TEXT_EXTENSIONS
 from .security_config import EXCLUDED_DIRS, is_dangerous_path
 from .token_utils import DEFAULT_CONTEXT_WINDOW, estimate_tokens
@@ -520,6 +521,43 @@ def read_file_content(
         return content, tokens
 
 
+def file_content_omission_reason(formatted_content: str) -> Optional[str]:
+    """
+    Tell whether read_file_content returned the file or a notice in its place.
+
+    read_file_content never raises: for a file it cannot read, it returns a short notice that the model sees
+    instead of the content. This maps that notice to a context_report reason.
+
+    Returns:
+        None when the content is the file itself, else the reason the file was omitted
+    """
+    marker = formatted_content.lstrip()
+    if marker.startswith("--- BEGIN FILE:"):
+        return None
+    if marker.startswith("--- FILE NOT FOUND:"):
+        return MISSING
+    if marker.startswith("--- FILE TOO LARGE:"):
+        return TOKEN_LIMIT
+    return NOT_ACCESSIBLE
+
+
+def _path_omission_reason(path_str: str) -> Optional[str]:
+    """
+    Give the reason expand_paths drops a requested path, or None when it keeps the path.
+
+    expand_paths skips paths that fail validation, do not exist, or are protected directories, without a word.
+    """
+    try:
+        path = resolve_and_validate_path(path_str)
+    except (ValueError, PermissionError):
+        return NOT_ACCESSIBLE
+    if not path.exists():
+        return MISSING
+    if path.is_dir():
+        return NOT_ACCESSIBLE if is_home_directory_root(path) or is_mcp_directory(path) else None
+    return None if path.is_file() else NOT_ACCESSIBLE
+
+
 def read_files(
     file_paths: list[str],
     code: Optional[str] = None,
@@ -527,6 +565,7 @@ def read_files(
     reserve_tokens: int = 50_000,
     *,
     include_line_numbers: bool = False,
+    report: Optional[ContextReport] = None,
 ) -> str:
     """
     Read multiple files and optional direct code with smart token management.
@@ -542,6 +581,7 @@ def read_files(
         max_tokens: Maximum tokens to use (defaults to DEFAULT_CONTEXT_WINDOW)
         reserve_tokens: Tokens to reserve for prompt and response (default 50K)
         include_line_numbers: Whether to add line numbers to file content
+        report: Optional ContextReport to record each file as embedded or omitted, for the tool response
 
     Returns:
         str: All file contents formatted for AI consumption
@@ -578,6 +618,12 @@ def read_files(
         all_files = expand_paths(file_paths)
         logger.debug(f"[FILES] After expansion: {len(all_files)} individual files")
 
+        if report is not None:
+            for path_str in file_paths:
+                reason = _path_omission_reason(path_str)
+                if reason:
+                    report.omit(path_str, reason)
+
         if not all_files and file_paths:
             # No files found but paths were provided
             logger.debug("[FILES] No files found from provided paths")
@@ -599,6 +645,12 @@ def read_files(
                     content_parts.append(file_content)
                     total_tokens += file_tokens
                     logger.debug(f"[FILES] Added file {file_path}, total tokens: {total_tokens:,}")
+                    if report is not None:
+                        reason = file_content_omission_reason(file_content)
+                        if reason:
+                            report.omit(file_path, reason)
+                        else:
+                            report.embed(file_path)
                 else:
                     # File too large for remaining budget
                     logger.debug(
@@ -610,6 +662,9 @@ def read_files(
     # what was omitted and why
     if files_skipped:
         logger.debug(f"[FILES] {len(files_skipped)} files skipped due to token limits")
+        if report is not None:
+            for file_path in files_skipped:
+                report.omit(file_path, TOKEN_LIMIT)
         skip_note = "\n\n--- SKIPPED FILES (TOKEN LIMIT) ---\n"
         skip_note += f"Total skipped: {len(files_skipped)}\n"
         # Show first 10 skipped files as examples

@@ -30,6 +30,7 @@ from config import TEMPERATURE_ANALYTICAL
 from systemprompts import CONSENSUS_PROMPT
 from tools.shared.argument_errors import build_request
 from tools.shared.base_models import ConsolidatedFindings, WorkflowRequest
+from utils.context_report import ContextReport
 from utils.conversation_memory import MAX_CONVERSATION_TURNS, create_thread, get_thread
 from utils.model_calls import run_model_call
 
@@ -440,6 +441,8 @@ of the evidence, even when it strongly points in one direction.""",
 
         # Store arguments
         self._current_arguments = arguments
+        # Records the files that the model of this step receives or misses, for the response metadata
+        self._context_report = ContextReport()
 
         # Validate request
         request = build_request(self.get_name(), self.get_workflow_request_model(), arguments)
@@ -598,6 +601,7 @@ of the evidence, even when it strongly points in one direction.""",
                     None,  # Use None instead of request.continuation_id for blinded consensus
                     "Context files",
                     model_context=model_context,
+                    context_report=getattr(self, "_context_report", None),
                 )
                 if file_content:
                     prompt = f"{prompt}\n\n=== CONTEXT FILES ===\n{file_content}\n=== END CONTEXT ==="
@@ -812,6 +816,8 @@ of the evidence, even when it strongly points in one direction.""",
 
         # Add basic tool metadata
         response_data["metadata"]["tool_name"] = self.get_name()
+        # The files that the model of this step received or missed; consensus sends no conversation history
+        response_data["metadata"].update(self._context_report_metadata())
 
         # The consensus-specific metadata is already added by _customize_consensus_metadata
         # which is called from customize_workflow_response. We don't add the standard

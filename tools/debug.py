@@ -315,7 +315,10 @@ class DebugIssueTool(WorkflowTool):
         # Add file content if we have relevant files
         if consolidated_findings.relevant_files:
             file_content, _ = self._prepare_file_content_for_prompt(
-                list(consolidated_findings.relevant_files), None, "Essential debugging files"
+                list(consolidated_findings.relevant_files),
+                None,
+                "Essential debugging files",
+                context_report=getattr(self, "_context_report", None),
             )
             if file_content:
                 context_parts.append(
