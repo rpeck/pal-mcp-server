@@ -284,6 +284,17 @@ class ModelProviderRegistry:
                     continue
                 models[model_name] = provider_type
 
+        if respect_restrictions:
+            # "Available" means callable: leave out models that the cost guard refuses (opt-in required,
+            # or above MAX_OUTPUT_PRICE_PER_M), so error messages never list them as alternatives.
+            from utils.cost_policy import is_refused
+
+            for model_name, provider_type in list(models.items()):
+                provider = cls.get_provider(provider_type)
+                described = provider.describe_model(model_name) if provider else None
+                if described is not None and is_refused(described, model_name):
+                    del models[model_name]
+
         return models
 
     @classmethod

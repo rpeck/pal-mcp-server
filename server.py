@@ -999,12 +999,20 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
             tool_category = tool.get_model_category()
             suggested_model = ModelProviderRegistry.get_preferred_fallback_model(tool_category)
 
-            error_message = (
-                f"Model '{model_name}' is not available with current API keys. "
-                f"Available models: {', '.join(available_models)}. "
-                f"Suggested model for {name}: '{suggested_model}' "
-                f"(category: {tool_category.value})"
-            )
+            # When the cost guard refused a model that a provider knows, say so and name the setting.
+            cost_reason = tool._cost_guard_reason(model_name)
+            if cost_reason:
+                error_message = (
+                    f"{cost_reason} Suggested model for {name}: '{suggested_model}' "
+                    f"(category: {tool_category.value})"
+                )
+            else:
+                error_message = (
+                    f"Model '{model_name}' is not available with current API keys. "
+                    f"Available models: {', '.join(available_models)}. "
+                    f"Suggested model for {name}: '{suggested_model}' "
+                    f"(category: {tool_category.value})"
+                )
             error_output = ToolOutput(
                 status="error",
                 content=error_message,
