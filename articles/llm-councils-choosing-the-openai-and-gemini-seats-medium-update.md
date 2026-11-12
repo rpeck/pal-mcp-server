@@ -7,7 +7,7 @@
 
 # Updating the live article
 
-Medium has no API for editing a published post, so the update is done in the Medium editor. The edits below change only structure: every sentence of the live post stays, except the "Skip ahead" sentence and three short bridging sentences. Editing in place keeps readers' highlights and responses; a full re-paste would not.
+Medium has no API for editing a published post, so the update is done in the Medium editor. The edits below change only structure: every sentence of the live post stays, except the "Skip ahead" sentence, three short bridging sentences, and one corrected sentence (step 6a). Editing in place keeps readers' highlights and responses; a full re-paste would not.
 
 Open `llm-councils-choosing-the-openai-and-gemini-seats-medium.html` in a browser as the copy source: copy blocks from the rendered page, never from raw Markdown or HTML source.
 
@@ -19,6 +19,7 @@ Open `llm-councils-choosing-the-openai-and-gemini-seats-medium.html` in a browse
 4. **Appendix B.** In "Choosing the metrics", cut the metrics table image (Metric, What it tells me about a seat). Paste it at the end, under a new large heading "Appendix B: The Nine Metrics". Then change the sentence before it to end: "...so I read nine columns: the Index, six test scores, the non-hallucination rate and the cost per task. Appendix B says what each one tells me about a seat."
 5. **Appendix C.** Cut the whole "The Numbers" section: its heading, "These are AA's v5 values...", the first table image, "SWE-Atlas QnA comes from the coding-agent page...", and the second table image. Paste it at the end, and rename its heading "Appendix C: The Full Numbers". At the top of "What the Numbers Say", add: "The full tables, AA's v5 values as of 2026.10.28, are in Appendix C; the findings below quote the numbers that decide each seat."
 6. **One reference.** In "Codifying the Technique", change "using the script above" to "using the script in Appendix A".
+6a. **One correction.** In "On the Gemini side", change "Argon's FrontierCode 2.0 score of 25.7 trails every other model here by a wide margin" to "Argon's FrontierCode 2.0 score of 25.7 trails the GPT, Claude and Carbon rows at `high` (30.3 to 40.6) by a wide margin". Gemini 3.8 Flash scores 18.7, so "every other model" was wrong.
 7. **Publish the update.** Check the published page, not the editor: the order of sections must match the Contents list below.
 8. **Fill in the Contents links.** On the published page, open the browser console and run the snippet below. It copies a Markdown list with Medium's own section links. Paste it into the "Contents" block at the end of this file, open this file in a Markdown preview, copy the rendered list, and paste it under the "Contents" heading in the editor. Publish again and click two links on the published page to check them.
 
