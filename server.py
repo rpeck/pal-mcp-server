@@ -1203,6 +1203,7 @@ async def reconstruct_thread_context(arguments: dict[str, Any]) -> dict[str, Any
         - Conversation history embedded in appropriate format for tool consumption
         - File context from previous turns made accessible
         - Cross-tool knowledge transfer enabled
+        - _context_report: the files the history embedded or omitted, and the turns it dropped
 
     Raises:
         ValueError: When continuation_id is invalid, thread not found, or expired
@@ -1221,6 +1222,7 @@ async def reconstruct_thread_context(arguments: dict[str, Any]) -> dict[str, Any
         4. Debug tool can reference specific findings from analyze tool
         5. Natural cross-tool collaboration without context loss
     """
+    from utils.context_report import ContextReport
     from utils.conversation_memory import add_turn, build_conversation_history, get_thread
 
     continuation_id = arguments["continuation_id"]
@@ -1383,7 +1385,11 @@ async def reconstruct_thread_context(arguments: dict[str, Any]) -> dict[str, Any
     logger.debug(f"[CONVERSATION_DEBUG] Building conversation history for thread {continuation_id}")
     logger.debug(f"[CONVERSATION_DEBUG] Thread has {len(context.turns)} turns, tool: {context.tool_name}")
     logger.debug(f"[CONVERSATION_DEBUG] Using model: {model_context.model_name}")
-    conversation_history, conversation_tokens = build_conversation_history(context, model_context)
+    # The report records the files and turns that the history leaves out, for the tool response metadata
+    context_report = ContextReport()
+    conversation_history, conversation_tokens = build_conversation_history(
+        context, model_context, report=context_report
+    )
     logger.debug(f"[CONVERSATION_DEBUG] Conversation history built: {conversation_tokens:,} tokens")
     logger.debug(
         f"[CONVERSATION_DEBUG] Conversation history length: {len(conversation_history)} chars (~{conversation_tokens:,} tokens)"
@@ -1428,6 +1434,7 @@ async def reconstruct_thread_context(arguments: dict[str, Any]) -> dict[str, Any
     remaining_tokens = token_allocation.content_tokens - conversation_tokens
     enhanced_arguments["_remaining_tokens"] = max(0, remaining_tokens)  # Ensure non-negative
     enhanced_arguments["_model_context"] = model_context  # Pass context for use in tools
+    enhanced_arguments["_context_report"] = context_report  # Files and turns the history left out
 
     logger.debug("[CONVERSATION_DEBUG] Token budget calculation:")
     logger.debug(f"[CONVERSATION_DEBUG]   Model: {model_context.model_name}")

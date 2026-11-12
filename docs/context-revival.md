@@ -32,6 +32,39 @@ The system employs a sophisticated **"newest-first"** approach that ensures opti
 - **Presentation Phase**: Reverses to chronological order for natural LLM flow
 - When token budget is tight, **older turns are excluded first**
 
+### What the Tool Response Reports
+
+The prompt tells the model which files and turns were left out. The tool response tells the client the same in
+`metadata`, so a caller can see that the model answered without a file:
+
+- `embedded_files`: the paths whose content the model received. Directories show as the files they hold.
+- `omitted_files`: the paths left out, each with a `reason`:
+  - `token_limit`: the file did not fit in the token budget, or it is larger than the read limit.
+  - `missing`: the path does not exist, for example it was moved or deleted after an earlier turn.
+  - `not_accessible`: the path exists but PAL cannot read it, for example a directory in the history.
+- `dropped_turns`: the number of older turns left out of the conversation history.
+
+```json
+"metadata": {
+  "tool_name": "chat",
+  "model_used": "gemini-2.5-flash",
+  "embedded_files": ["/repo/src/new.py"],
+  "omitted_files": [
+    {"path": "/repo/src/old_big.py", "reason": "token_limit"},
+    {"path": "/repo/src/deleted.py", "reason": "missing"}
+  ],
+  "dropped_turns": 2
+}
+```
+
+Rules:
+
+- The three fields are always present on `chat`, `clink` and workflow tool responses. A call that omits nothing
+  has empty lists and `0`.
+- The fields describe the model call of that response. A workflow step that calls no model has empty fields.
+- Workflow tools send the expert model files but no conversation history, so their `dropped_turns` is `0`.
+- `clink` passes `absolute_file_paths` to the CLI, which reads them itself, so only history files show.
+
 **Show Case**:
 
 The following video demonstartes `continuation` via a casual `continue with gemini...` prompt and the slash command `/continue`.

@@ -43,6 +43,11 @@
   `.pal_venv`. Before, `code_quality_checks.sh` installed the dev tools into `.pal_venv`.
 - `./run-server.sh` keeps a working uv venv: it no longer builds `.pal_venv` again on every run. It installs new
   or changed requirements into it with `uv pip install -r requirements.txt`.
+- The tool response tells the client which files and turns the model did not receive (#15). `chat`, `clink` and
+  the workflow tools add `embedded_files`, `omitted_files` (each with a reason: `token_limit`, `missing` or
+  `not_accessible`) and `dropped_turns` to `metadata`. Before, only the prompt and the log recorded files that a
+  continuation or `read_files` left out. See
+  [What the Tool Response Reports](docs/context-revival.md#what-the-tool-response-reports).
 
 ### Bug Fixes
 

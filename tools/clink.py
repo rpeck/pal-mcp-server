@@ -169,6 +169,8 @@ class CLinkTool(SimpleTool):
 
     async def execute(self, arguments: dict[str, Any]) -> list[TextContent]:
         self._current_arguments = arguments
+        # The CLI reads absolute_file_paths itself, so the report covers only the conversation history
+        self._start_context_report(arguments)
         request = build_request(self.get_name(), self.get_request_model(), arguments)
 
         path_error = self._validate_file_paths(request)
@@ -233,6 +235,7 @@ class CLinkTool(SimpleTool):
             result.parsed.content,
             metadata,
         )
+        metadata = {**metadata, **self._context_report_metadata()}
 
         model_info = {
             "provider": client_config.name,
