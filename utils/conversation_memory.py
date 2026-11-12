@@ -332,7 +332,7 @@ def add_turn(
         thread_id: UUID of the conversation thread
         role: "user" (Agent request) or "assistant" (model response)
         content: The actual message/response content
-        files: Optional list of files referenced in this turn
+        files: Optional list of files referenced in this turn. A directory is stored as the files in it.
         images: Optional list of images referenced in this turn
         tool_name: Name of the tool adding this turn (for attribution)
         model_provider: Provider used (e.g., "google", "openai")
@@ -365,6 +365,12 @@ def add_turn(
     if len(context.turns) >= MAX_CONVERSATION_TURNS:
         logger.debug(f"[FLOW] Thread {thread_id} at max turns ({MAX_CONVERSATION_TURNS})")
         return False
+
+    if files:
+        from utils.file_utils import expand_directories
+
+        # The history embeds only regular files, so store the files of a directory, not the directory (issue #27)
+        files = expand_directories(files)
 
     # Create new turn with complete metadata
     turn = ConversationTurn(

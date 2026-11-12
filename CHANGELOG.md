@@ -92,6 +92,13 @@
     each file that the server's history does not hold, in the token budget left after the history.
   - With `prompt.txt` on a continuation, the history that server.py embeds stays in front of the `prompt.txt`
     text. Before, the `prompt.txt` text replaced it, so `clink` sent no history.
+- A directory in `absolute_file_paths` or `relevant_files` reaches the model on a continuation too (#27). A
+  conversation turn now stores the files in the directory, as `expand_paths` finds them, not the directory.
+  Before, the history skipped the directory as not a regular file, and the tool dropped it as already in the
+  thread, so the model never saw its files. `omitted_files` reported the directory as `not_accessible`.
+  - A directory that a later turn passes again adds only its files that the history does not hold yet.
+  - A directory with no file to read (for example an empty one) is stored as given, so the history still reports
+    it as `not_accessible`.
 
 ### Documentation
 

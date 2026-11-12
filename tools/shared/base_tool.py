@@ -32,7 +32,7 @@ from utils.conversation_memory import (
 )
 from utils.cost_policy import is_refused, refusal_reason
 from utils.env import get_env
-from utils.file_utils import read_file_content, read_files
+from utils.file_utils import expand_directories, read_file_content, read_files
 
 # Import models from tools.models for compatibility
 try:
@@ -875,6 +875,10 @@ class BaseTool(ABC):
                 )
                 return requested_files
 
+            # A turn stores the files of a directory, not the directory (issue #27). So compare file by file: a
+            # requested directory gives only those of its files that the history does not hold yet.
+            requested_files = expand_directories(requested_files)
+
             # Return only files that haven't been embedded yet
             new_files = [f for f in requested_files if f not in embedded_files]
             logger.debug(
@@ -1194,10 +1198,10 @@ class BaseTool(ABC):
         else:
             logger.debug(f"[FILES] {self.name}: No files to embed after filtering")
 
-        # Generate note about files already in conversation history
-        if continuation_id and len(files_to_embed) < len(request_files):
-            embedded_files = self.get_conversation_embedded_files(continuation_id)
-            skipped_files = [f for f in request_files if f in embedded_files]
+        # Generate note about files already in conversation history. A requested directory counts file by file.
+        if continuation_id and files_to_embed != request_files:
+            embedded_files = set(self.get_conversation_embedded_files(continuation_id))
+            skipped_files = [f for f in expand_directories(request_files) if f in embedded_files]
             if skipped_files:
                 logger.debug(
                     f"{self.name} tool skipping {len(skipped_files)} files already in conversation history: {', '.join(skipped_files)}"
