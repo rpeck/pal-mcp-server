@@ -334,6 +334,111 @@ class TestGenerateContent:
         assert fake.calls == []
 
 
+class TestTimeouts:
+    """Each call's limit: the model's value for the effort, then the model's value, then the default."""
+
+    @pytest.fixture
+    def custom_catalogue(self, monkeypatch, tmp_path):
+        """Load a one-model catalogue with its own limits, and restore the shipped one afterwards."""
+
+        def load(**limits):
+            entry = {
+                "model_name": "chatgpt/test-model",
+                "aliases": ["chatgpt/test"],
+                "effort_levels": ["low", "medium", "high"],
+                "supports_temperature": False,
+                **limits,
+            }
+            path = tmp_path / "chatgpt_models.json"
+            path.write_text(json.dumps({"models": [entry]}))
+            monkeypatch.setenv("CHATGPT_MODELS_CONFIG_PATH", str(path))
+            ChatGPTModelProvider.reload_registry()
+
+        yield load
+        monkeypatch.delenv("CHATGPT_MODELS_CONFIG_PATH", raising=False)
+        ChatGPTModelProvider.reload_registry()
+
+    def _timeout_of_call(self, monkeypatch, model, thinking_mode=None):
+        fake = _use(monkeypatch, (_reply(), b"", 0))
+        ChatGPTModelProvider().generate_content("hi", model, thinking_mode=thinking_mode)
+        return fake.calls[0]["kwargs"]["timeout"]
+
+    def test_default_is_1800_seconds(self, provider, monkeypatch):
+        assert chatgpt_module.DEFAULT_TIMEOUT_SECONDS == 1800
+        assert self._timeout_of_call(monkeypatch, "chatgpt/luna", "max") == 1800
+
+    def test_astra_at_max_effort_gets_an_hour(self, provider, monkeypatch):
+        assert self._timeout_of_call(monkeypatch, "chatgpt/astra", "max") == 3600
+        assert self._timeout_of_call(monkeypatch, "chatgpt/astra", "high") == 1800
+
+    def test_model_entry_wins_over_the_env_setting(self, provider, monkeypatch):
+        monkeypatch.setenv("CHATGPT_TIMEOUT_SECONDS", "42")
+
+        assert self._timeout_of_call(monkeypatch, "chatgpt/astra", "max") == 3600
+        assert self._timeout_of_call(monkeypatch, "chatgpt/astra", "high") == 42
+
+    def test_effort_value_then_model_value_then_default(self, provider, monkeypatch, custom_catalogue):
+        custom_catalogue(timeout_seconds=300, timeout_seconds_by_effort={"high": 900})
+        monkeypatch.setenv("CHATGPT_TIMEOUT_SECONDS", "42")
+
+        assert self._timeout_of_call(monkeypatch, "chatgpt/test", "high") == 900
+        assert self._timeout_of_call(monkeypatch, "chatgpt/test", "low") == 300
+        assert self._timeout_of_call(monkeypatch, "chatgpt/test") == 300
+
+    def test_effort_value_uses_the_effort_that_is_sent(self, provider, monkeypatch, custom_catalogue):
+        # The model stops at high, so thinking_mode "max" sends high and gets the high limit.
+        custom_catalogue(timeout_seconds_by_effort={"high": 900})
+
+        assert self._timeout_of_call(monkeypatch, "chatgpt/test", "max") == 900
+        assert self._timeout_of_call(monkeypatch, "chatgpt/test", "medium") == 1800
+
+    @pytest.mark.parametrize(
+        "limits, message",
+        [
+            ({"timeout_seconds": 0}, "positive whole number"),
+            ({"timeout_seconds": "600"}, "positive whole number"),
+            ({"timeout_seconds": True}, "positive whole number"),
+            ({"timeout_seconds_by_effort": {"high": -1}}, "positive whole number"),
+            ({"timeout_seconds_by_effort": {"max": 900}}, "not one of"),
+            ({"timeout_seconds_by_effort": [900]}, "must map effort levels"),
+        ],
+    )
+    def test_bad_catalogue_values_are_rejected(self, tmp_path, limits, message):
+        from providers.registries.chatgpt import ChatGPTModelRegistry
+
+        path = tmp_path / "chatgpt_models.json"
+        entry = {"model_name": "chatgpt/test-model", "effort_levels": ["low", "medium", "high"], **limits}
+        path.write_text(json.dumps({"models": [entry]}))
+
+        with pytest.raises(ValueError, match=message):
+            ChatGPTModelRegistry(config_path=str(path))
+
+    def test_timeout_error_names_the_setting_to_raise(self, provider, monkeypatch):
+        _use(monkeypatch, subprocess.TimeoutExpired(cmd="codex", timeout=3600))
+
+        with pytest.raises(ChatGPTCLIError) as raised:
+            provider.generate_content("hi", "chatgpt/astra", thinking_mode="max")
+
+        message = str(raised.value)
+        assert "within 3600s" in message
+        assert "timeout_seconds_by_effort.max of chatgpt/gpt-6-astra" in message
+        assert "CHATGPT_MODELS_CONFIG_PATH" in message
+
+    def test_summary_lists_the_default_and_each_override(self, monkeypatch):
+        assert chatgpt_module.timeout_summary() == "default 1800s (built-in default); chatgpt/gpt-6-astra: max 3600s"
+
+        monkeypatch.setenv("CHATGPT_TIMEOUT_SECONDS", "900")
+        assert chatgpt_module.timeout_summary().startswith("default 900s (CHATGPT_TIMEOUT_SECONDS); ")
+
+        monkeypatch.setenv("CHATGPT_TIMEOUT_SECONDS", "soon")
+        assert chatgpt_module.timeout_summary().startswith("default 1800s (built-in default); ")
+
+    def test_summary_shows_both_kinds_of_model_limit(self, custom_catalogue):
+        custom_catalogue(timeout_seconds=300, timeout_seconds_by_effort={"high": 900})
+
+        assert chatgpt_module.timeout_summary().endswith("chatgpt/test-model: 300s, high 900s")
+
+
 class TestFailures:
     def test_missing_codex_cli(self, monkeypatch):
         monkeypatch.setattr(chatgpt_module.shutil, "which", lambda name: None)

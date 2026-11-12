@@ -20,12 +20,13 @@ Codex MCP servers and plugins. (Agentic Codex runs through `clink` are planned s
    CHATGPT_ENABLED=true
    # Optional
    CHATGPT_ALLOWED_MODELS=chatgpt/gpt-6.1-sol,chatgpt/gpt-6-luna
-   CHATGPT_TIMEOUT_SECONDS=600
+   CHATGPT_TIMEOUT_SECONDS=1800
    CHATGPT_CODEX_COMMAND=codex
    ```
 
 4. Restart PAL. The startup log shows `CHATGPT_ENABLED=true - ChatGPT-plan models available through the
-   Codex CLI`; `listmodels` lists them under **ChatGPT (via Codex CLI)**.
+   Codex CLI`, then a `ChatGPT call timeouts:` line (see [Timeouts](#timeouts)). `listmodels` lists the models
+   under **ChatGPT (via Codex CLI)**.
 
 At startup PAL checks that `codex` is on `PATH` (the provider stays off if it is not) and runs
 `codex login status`. A missing or API-key login is logged as a warning; the provider stays on, so
@@ -35,7 +36,7 @@ running `codex login` fixes it without a restart.
 |----------|---------|---------|
 | `CHATGPT_ENABLED` | off | `true` turns the provider on. No API key is needed. |
 | `CHATGPT_ALLOWED_MODELS` / `CHATGPT_DISALLOWED_MODELS` | all | Comma-separated model names or aliases, like other providers. |
-| `CHATGPT_TIMEOUT_SECONDS` | `600` | Per-call limit. Raise it for long prompts at high effort. |
+| `CHATGPT_TIMEOUT_SECONDS` | `1800` | Per-call limit for models whose catalogue entry sets no limit. See [Timeouts](#timeouts). |
 | `CHATGPT_CODEX_COMMAND` | `codex` | The Codex executable, if it is not on `PATH` under that name. |
 | `CHATGPT_MODELS_CONFIG_PATH` | `conf/chatgpt_models.json` | Your own model catalogue. |
 
@@ -90,6 +91,48 @@ picks a model itself (its fallback for a tool category), it asks providers in pr
 ChatGPT provider comes after every native API provider (before custom endpoints and OpenRouter), so it
 is only chosen when no native API provider is configured.
 
+## Timeouts
+
+PAL stops a Codex call that runs longer than its limit. A call at high effort on a long prompt can take more
+than 10 minutes, so the limit must fit both the model and the effort.
+
+PAL takes the limit of a call from the first of these that is set:
+
+1. **`timeout_seconds_by_effort`** in the model's catalogue entry, for the effort that PAL sends.
+2. **`timeout_seconds`** in the model's catalogue entry.
+3. **`CHATGPT_TIMEOUT_SECONDS`**.
+4. **1800 seconds**, the same default as `clink`.
+
+A value in the catalogue entry wins over `CHATGPT_TIMEOUT_SECONDS`. To change it, copy
+`conf/chatgpt_models.json`, edit the copy, and set `CHATGPT_MODELS_CONFIG_PATH` to it.
+
+```json
+{
+  "model_name": "chatgpt/gpt-6-astra",
+  "timeout_seconds": 1200,
+  "timeout_seconds_by_effort": { "xhigh": 2700, "max": 3600 }
+}
+```
+
+- **Effort keys:** each key must be one of the model's `effort_levels`.
+- **Sent effort:** PAL looks up the effort that it sends, after it fits `thinking_mode` to the model. For
+  example, `max` on a model that stops at `xhigh` uses the `xhigh` value.
+- **Values:** each value must be a positive whole number of seconds. A bad value stops the catalogue from
+  loading, and the log names the model and the field.
+- **Shipped values:** only GPT-6 Astra at `max` has its own limit, 3600 seconds. All other calls use the
+  default.
+
+The startup log shows the limits, for example:
+
+```
+ChatGPT call timeouts: default 1800s (built-in default); chatgpt/gpt-6-astra: max 3600s
+```
+
+When a call times out, the error names the setting that gave the limit.
+
+Your MCP client can also stop a long tool call. If the client has its own limit for a tool call, make it
+longer than the PAL limit. In Claude Code, `MCP_TOOL_TIMEOUT` (in milliseconds) sets that limit.
+
 ## How a call runs
 
 ```
@@ -137,7 +180,7 @@ Startup messages go to `logs/mcp_server.log`; `grep -i chatgpt logs/mcp_server.l
 | `... the Codex CLI is not signed in (run codex login)` | No Codex login | Run `codex login` and choose ChatGPT. No PAL restart needed |
 | `... the Codex CLI is not signed in with ChatGPT` | Codex is signed in with an API key | Run `codex logout`, then `codex login` and choose ChatGPT |
 | `ChatGPT plan usage limit reached` | The plan's Codex usage limit | Wait for the limit to reset, or use another provider meanwhile |
-| `Codex CLI did not answer within 600s` | Long prompt or high effort | Raise `CHATGPT_TIMEOUT_SECONDS` |
+| `Codex CLI did not answer within 1800s` | Long prompt or high effort | Raise the setting that the error names. See [Timeouts](#timeouts) |
 | `Codex CLI failed (exit status 2): error: unexpected argument ...` | A Codex release changed its command line | Update PAL, or pin the Codex version listed under Limits and costs |
 | `chatgpt/...` models missing from `listmodels` | Flag not set in the environment PAL actually runs with, or a `CHATGPT_ALLOWED_MODELS` filter | Check the client's `env` block and restart the client |
 

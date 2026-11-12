@@ -47,7 +47,7 @@ ANTHROPIC_API_KEY=your_anthropic_api_key_here
 # ChatGPT-plan models through the Codex CLI login (no key; chatgpt/<model>) - see docs/chatgpt_provider.md
 # CHATGPT_ENABLED=true
 # CHATGPT_ALLOWED_MODELS=chatgpt/gpt-6.1-sol,chatgpt/gpt-6-luna
-# CHATGPT_TIMEOUT_SECONDS=600                # per call
+# CHATGPT_TIMEOUT_SECONDS=1800               # per call; a model entry in the catalogue can set its own limit
 # CHATGPT_CODEX_COMMAND=/opt/homebrew/bin/codex  # full path when the MCP client's PATH lacks codex
 
 # Azure OpenAI with your Entra ID login instead of AZURE_OPENAI_API_KEY - see docs/entra_auth.md
