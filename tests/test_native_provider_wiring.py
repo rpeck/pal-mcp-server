@@ -870,12 +870,46 @@ def test_gemini_4_carbon_is_generally_available():
     assert carbon["intelligence_score"] == 20
     assert carbon["aa_index"] == 60 and carbon["aa_index_by_effort"] == {"low": 54, "medium": 58, "high": 60}
     assert "auto_selectable" not in carbon
-    assert carbon["max_output_tokens"] == 65536
+    # The Gemini API models list (read 2026-11-11) gives output_token_limit 32768 for the native route.
+    assert carbon["max_output_tokens"] == 32768
     assert "carbon" in carbon["aliases"]
     assert "LIMITED ACCESS" not in carbon["description"] and "UNVERIFIED" not in carbon["description"]
+    assert "not live-tested" not in carbon["description"]
+    for benchmark in ("FrontierCode 2.0 40.6", "Terminal-Bench 4.0 65.2", "non-hallucination 89%"):
+        assert benchmark in carbon["description"]
     orc = _orm()["google/gemini-4-carbon"]
     assert "carbon" not in orc["aliases"], "the bare alias belongs to the native route"
     assert "auto_selectable" not in orc
+
+
+def test_gemini_4_carbon_auto_mode_picks_it_for_extended_reasoning(monkeypatch):
+    # Issue #14: with only a Gemini key and no allow-list, auto mode must offer and pick Gemini 4 Carbon.
+    from providers.gemini import GeminiModelProvider
+    from providers.registry import ModelProviderRegistry
+    from providers.shared import ProviderType
+    from tools.models import ToolModelCategory
+
+    for var in ("OPENAI_API_KEY", "XAI_API_KEY", "OPENROUTER_API_KEY", "CUSTOM_API_URL", "GOOGLE_ALLOWED_MODELS"):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    monkeypatch.setenv("DYNAMIC_MODEL_SELECTION", "1")
+
+    import utils.model_restrictions
+
+    monkeypatch.setattr(utils.model_restrictions, "_restriction_service", None)
+    ModelProviderRegistry.reset_for_testing()
+    try:
+        ModelProviderRegistry.register_provider(ProviderType.GOOGLE, GeminiModelProvider)
+        provider = ModelProviderRegistry.get_provider(ProviderType.GOOGLE)
+        assert "gemini-4-carbon" in ModelProviderRegistry._get_allowed_models_for_provider(
+            provider, ProviderType.GOOGLE
+        )
+        assert (
+            ModelProviderRegistry.get_preferred_fallback_model(ToolModelCategory.EXTENDED_REASONING)
+            == "gemini-4-carbon"
+        )
+    finally:
+        ModelProviderRegistry.reset_for_testing()
 
 
 def test_november_10_releases():
