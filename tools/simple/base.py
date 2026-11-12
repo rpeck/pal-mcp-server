@@ -21,6 +21,7 @@ from tools.shared.base_tool import BaseTool
 from tools.shared.exceptions import ToolExecutionError
 from tools.shared.schema_builders import SchemaBuilder
 from utils.context_report import ContextReport
+from utils.conversation_memory import CONVERSATION_HISTORY_HEADER
 from utils.model_calls import run_model_call
 
 
@@ -342,9 +343,11 @@ class SimpleTool(BaseTool):
             if continuation_id:
                 # Check if conversation history is already embedded
                 field_value = self.get_request_prompt(request)
-                if "=== CONVERSATION HISTORY ===" in field_value:
-                    # Use pre-embedded history
-                    prompt = field_value
+                if CONVERSATION_HISTORY_HEADER in field_value:
+                    # server.py stored the user's turn and embedded the history in the prompt field. Prepare the
+                    # prompt from it as is: the tool adds the new files of this turn, and the size check uses
+                    # _original_user_prompt.
+                    prompt = await self.prepare_prompt(request)
                     logger.debug(f"{self.get_name()}: Using pre-embedded conversation history")
                 else:
                     # No embedded history - reconstruct it (for in-process calls)
@@ -926,7 +929,12 @@ Please provide a thoughtful, comprehensive response:"""
             prompt_content = None
 
         # Use prompt.txt content if available, otherwise use the prompt field
-        user_content = prompt_content if prompt_content else self.get_request_prompt(request)
+        request_prompt = self.get_request_prompt(request)
+        if prompt_content and CONVERSATION_HISTORY_HEADER in request_prompt:
+            # The prompt field holds the history that server.py embedded: keep it in front of the prompt.txt content
+            user_content = f"{request_prompt}\n\n{prompt_content}"
+        else:
+            user_content = prompt_content if prompt_content else request_prompt
 
         # Check user input size at MCP transport boundary (excluding conversation history)
         validation_content = self.get_prompt_content_for_size_validation(user_content)

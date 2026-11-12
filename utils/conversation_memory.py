@@ -148,6 +148,10 @@ except ValueError:
 
 CONVERSATION_TIMEOUT_SECONDS = CONVERSATION_TIMEOUT_HOURS * 3600
 
+# The first line of the history that build_conversation_history writes. A tool tests for it to tell whether
+# server.py already embedded the history in the prompt, so the writer and the check must share it (issue #26).
+CONVERSATION_HISTORY_HEADER = "=== CONVERSATION HISTORY (CONTINUATION) ==="
+
 
 class ConversationTurn(BaseModel):
     """
@@ -813,7 +817,7 @@ def build_conversation_history(
     logger.debug(f"[HISTORY]   Max history tokens: {max_history_tokens:,}")
 
     history_parts = [
-        "=== CONVERSATION HISTORY (CONTINUATION) ===",
+        CONVERSATION_HISTORY_HEADER,
         f"Thread: {context.thread_id}",
         f"Tool: {context.tool_name}",  # Original tool that started the conversation
         f"Turn {total_turns}/{MAX_CONVERSATION_TURNS}",

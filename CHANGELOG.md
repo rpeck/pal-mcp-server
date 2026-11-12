@@ -84,6 +84,14 @@
   - The description adds FrontierCode 2.0 (40.6), Terminal-Bench 4.0 (65.2) and non-hallucination (89%).
   - Carbon is auto-selectable since PR #16, and a new test checks that auto mode selects it for extended
     reasoning. A free-tier Gemini key gets HTTP 429 (quota 0) for Carbon.
+- A `chat` continuation sends the conversation history to the model once (#26). Before, the prompt held it 3
+  times, and the thread stored the whole prompt, history included, as a second user turn.
+  - The check for the history that server.py embeds looked for a header that the history never had. So `chat`
+    built the history again on every continuation. The writer and the check now share one constant.
+  - That second build was the only path that embedded the new files of a continuation turn. Now the tool embeds
+    each file that the server's history does not hold, in the token budget left after the history.
+  - With `prompt.txt` on a continuation, the history that server.py embeds stays in front of the `prompt.txt`
+    text. Before, the `prompt.txt` text replaced it, so `clink` sent no history.
 
 ### Documentation
 

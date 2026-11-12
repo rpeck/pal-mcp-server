@@ -814,11 +814,21 @@ class BaseTool(ABC):
             continuation_id: Thread continuation ID, or None for new conversations
 
         Returns:
-            list[str]: List of file paths already embedded in conversation history
+            list[str]: List of file paths already embedded in conversation history. On a continuation through
+                server.py, this also holds the files that the history left out, with a note to the model.
         """
         if not continuation_id:
             # New conversation, no files embedded yet
             return []
+
+        # server.py stores the user's turn, files included, in the thread, but builds the history from the turns
+        # before it. So when server.py built the history, the files that the history covers are the ones its
+        # report records, not the files that the thread lists (issue #26).
+        server_context_report = (getattr(self, "_current_arguments", None) or {}).get("_context_report")
+        if isinstance(server_context_report, ContextReport):
+            history_files = server_context_report.embedded_files + list(server_context_report.omitted_files)
+            logger.debug(f"[FILES] {self.name}: Found {len(history_files)} files in the history that server.py built")
+            return history_files
 
         thread_context = get_thread(continuation_id)
         if not thread_context:
