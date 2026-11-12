@@ -1,6 +1,7 @@
 {
   "_README": {
     "description": "Model metadata for local/self-hosted OpenAI-compatible endpoints (Custom provider).",
+    "aa_version": "No entry here has an Artificial Analysis Intelligence Index value. The scores are estimates on the 1-20 scale that the v5.0.1 ladder in docs/model_ranking.md keeps (leaderboard read 2026-11-11). Change this line at each AA regrade.",
     "documentation": "https://github.com/BeehiveInnovations/pal-mcp-server/blob/main/docs/custom_models.md",
     "usage": "Each entry will be advertised by the Custom provider. Aliases are case-insensitive.",
     "field_notes": "Matches providers/shared/model_capabilities.py.",

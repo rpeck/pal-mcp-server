@@ -1,6 +1,7 @@
 {
   "_README": {
     "description": "Model metadata for X.AI (GROK) API access.",
+    "aa_version": "The aa_index and aa_index_by_effort values here come from the Artificial Analysis Intelligence Index v5.0.1 (leaderboard read 2026-11-11). Entries without them carry estimated or v4.3-based scores; each description says which. Change this line at each AA regrade.",
     "documentation": "https://github.com/BeehiveInnovations/pal-mcp-server/blob/main/docs/custom_models.md",
     "usage": "Models listed here are exposed directly through the X.AI provider. Aliases are case-insensitive.",
     "field_notes": "Matches providers/shared/model_capabilities.py.",
@@ -20,8 +21,8 @@
       "use_openai_response_api": "Set to true when the model must use the /responses endpoint (reasoning models like GPT-5.2 Pro). Leave false/omit for standard chat completions.",
       "default_reasoning_effort": "Default reasoning effort level for models that support it (e.g., 'low', 'medium', 'high'). Omit if not applicable.",
       "description": "Human-readable description of the model",
-      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering. Since 2026-10-28 it is anchored to the Artificial Analysis Intelligence Index v5 at HIGH reasoning effort (aa_index_by_effort['high'], leaderboard read 2026-10-28) through the v5 ladder in docs/model_ranking.md, which keeps the 1-20 scale of the earlier v4.3 ladder. Entries without aa_index_by_effort carry estimated scores; models that AA measured on v4.3 but not on v5 keep their v4.3-based scores. PAL tools default to thinking_mode medium, so a typical call can score a few Index points below the anchor.",
-      "aa_index_by_effort": "Optional per-effort Artificial Analysis Intelligence Index values (v5 leaderboard, read 2026-10-28), keyed by effort (non-reasoning, low, medium, high, xhigh, max; 'default' for a model with a single row). Values AA marks as incomplete (*) are left out."
+      "intelligence_score": "1-20 human rating used as the primary signal for auto-mode model ordering. Since 2026-10-28 it is anchored to the Artificial Analysis Intelligence Index v5.0.1 at HIGH reasoning effort (aa_index_by_effort['high']; the read date is in aa_version) through the ladder in docs/model_ranking.md, which keeps the 1-20 scale of the earlier v4.3 ladder. Entries without aa_index_by_effort carry estimated scores; models that AA measured on v4.3 but not on v5 keep their v4.3-based scores. PAL tools default to thinking_mode medium, so a typical call can score a few Index points below the anchor.",
+      "aa_index_by_effort": "Optional per-effort Artificial Analysis Intelligence Index values (v5.0.1 leaderboard; the read date is in aa_version), keyed by effort (non-reasoning, low, medium, high, xhigh, max; 'default' for a model with a single row). Values AA marks as incomplete (*) are left out."
     }
   },
   "models": [

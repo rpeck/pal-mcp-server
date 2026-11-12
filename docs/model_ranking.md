@@ -37,10 +37,10 @@ of the work so you can enforce organisational preferences easily.
 
 The scores in this catalog come from the
 [Artificial Analysis (AA) Intelligence Index](https://artificialanalysis.ai/leaderboards/models)
-(v5), **at `high` reasoning effort** (since 2026-10-28; leaderboard last read 2026-11-10). A model that AA
-measures gets its score from its `high` value, rounded to a whole number, through this ladder:
+**v5.0.1**, **at `high` reasoning effort** (since 2026-10-28; leaderboard last read 2026-11-11). A model
+that AA measures gets its score from its `high` value, rounded to a whole number, through this ladder:
 
-| AA Index v5 | Score | | AA Index v5 | Score | | AA Index v5 | Score |
+| AA Index v5.0.1 | Score | | AA Index v5.0.1 | Score | | AA Index v5.0.1 | Score |
 |---|---|---|---|---|---|---|---|
 | 49+ | 20 | | 24-25 | 14 | | 9-10 | 8 |
 | 44-48 | 19 | | 21-23 | 13 | | 7-8 | 7 |
@@ -57,6 +57,16 @@ measures gets its score from its `high` value, rounded to a whole number, throug
   sort the v4.3 values and the v5 values separately, pair them by rank, fit a quadratic curve from v5
   to v4.3 (residual SD 1.4 points), and convert each v4.3 step bound to v5 through the curve. The
   order of models follows v5; only the step bounds come from the fit.
+- **Index versions:** the fit used v5.0 values (read 2026-10-28). AA moved to v5.0.1 for November 2026.
+  v5.0.1 grades CritPt v2 again with the authors' robustness fixes; no weight changed.
+  - The conf values come from v5.0.1 reads (2026-11-10, checked again 2026-11-11). Under v5.0.1, two
+    values moved by 1 point: Gemini 4 Carbon at high (59 -> 60) and Claude Opus 5.5 at max (58 -> 59).
+    No score changed.
+  - The ladder stays the same. A fit on v5.0.1 values moves the curve up by 0.2 to 0.6 points, less
+    than its residual SD. Bounds that are near a half point can move by 1 if you change the rounding
+    or the set of models, so a re-fit would change scores of models whose AA values did not change.
+  - Each conf file's `_README` names the AA version and the read date in `aa_version`. Change that line
+    at each AA regrade.
 - **Effort anchor:** the score describes the model at `high` effort. PAL tools default to
   `thinking_mode: medium`, so a typical call runs one level below the anchor and can score a few Index
   points lower (Claude Sonnet 5.5: 42 at high, 31 at medium). Ask for `thinking_mode: high` to get the
@@ -68,7 +78,7 @@ measures gets its score from its `high` value, rounded to a whole number, throug
   interpolated or estimated entry says so in its description, with the rows it used and a range.
   - A `non-reasoning` row is a separate mode, not an effort level below `high`. It is not used for
     interpolation; it is only a floor for an estimate.
-  - Compute the median gaps again at each leaderboard read (2026-11-10: max to high 5.5, xhigh to high 2).
+  - Compute the median gaps again at each leaderboard read (2026-11-11: max to high 5.5, xhigh to high 2).
 - **Measured and estimated scores:** a model that AA does not list keeps an **estimated** score. The
   re-score to the `high` anchor lowered each such score of 12 or more by 1, the median change across
   the measured models with several effort levels; lower scores did not change. When AA publishes a

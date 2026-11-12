@@ -1,6 +1,7 @@
 {
   "_README": {
     "description": "Model metadata for DeepSeek's first-party API (native provider, DEEPSEEK_API_KEY).",
+    "aa_version": "The aa_index and aa_index_by_effort values here come from the Artificial Analysis Intelligence Index v5.0.1 (leaderboard read 2026-11-11). Entries without them carry estimated or v4.3-based scores; each description says which. Change this line at each AA regrade.",
     "usage": "Exposed directly through the native DeepSeek provider (api.deepseek.com, OpenAI-compatible). These models are also reachable via OpenRouter (deepseek/... IDs); with a DeepSeek key set the native provider wins by priority so bare aliases route direct. Scores are pinned to the OpenRouter mirrors.",
     "field_notes": "Matches providers/shared/model_capabilities.py."
   },

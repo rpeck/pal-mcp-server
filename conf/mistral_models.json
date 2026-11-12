@@ -1,6 +1,7 @@
 {
   "_README": {
     "description": "Mistral via la Plateforme OpenAI-compatible API (native provider, MISTRAL_API_KEY).",
+    "aa_version": "No entry here has an Artificial Analysis Intelligence Index value. The scores are estimates on the 1-20 scale that the v5.0.1 ladder in docs/model_ranking.md keeps (leaderboard read 2026-11-11). Change this line at each AA regrade.",
     "usage": "Base URL https://api.mistral.ai/v1. Mixed open/closed lineup. Scores pinned to the mistralai/* OpenRouter mirrors. `*-latest` aliases track the current dated snapshot. Verify model IDs against /models if a call 404s."
   },
   "models": [
