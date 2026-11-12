@@ -64,6 +64,13 @@
   second time, which added a second log handler.
 - A Codex timeout now also kills the processes that Codex starts, so the timeout holds when Codex runs through a
   launcher (for example the npm package).
+- ChatGPT provider: a call at max effort on a long prompt no longer times out at 600 seconds (#10).
+  - The default limit of a call is now 1800 seconds, the same as `clink`.
+  - A model entry in the ChatGPT catalogue can set its own limit: `timeout_seconds`, and
+    `timeout_seconds_by_effort` for each effort level. These values win over `CHATGPT_TIMEOUT_SECONDS`.
+  - GPT-6 Astra at `max` effort gets 3600 seconds.
+  - The startup log shows the default and each model limit. A timeout error names the setting that gave the
+    limit. See [Timeouts](docs/chatgpt_provider.md#timeouts).
 - `run-server.sh`: when it makes a new `.env` from shell variables, it now copies each key as plain text. Before,
   `sed` stopped the script for a value with `/` (every `op://` reference), and changed a value with `&` or `\`.
 

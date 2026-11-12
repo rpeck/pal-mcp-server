@@ -745,6 +745,33 @@ def test_server_registers_chatgpt_when_login_needs_fixing(monkeypatch, clean_reg
     assert "codex login" in caplog.text
 
 
+def test_server_logs_the_chatgpt_timeouts_at_startup(monkeypatch, clean_registry, caplog):
+    import logging
+
+    import server
+
+    for var in _NO_KEY_VARS:
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("CHATGPT_ENABLED", "true")
+    monkeypatch.setenv("CHATGPT_TIMEOUT_SECONDS", "900")
+    _fake_codex_on_path(monkeypatch)
+    # The first `import server` clears the root handlers, caplog's too, so add it again.
+    root = logging.getLogger()
+    added = caplog.handler not in root.handlers
+    if added:
+        root.addHandler(caplog.handler)
+    try:
+        with caplog.at_level(logging.INFO):
+            server.configure_providers()
+    finally:
+        if added:
+            root.removeHandler(caplog.handler)
+
+    assert (
+        "ChatGPT call timeouts: default 900s (CHATGPT_TIMEOUT_SECONDS); chatgpt/gpt-6-astra: max 3600s" in caplog.text
+    )
+
+
 def test_server_skips_chatgpt_without_codex_cli(monkeypatch, clean_registry):
     import server
 

@@ -580,7 +580,7 @@ def configure_providers():
     if get_env_bool("CHATGPT_ENABLED"):
         import shutil
 
-        from providers.chatgpt import codex_command, codex_login_problem
+        from providers.chatgpt import codex_command, codex_login_problem, timeout_summary
 
         codex_executable = shutil.which(codex_command())
         if codex_executable is None:
@@ -598,6 +598,7 @@ def configure_providers():
             valid_providers.append("ChatGPT (Codex CLI)")
             has_native_apis = True
             logger.info("CHATGPT_ENABLED=true - ChatGPT-plan models available through the Codex CLI")
+            logger.info("ChatGPT call timeouts: %s", timeout_summary())
 
     # Check for OpenRouter API key
     openrouter_key = get_env("OPENROUTER_API_KEY")

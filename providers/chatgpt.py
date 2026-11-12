@@ -30,7 +30,7 @@ from utils.image_utils import validate_image
 from utils.model_calls import run_cancellable
 
 from .base import ModelProvider
-from .registries.chatgpt import ChatGPTModelRegistry
+from .registries.chatgpt import TIMEOUT_BY_EFFORT_KEY, TIMEOUT_KEY, ChatGPTModelRegistry
 from .registry_provider_mixin import RegistryBackedProviderMixin
 from .shared import ModelCapabilities, ModelResponse, ProviderType
 from .shared.effort import resolve_reasoning_effort
@@ -38,7 +38,9 @@ from .shared.effort import resolve_reasoning_effort
 logger = logging.getLogger(__name__)
 
 MODEL_PREFIX = "chatgpt/"
-DEFAULT_TIMEOUT_SECONDS = 600
+# Matches clink. A model entry can set its own limit (see timeout_for).
+DEFAULT_TIMEOUT_SECONDS = 1800
+_DEFAULT_TIMEOUT_SOURCE = "the provider default"
 
 # Codex sends its own agent instructions with every request. This note, placed before PAL's system
 # prompt, keeps the model answering from the prompt instead of reaching for tools in an empty sandbox.
@@ -91,7 +93,8 @@ class ChatGPTModelProvider(RegistryBackedProviderMixin, ModelProvider):
         """Initialize the provider. ``api_key`` is unused: Codex authenticates with its own login.
 
         Optional kwargs: ``command`` (default ``CHATGPT_CODEX_COMMAND`` or ``codex``) and
-        ``timeout_seconds`` (default ``CHATGPT_TIMEOUT_SECONDS`` or 600).
+        ``timeout_seconds`` (default ``CHATGPT_TIMEOUT_SECONDS`` or 1800). ``timeout_seconds`` applies to
+        models whose catalogue entry sets no limit of its own (see :meth:`timeout_for`).
         """
         self._ensure_registry()
         super().__init__(api_key, **kwargs)
@@ -151,8 +154,10 @@ class ChatGPTModelProvider(RegistryBackedProviderMixin, ModelProvider):
                 image_paths=image_paths,
             )
 
+            timeout = self.timeout_for(resolved_model_name, effort)
+
             def _attempt() -> ModelResponse:
-                return self._run_once(command, prompt, str(workspace), resolved_model_name, effort)
+                return self._run_once(command, prompt, str(workspace), resolved_model_name, effort, timeout)
 
             return self._run_with_retries(
                 operation=_attempt,
@@ -160,6 +165,20 @@ class ChatGPTModelProvider(RegistryBackedProviderMixin, ModelProvider):
                 delays=[2],
                 log_prefix=f"ChatGPT via Codex CLI ({slug})",
             )
+
+    def timeout_for(self, model_name: str, effort: str | None) -> tuple[int, str]:
+        """Return the call limit in seconds for a model and effort, and the setting that gave it.
+
+        The model's ``timeout_seconds_by_effort`` value for the effort comes first, then the model's
+        ``timeout_seconds``, then the provider default (``CHATGPT_TIMEOUT_SECONDS`` or 1800).
+        """
+        entry = (self._registry.get_entry(model_name) if self._registry else None) or {}
+        by_effort = entry.get(TIMEOUT_BY_EFFORT_KEY) or {}
+        if effort and effort in by_effort:
+            return by_effort[effort], f"{TIMEOUT_BY_EFFORT_KEY}.{effort} of {model_name}"
+        if entry.get(TIMEOUT_KEY):
+            return entry[TIMEOUT_KEY], f"{TIMEOUT_KEY} of {model_name}"
+        return self._timeout_seconds, _DEFAULT_TIMEOUT_SOURCE
 
     @staticmethod
     def build_command(
@@ -212,8 +231,15 @@ class ChatGPTModelProvider(RegistryBackedProviderMixin, ModelProvider):
         workspace: str,
         resolved_model_name: str,
         effort: str | None,
+        timeout: tuple[int, str],
     ) -> ModelResponse:
-        logger.debug("ChatGPT: running %s", " ".join(_redact_command(command)))
+        timeout_seconds, timeout_source = timeout
+        logger.debug(
+            "ChatGPT: running %s (timeout %ss from %s)",
+            " ".join(_redact_command(command)),
+            timeout_seconds,
+            timeout_source,
+        )
         start = time.monotonic()
         try:
             completed = run_cancellable(
@@ -221,12 +247,12 @@ class ChatGPTModelProvider(RegistryBackedProviderMixin, ModelProvider):
                 input=prompt.encode("utf-8"),
                 cwd=workspace,
                 env=_child_environment(),
-                timeout=self._timeout_seconds,
+                timeout=timeout_seconds,
             )
         except subprocess.TimeoutExpired as exc:
             raise ChatGPTCLIError(
-                f"Codex CLI did not answer within {self._timeout_seconds}s "
-                "(raise CHATGPT_TIMEOUT_SECONDS for long prompts or high effort)"
+                f"Codex CLI did not answer within {timeout_seconds}s ({timeout_source}). "
+                f"For long prompts or high effort, {_timeout_fix(timeout_source)}"
             ) from exc
         except OSError as exc:
             raise ChatGPTCLIError(f"Could not start the Codex CLI ({command[0]}): {exc}") from exc
@@ -435,16 +461,48 @@ def _child_environment() -> dict[str, str]:
     return env
 
 
+def timeout_summary() -> str:
+    """Describe the ChatGPT call limits for the startup log: the default and each catalogue override."""
+    from_env = _parse_env_timeout()
+    if from_env is None:
+        parts = [f"default {DEFAULT_TIMEOUT_SECONDS}s (built-in default)"]
+    else:
+        parts = [f"default {from_env}s (CHATGPT_TIMEOUT_SECONDS)"]
+    try:
+        registry = ChatGPTModelRegistry()
+    except Exception as exc:  # The provider logs its own registry failure; keep the startup line.
+        return f"{parts[0]}; per-model limits unknown: {exc}"
+    for model_name, _capability, extras in registry.iter_entries():
+        limits = []
+        if extras.get(TIMEOUT_KEY):
+            limits.append(f"{extras[TIMEOUT_KEY]}s")
+        limits += [f"{effort} {seconds}s" for effort, seconds in (extras.get(TIMEOUT_BY_EFFORT_KEY) or {}).items()]
+        if limits:
+            parts.append(f"{model_name}: {', '.join(limits)}")
+    return "; ".join(parts)
+
+
+def _timeout_fix(source: str) -> str:
+    if source == _DEFAULT_TIMEOUT_SOURCE:
+        return "raise CHATGPT_TIMEOUT_SECONDS, or set a limit for the model in the model catalogue."
+    return "raise that value in your own copy of the model catalogue (CHATGPT_MODELS_CONFIG_PATH)."
+
+
 def _env_timeout() -> int:
+    return _parse_env_timeout() or DEFAULT_TIMEOUT_SECONDS
+
+
+def _parse_env_timeout() -> int | None:
+    """Return ``CHATGPT_TIMEOUT_SECONDS`` as a positive whole number, or None when it is not set or not valid."""
     raw = get_env("CHATGPT_TIMEOUT_SECONDS")
     if not raw:
-        return DEFAULT_TIMEOUT_SECONDS
+        return None
     try:
         value = int(raw)
     except ValueError:
         logger.warning("CHATGPT_TIMEOUT_SECONDS=%r is not a whole number; using %ss", raw, DEFAULT_TIMEOUT_SECONDS)
-        return DEFAULT_TIMEOUT_SECONDS
-    return value if value > 0 else DEFAULT_TIMEOUT_SECONDS
+        return None
+    return value if value > 0 else None
 
 
 def _last_lines(text: str, count: int = 3) -> str:

@@ -3,7 +3,7 @@
     "description": "Models reachable with a ChatGPT plan login through the Codex CLI (`codex login`), used as plain single-turn models.",
     "documentation": "docs/chatgpt_provider.md",
     "usage": "Enable with CHATGPT_ENABLED=true. Model names are namespaced `chatgpt/<codex model slug>`; the slug after the prefix is passed to `codex exec -m`. Aliases are case-insensitive. Override this file with CHATGPT_MODELS_CONFIG_PATH.",
-    "field_notes": "Matches providers/shared/model_capabilities.py. context_window and effort_levels follow `codex debug models`; intelligence_score/aa_index mirror conf/openai_models.json. Temperature and max output tokens cannot be set through the Codex CLI, so supports_temperature is false."
+    "field_notes": "Matches providers/shared/model_capabilities.py. context_window and effort_levels follow `codex debug models`; intelligence_score/aa_index mirror conf/openai_models.json. Temperature and max output tokens cannot be set through the Codex CLI, so supports_temperature is false. Optional timeout_seconds and timeout_seconds_by_effort (seconds, keyed by effort level) set the limit of one call for that model; they win over CHATGPT_TIMEOUT_SECONDS (default 1800). GPT-6 Astra at max effort gets 3600 s because a long design review at max took more than 600 s (issue #10)."
   },
   "models": [
     {
@@ -83,6 +83,9 @@
         "xhigh",
         "max"
       ],
+      "timeout_seconds_by_effort": {
+        "max": 3600
+      },
       "supports_system_prompts": true,
       "supports_streaming": false,
       "supports_function_calling": false,
