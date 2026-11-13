@@ -59,13 +59,15 @@ console.log(found.length === want.length ? "All entries found and copied." : `Fo
 
 ## Contents (paste the snippet's output here, then copy it from the preview)
 
-- The Council Setup
-- The Analysis Technique
-- What the Numbers Say
-- The Council at Each Difficulty
-- Adjusting the Council for Each Kind of Task
-- Where the Numbers Stop
-- Codifying the Technique
-- Wrapping Up!
-- Appendix A: The Nine Metrics
-- Appendix B: The Full Numbers
+Collected from the published page on 2026-11-13, after the full re-paste.
+
+- [The Council Setup](https://medium.com/@raymondpeck/llm-councils-choosing-the-openai-and-gemini-seats-for-a-claude-led-council-9d0acc62f2a3#d1f4)
+- [The Analysis Technique](https://medium.com/@raymondpeck/llm-councils-choosing-the-openai-and-gemini-seats-for-a-claude-led-council-9d0acc62f2a3#8e29)
+- [What the Numbers Say](https://medium.com/@raymondpeck/llm-councils-choosing-the-openai-and-gemini-seats-for-a-claude-led-council-9d0acc62f2a3#6556)
+- [The Council at Each Difficulty](https://medium.com/@raymondpeck/llm-councils-choosing-the-openai-and-gemini-seats-for-a-claude-led-council-9d0acc62f2a3#4605)
+- [Adjusting the Council for Each Kind of Task](https://medium.com/@raymondpeck/llm-councils-choosing-the-openai-and-gemini-seats-for-a-claude-led-council-9d0acc62f2a3#c8a5)
+- [Where the Numbers Stop](https://medium.com/@raymondpeck/llm-councils-choosing-the-openai-and-gemini-seats-for-a-claude-led-council-9d0acc62f2a3#86ea)
+- [Codifying the Technique](https://medium.com/@raymondpeck/llm-councils-choosing-the-openai-and-gemini-seats-for-a-claude-led-council-9d0acc62f2a3#68a7)
+- [Wrapping Up!](https://medium.com/@raymondpeck/llm-councils-choosing-the-openai-and-gemini-seats-for-a-claude-led-council-9d0acc62f2a3#bbda)
+- [Appendix A: The Nine Metrics](https://medium.com/@raymondpeck/llm-councils-choosing-the-openai-and-gemini-seats-for-a-claude-led-council-9d0acc62f2a3#5b24)
+- [Appendix B: The Full Numbers](https://medium.com/@raymondpeck/llm-councils-choosing-the-openai-and-gemini-seats-for-a-claude-led-council-9d0acc62f2a3#6661)
