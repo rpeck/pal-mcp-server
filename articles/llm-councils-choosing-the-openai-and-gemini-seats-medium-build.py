@@ -115,6 +115,9 @@ def main():
     if base:
         body = re.sub(r'src="(?!https?:)([^"]+)"', lambda m: f'src="{base}{m.group(1)}"', body)
 
+    # In-page links ("#slug") are GitHub anchors; Medium assigns its own, so keep only the link text.
+    body = re.sub(r'<a href="#[^"]*">(.*?)</a>', r"\1", body, flags=re.S)
+
     # Code blocks -> Medium markup.
     body = re.sub(
         r'<pre(?: class="(?:sourceCode )?([\w-]+)")?[^>]*><code[^>]*>(.*?)</code></pre>', medium_pre, body, flags=re.S
