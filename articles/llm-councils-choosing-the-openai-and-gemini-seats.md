@@ -22,9 +22,8 @@
 - [Where the Numbers Stop](#where-the-numbers-stop)
 - [Codifying the Technique](#codifying-the-technique)
 - [Wrapping Up!](#wrapping-up)
-- [Appendix A: Reading the AA Leaderboard Data](#appendix-a-reading-the-aa-leaderboard-data)
-- [Appendix B: The Nine Metrics](#appendix-b-the-nine-metrics)
-- [Appendix C: The Full Numbers](#appendix-c-the-full-numbers)
+- [Appendix A: The Nine Metrics](#appendix-a-the-nine-metrics)
+- [Appendix B: The Full Numbers](#appendix-b-the-full-numbers)
 
 I use LLM Councils for the hard parts of my engineering work: the plan I write for every task that has more than a couple of pieces and steps, the data migration that can't go wrong, the architecture decision that the team will live with for years, and the code review that has to find the subtle concurrency bug. As you can see, there are various levels of difficulty here.
 
@@ -60,11 +59,11 @@ On the Gemini side I query the API's models list with my key, and I also read Op
 
 ### Getting the benchmark data
 
-AA's leaderboard has one row per model and reasoning effort, for example "GPT-6.1 Sol (High)", with the Index value, the score on each test inside the Index and the cost of the Index run. Claude Code's web fetch tool misses most of those rows, so a short script reads the data that the page embeds; [Appendix A](#appendix-a-reading-the-aa-leaderboard-data) has the script and how it works.
+AA's leaderboard has one row per model and reasoning effort, for example "GPT-6.1 Sol (High)", with the Index value, the score on each test inside the Index and the cost of the Index run. Claude Code's web fetch tool misses most of those rows, so a short Python script reads the data that the page embeds instead.
 
 ### Choosing the metrics
 
-My councils review plans, designs, measurements and, for the hard parts of a coding task, the code itself, and each kind of work leans on different results. That means the headline Index can't carry the decision alone, so I read nine columns: the Index, six test scores, the non-hallucination rate and the cost per task. [Appendix B](#appendix-b-the-nine-metrics) says what each one tells me about a seat.
+My councils review plans, designs, measurements and, for the hard parts of a coding task, the code itself, and each kind of work leans on different results. That means the headline Index can't carry the decision alone, so I read nine columns: the Index, six test scores, the non-hallucination rate and the cost per task. [Appendix A](#appendix-a-the-nine-metrics) says what each one tells me about a seat.
 
 No public benchmark measures architecture design directly. SWE-Atlas QnA and FrontierCode 2.0 come closest, so they carry the most weight for planning and review seats.
 
@@ -74,7 +73,7 @@ We do set a different effort for each task, but that comes later; to decide *whi
 
 ### Building tiers by task difficulty
 
-Most council decisions don't need the most expensive models, and the ones that do need them badly. So I sort the work into four tiers and pick one model and one effort per provider for each:
+Most council decisions don't need the most expensive models, and the ones that do need them badly. So I sort the work into four tiers and pick one model and one effort per provider for each. The tiers set the default by difficulty only: different kinds of work also lean on different benchmarks, so each council adjusts that default for its own kind of work, as I explain later in [Adjusting the Council for Each Kind of Task](#adjusting-the-council-for-each-kind-of-task). Here are the tiers:
 
 | Tier | Typical work | Selection rule |
 |---|---|---|
@@ -93,7 +92,7 @@ The tier rules give a first draft, and three checks turn it into a roster. First
 
 ## What the Numbers Say
 
-The full tables, AA's v5 values as of 2026.10.28, are in [Appendix C](#appendix-c-the-full-numbers); the findings below quote the numbers that decide each seat.
+The full tables, AA's v5 values as of 2026.10.28, are in [Appendix B](#appendix-b-the-full-numbers); the findings below quote the numbers that decide each seat.
 
 ### On the GPT side
 
@@ -172,7 +171,7 @@ A few caveats keep this table in perspective. AA measured Carbon and Argon only 
 
 ## Codifying the Technique
 
-Redoing this by hand every time a lab releases a model gets old fast, so the method now lives in a Claude Code agent called `update-MODEL-SELECTION`. It runs only when I call it by name, because I want a human in the loop whenever council seats change. When I invoke it, it inventories the routes, reads the current AA data using the script in Appendix A, builds the comparison tables, applies the tier rules and the three checks, and updates the policy file. It asks me before it touches the PAL configuration itself.
+Redoing this by hand every time a lab releases a model gets old fast, so the method now lives in a Claude Code agent called `update-MODEL-SELECTION`. It runs only when I call it by name, because I want a human in the loop whenever council seats change. When I invoke it, it inventories the routes, reads the current AA data with that script, builds the comparison tables, applies the tier rules and the three checks, and updates the policy file. It asks me before it touches the PAL configuration itself.
 
 That makes the whole workflow one step: I run `update-MODEL-SELECTION`, it rewrites `MODEL-SELECTION.md`, and every council picks up the new roster on its next run. The four council prompts never change, because they don't name a single model. Each one describes its seats' roles and how to classify a decision's difficulty, and at the start of every run it reads each seat's model and effort from `MODEL-SELECTION.md`. The council calls in my other projects work the same way, so they never need an edit either.
 
@@ -182,62 +181,7 @@ Ok, that's enough for today! We covered the council setup, a six-part technique 
 
 As always, please comment below with any questions, corrections, or the council setup you use yourself. If you liked this, please clap and follow me here and on LinkedIn. See you next time! 🤓
 
-## Appendix A: Reading the AA Leaderboard Data
-
-AA's leaderboard has one row per model and reasoning effort, for example "GPT-6.1 Sol (High)", with the Index value, the score on each test inside the Index and the cost of the Index run. The trouble is that the web fetch tool in Claude Code truncates the page and misses most of the rows; however, the page embeds its data as JSON inside script tags, so a short script reads all of it:
-
-```python
-"""Read per-effort benchmark rows from the Artificial Analysis leaderboard page."""
-import json
-import re
-import urllib.request
-
-URL = "https://artificialanalysis.ai/leaderboards/models"
-ROW = re.compile(
-    r'\{"slug":"(?P<slug>[^"]+)","name":"(?P<name>[^"]+)","shortName"[^{}]*?'
-    r'"intelligenceIndex":(?P<index>[^,]+),[^{}]*?"scores":(?P<scores>\{[^{}]*\})'
-    r'(?:[^{}]*?"intelligenceIndexCostPerTask":(?P<cost>[0-9.]+|null))?'
-)
-METRICS = {
-    "frontiercode-2-0": "FrontierCode 2.0",
-    "terminalbench-4-0": "Terminal-Bench 4.0",
-    "critpt-v2-hard": "CritPt v2 (hard)",
-    "omniscience-non-hallucination": "Non-hallucination",
-}
-
-
-def fetch(url: str) -> str:
-    request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(request) as response:
-        # The page embeds its data as escaped JSON inside script tags.
-        return response.read().decode("utf-8").replace('\\"', '"')
-
-
-def rows(page: str, wanted: tuple[str, ...]):
-    seen = set()
-    for match in ROW.finditer(page):
-        if match["slug"] in seen or match["index"] == "null" or not match["name"].startswith(wanted):
-            continue
-        seen.add(match["slug"])
-        scores = json.loads(match["scores"])
-        cost = match["cost"]
-        yield {
-            "model": match["name"],  # for example "GPT-6.1 Sol (High)"
-            "index": round(float(match["index"]), 1),
-            "cost_per_task": float(cost) if cost not in (None, "null") else None,
-            **{label: scores.get(key) for key, label in METRICS.items()},
-        }
-
-
-if __name__ == "__main__":
-    page = fetch(URL)
-    for row in rows(page, ("GPT-6", "Gemini 4", "Gemini 3.8", "Claude Opus 5.5", "Claude Fable 5.1")):
-        print(row)
-```
-
-The regex keys on the row's own fields (`slug`, `name`, `intelligenceIndex`, `scores`) instead of on the page layout around them, which keeps it working when AA rearranges the page; it still depends on how AA serializes the rows, though, so expect to touch the pattern now and then. The `seen` set matters because the page repeats each row in several charts, and the `null` check drops models that AA lists but hasn't scored on this Index version yet. AA's coding-agent page works the same way: it measures each model inside its vendor's agent (Claude Code, Codex or Antigravity) on three tests, and one of them, SWE-Atlas QnA, appears only there.
-
-## Appendix B: The Nine Metrics
+## Appendix A: The Nine Metrics
 
 | Metric | What it tells me about a seat |
 |---|---|
@@ -251,7 +195,7 @@ The regex keys on the row's own fields (`slug`, `name`, `intelligenceIndex`, `sc
 | Non-hallucination rate | from AA-Omniscience: how often the model says "I don't know" instead of giving a wrong answer |
 | Cost per task | AA's API-equivalent cost; on a ChatGPT plan it predicts how fast a model uses up the quota |
 
-## Appendix C: The Full Numbers
+## Appendix B: The Full Numbers
 
 These are AA's v5 values as of 2026.10.28. FrontierCode 2.0, Terminal-Bench 4.0, CritPt and non-hallucination are percentages.
 
