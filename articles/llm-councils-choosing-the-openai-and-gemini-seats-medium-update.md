@@ -7,15 +7,25 @@
 
 # Updating the live article
 
-Medium has no API for editing a published post, so the update is done in the Medium editor. Editing in place keeps readers' highlights and responses; a full re-paste would not. The changes:
+Medium has no API for editing a published post, so the update is done in the Medium editor. The preferred method is a full re-paste from the built HTML, the method that worked best for the original post. The fallback edits the live post in place. The changes either way:
 - new: the TL;DR, the Contents list, three bridging sentences, and one added passage in "Building tiers by task difficulty";
 - removed: the scraping details (one paragraph, the code block, and the paragraph about the regex);
 - moved: the metrics table and the full numbers, to two appendices;
 - corrected: one sentence about Argon's FrontierCode score.
 
-Open `llm-councils-choosing-the-openai-and-gemini-seats-medium.html` in a browser as the copy source: copy blocks from the rendered page, never from raw Markdown or HTML source.
+## Preferred: re-paste the whole post from the HTML
 
-## Steps in the Medium editor
+The HTML's images point at public URLs on the `docs/seats-article-scannable` branch, and Medium fetches and re-hosts them when you paste (all 11 checked: HTTP 200 on 2026-11-13). A re-paste can drop readers' highlights on the old text; responses stay on the post.
+
+1. Open `llm-councils-choosing-the-openai-and-gemini-seats-medium.html` in a browser. Copy from the rendered page, never from the raw HTML source.
+2. In the browser, select the whole page (Cmd+A) and copy it.
+3. In the Medium editor for the live post, click in the body, select everything (Cmd+A), and paste. Check that the title is still the first line and the hero image follows it.
+4. Check the pasted post against the source: two large-heading appendices at the end, eight table images and two plots, and the code block gone from "Getting the benchmark data".
+5. Publish the update, then fill in the Contents links with step 10 of the fallback below.
+
+## Fallback: edit the live post in place
+
+Use this if you want to keep readers' highlights. Open `llm-councils-choosing-the-openai-and-gemini-seats-medium.html` in a browser as the copy source: copy blocks from the rendered page, never from raw Markdown or HTML source.
 
 1. **Add the TL;DR.** Under the italic line "In this article, we work out...", paste the "TL;DR" heading and its five bullets from the rendered HTML. Set "TL;DR" as a large heading.
 2. **Add a Contents placeholder.** Under the TL;DR, add a large heading "Contents". Leave a blank line under it for now; step 10 fills it.
