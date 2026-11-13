@@ -28,6 +28,8 @@ Open `llm-councils-choosing-the-openai-and-gemini-seats-medium.html` in a browse
 9. **Publish the update.** Check the published page, not the editor: the order of sections must match the Contents list below.
 10. **Fill in the Contents links.** On the published page, open the browser console and run the snippet below. It copies a Markdown list with Medium's own section links. Paste it into the "Contents" block at the end of this file, open this file in a Markdown preview, copy the rendered list, and paste it under the "Contents" heading in the editor. Publish again and click two links on the published page to check them.
 
+Collect the links only from the final published page, after the last edit. Medium can give a block a new id when it is pasted or when the post goes from preview to published: the Part 3 ids collected from the June preview no longer exist, while the links collected again from the published page all work (checked 2026-11-13). After any later edit that moves or re-pastes a heading, run the snippet again.
+
 Optional: link "Adjusting the Council for Each Kind of Task" in step 5's passage and the "Appendix A" and "Appendix B" mentions in the body to their sections, with the same links.
 
 ## Console snippet
