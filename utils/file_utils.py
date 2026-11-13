@@ -419,6 +419,32 @@ def expand_paths(paths: list[str], extensions: Optional[set[str]] = None) -> lis
     return expanded_files
 
 
+def expand_directories(paths: list[str]) -> list[str]:
+    """
+    Replace each directory in paths with the files that expand_paths finds in it.
+
+    The conversation history embeds only regular files, so a conversation turn stores the files of a directory,
+    not the directory (issue #27). Other paths stay as given, so that the history can still report a missing file.
+    A directory that gives no file (empty, or skipped as the home directory or the MCP directory) stays too, so that
+    the history reports it as not accessible.
+
+    Args:
+        paths: List of file or directory paths
+
+    Returns:
+        The paths in their order, each directory replaced by its files, without duplicates
+    """
+    result: list[str] = []
+    seen: set[str] = set()
+    for path in paths:
+        files = expand_paths([path]) if os.path.isdir(path) else []
+        for file_path in files or [path]:
+            if file_path not in seen:
+                seen.add(file_path)
+                result.append(file_path)
+    return result
+
+
 def read_file_content(
     file_path: str, max_size: int = 1_000_000, *, include_line_numbers: Optional[bool] = None
 ) -> tuple[str, int]:

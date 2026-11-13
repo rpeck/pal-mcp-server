@@ -41,7 +41,8 @@ The prompt tells the model which files and turns were left out. The tool respons
 - `omitted_files`: the paths left out, each with a `reason`:
   - `token_limit`: the file did not fit in the token budget, or it is larger than the read limit.
   - `missing`: the path does not exist, for example it was moved or deleted after an earlier turn.
-  - `not_accessible`: the path exists but PAL cannot read it, for example a directory in the history.
+  - `not_accessible`: the path exists but PAL cannot read it, for example the home directory, which PAL does
+    not scan.
 - `dropped_turns`: the number of older turns left out of the conversation history.
 
 ```json
@@ -64,6 +65,8 @@ Rules:
 - The fields describe the model call of that response. A workflow step that calls no model has empty fields.
 - Workflow tools send the expert model files but no conversation history, so their `dropped_turns` is `0`.
 - `clink` passes `absolute_file_paths` to the CLI, which reads them itself, so only history files show.
+- A directory counts as the files in it, on the first turn and on a continuation. The thread stores those
+  files, not the directory, so the history of a later turn embeds them.
 
 **Show Case**:
 

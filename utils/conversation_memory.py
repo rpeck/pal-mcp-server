@@ -148,6 +148,10 @@ except ValueError:
 
 CONVERSATION_TIMEOUT_SECONDS = CONVERSATION_TIMEOUT_HOURS * 3600
 
+# The first line of the history that build_conversation_history writes. A tool tests for it to tell whether
+# server.py already embedded the history in the prompt, so the writer and the check must share it (issue #26).
+CONVERSATION_HISTORY_HEADER = "=== CONVERSATION HISTORY (CONTINUATION) ==="
+
 
 class ConversationTurn(BaseModel):
     """
@@ -328,7 +332,7 @@ def add_turn(
         thread_id: UUID of the conversation thread
         role: "user" (Agent request) or "assistant" (model response)
         content: The actual message/response content
-        files: Optional list of files referenced in this turn
+        files: Optional list of files referenced in this turn. A directory is stored as the files in it.
         images: Optional list of images referenced in this turn
         tool_name: Name of the tool adding this turn (for attribution)
         model_provider: Provider used (e.g., "google", "openai")
@@ -361,6 +365,12 @@ def add_turn(
     if len(context.turns) >= MAX_CONVERSATION_TURNS:
         logger.debug(f"[FLOW] Thread {thread_id} at max turns ({MAX_CONVERSATION_TURNS})")
         return False
+
+    if files:
+        from utils.file_utils import expand_directories
+
+        # The history embeds only regular files, so store the files of a directory, not the directory (issue #27)
+        files = expand_directories(files)
 
     # Create new turn with complete metadata
     turn = ConversationTurn(
@@ -813,7 +823,7 @@ def build_conversation_history(
     logger.debug(f"[HISTORY]   Max history tokens: {max_history_tokens:,}")
 
     history_parts = [
-        "=== CONVERSATION HISTORY (CONTINUATION) ===",
+        CONVERSATION_HISTORY_HEADER,
         f"Thread: {context.thread_id}",
         f"Tool: {context.tool_name}",  # Original tool that started the conversation
         f"Turn {total_turns}/{MAX_CONVERSATION_TURNS}",

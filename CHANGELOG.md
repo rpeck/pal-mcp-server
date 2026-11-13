@@ -84,6 +84,21 @@
   - The description adds FrontierCode 2.0 (40.6), Terminal-Bench 4.0 (65.2) and non-hallucination (89%).
   - Carbon is auto-selectable since PR #16, and a new test checks that auto mode selects it for extended
     reasoning. A free-tier Gemini key gets HTTP 429 (quota 0) for Carbon.
+- A `chat` continuation sends the conversation history to the model once (#26). Before, the prompt held it 3
+  times, and the thread stored the whole prompt, history included, as a second user turn.
+  - The check for the history that server.py embeds looked for a header that the history never had. So `chat`
+    built the history again on every continuation. The writer and the check now share one constant.
+  - That second build was the only path that embedded the new files of a continuation turn. Now the tool embeds
+    each file that the server's history does not hold, in the token budget left after the history.
+  - With `prompt.txt` on a continuation, the history that server.py embeds stays in front of the `prompt.txt`
+    text. Before, the `prompt.txt` text replaced it, so `clink` sent no history.
+- A directory in `absolute_file_paths` or `relevant_files` reaches the model on a continuation too (#27). A
+  conversation turn now stores the files in the directory, as `expand_paths` finds them, not the directory.
+  Before, the history skipped the directory as not a regular file, and the tool dropped it as already in the
+  thread, so the model never saw its files. `omitted_files` reported the directory as `not_accessible`.
+  - A directory that a later turn passes again adds only its files that the history does not hold yet.
+  - A directory with no file to read (for example an empty one) is stored as given, so the history still reports
+    it as `not_accessible`.
 
 ### Documentation
 
