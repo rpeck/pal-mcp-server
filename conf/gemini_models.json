@@ -56,6 +56,61 @@
       }
     },
     {
+      "model_name": "gemini-4-neon",
+      "friendly_name": "Gemini (4 Neon)",
+      "aliases": [
+        "neon",
+        "gemini-neon"
+      ],
+      "intelligence_score": 20,
+      "aa_index": 60,
+      "description": "Gemini 4 Neon (released 2026-11-18, 1M context, 64K output) - Google's newest reasoning model. AA Intelligence Index v5.0.1 59.6 at high (54.9 at medium, 61.4 at xhigh; read 2026-11-19), FrontierCode 2.0 43.3 at high, Terminal-Bench 4.0 61.6, non-hallucination 86%. Bug Hunt Bench 57 fixes of 105 at high and 63 at xhigh in the Antigravity CLI, the top of that board. Multimodal input. Paid tier; the Gemini API models list included it on 2026-11-19, output limit 65536 tokens.",
+      "context_window": 1048576,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "max_image_size_mb": 32.0,
+      "max_thinking_tokens": 65536,
+      "allow_code_generation": true,
+      "aa_index_by_effort": {
+        "medium": 55,
+        "high": 60,
+        "xhigh": 61
+      }
+    },
+    {
+      "model_name": "gemini-4-hydrogen",
+      "friendly_name": "Gemini (4 Hydrogen)",
+      "aliases": [
+        "hydrogen",
+        "gemini-hydrogen"
+      ],
+      "intelligence_score": 20,
+      "aa_index": 51,
+      "description": "Gemini 4 Hydrogen (listed by the Gemini API from 2026-11-04, 1M context, 64K output) - the fast tier of the Gemini 4 family. AA Intelligence Index v5.0.1 50.8 at high (53.9 at xhigh; read 2026-11-19), FrontierCode 2.0 36.3, Terminal-Bench 4.0 54.0, non-hallucination 91%, about 38% of Argon's cost per task. CWE-bench v2 68.1%. Bug Hunt Bench 28.3 fixes of 105 at high, below Argon. Paid tier; output limit 65536 tokens.",
+      "context_window": 1048576,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "max_image_size_mb": 32.0,
+      "max_thinking_tokens": 65536,
+      "allow_code_generation": true,
+      "aa_index_by_effort": {
+        "high": 51,
+        "xhigh": 54
+      }
+    },
+    {
       "model_name": "gemini-4-argon",
       "friendly_name": "Gemini (4 Argon)",
       "aliases": [

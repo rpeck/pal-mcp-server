@@ -105,7 +105,7 @@ class TestCatalog:
             assert caps.effort_levels
 
     def test_aliases_resolve_case_insensitively(self, provider):
-        assert provider.get_capabilities("chatgpt/sol").model_name == "chatgpt/gpt-6.1-sol"
+        assert provider.get_capabilities("chatgpt/sol").model_name == "chatgpt/gpt-6.2-sol"
         assert provider.get_capabilities("CHATGPT/GPT-6-LUNA").model_name == "chatgpt/gpt-6-luna"
 
     @pytest.mark.parametrize("name", ["gpt-6.1-sol", "sol", "codex", "openai/gpt-6.1-sol", "gpt-5.5"])
@@ -421,11 +421,14 @@ class TestTimeouts:
 
         message = str(raised.value)
         assert "within 3600s" in message
-        assert "timeout_seconds_by_effort.max of chatgpt/gpt-6-astra" in message
+        assert "timeout_seconds_by_effort.max of chatgpt/gpt-6.2-astra" in message
         assert "CHATGPT_MODELS_CONFIG_PATH" in message
 
     def test_summary_lists_the_default_and_each_override(self, monkeypatch):
-        assert chatgpt_module.timeout_summary() == "default 1800s (built-in default); chatgpt/gpt-6-astra: max 3600s"
+        assert (
+            chatgpt_module.timeout_summary()
+            == "default 1800s (built-in default); chatgpt/gpt-6.2-astra: max 3600s; chatgpt/gpt-6-astra: max 3600s"
+        )
 
         monkeypatch.setenv("CHATGPT_TIMEOUT_SECONDS", "900")
         assert chatgpt_module.timeout_summary().startswith("default 900s (CHATGPT_TIMEOUT_SECONDS); ")
@@ -551,5 +554,5 @@ def test_preferred_models(provider):
 
     assert provider.get_preferred_model(ToolModelCategory.FAST_RESPONSE, allowed).endswith("-luna")
     best = provider.get_preferred_model(ToolModelCategory.EXTENDED_REASONING, allowed)
-    assert best in {"chatgpt/gpt-6.1-sol", "chatgpt/gpt-6-astra"}
+    assert best in {"chatgpt/gpt-6.2-astra", "chatgpt/gpt-6.2-sol", "chatgpt/gpt-6.1-sol", "chatgpt/gpt-6-astra"}
     assert provider.get_preferred_model(ToolModelCategory.BALANCED, []) is None
