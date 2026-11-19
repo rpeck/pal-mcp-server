@@ -8,11 +8,67 @@
   },
   "models": [
     {
-      "model_name": "chatgpt/gpt-6.1-sol",
-      "friendly_name": "ChatGPT (GPT-6.1 Sol)",
+      "model_name": "chatgpt/gpt-6.2-astra",
+      "friendly_name": "ChatGPT (GPT-6.2 Astra)",
+      "aliases": [
+        "chatgpt/astra"
+      ],
+      "intelligence_score": 20,
+      "aa_index": 60,
+      "description": "gpt-6.2-astra through a ChatGPT plan via the Codex CLI (272K context) - OpenAI flagship, successor of GPT-6 Astra (released 2026-11-17); AA Intelligence Index v5.0.1 60.1 at high (61.6 at xhigh, 62.1 at max; read 2026-11-19), FrontierCode 2.0 47.1 at high, Terminal-Bench 4.0 60.1, non-hallucination 42%. Bug Hunt Bench 59.6 fixes of 105 at high and 62.7 at max in Codex CLI, the best GPT rows. SWE-Atlas Refactoring 51.43, below GPT-6 Astra.",
+      "context_window": 272000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "effort_levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "supports_system_prompts": true,
+      "supports_streaming": false,
+      "supports_function_calling": false,
+      "supports_json_mode": false,
+      "supports_images": true,
+      "supports_temperature": false,
+      "max_image_size_mb": 20.0,
+      "allow_code_generation": true,
+      "temperature_constraint": "fixed"
+    },
+    {
+      "model_name": "chatgpt/gpt-6.2-sol",
+      "friendly_name": "ChatGPT (GPT-6.2 Sol)",
       "aliases": [
         "chatgpt/sol"
       ],
+      "intelligence_score": 20,
+      "aa_index": 55,
+      "description": "gpt-6.2-sol through a ChatGPT plan via the Codex CLI (500K context) - successor of GPT-6.1 Sol (released 2026-11-17); AA Intelligence Index v5.0.1 54.9 at high (55.7 at xhigh, 57.3 at max; read 2026-11-19), FrontierCode 2.0 40.2 at high, Terminal-Bench 4.0 58.6, non-hallucination 40%. Bug Hunt Bench 49.7 fixes of 105 at high and 54.7 at max in Codex CLI. SWE-Atlas QnA in Codex 46.2, below GPT-6.1 Sol.",
+      "context_window": 500000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "effort_levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "supports_system_prompts": true,
+      "supports_streaming": false,
+      "supports_function_calling": false,
+      "supports_json_mode": false,
+      "supports_images": true,
+      "supports_temperature": false,
+      "max_image_size_mb": 20.0,
+      "allow_code_generation": true,
+      "temperature_constraint": "fixed"
+    },
+    {
+      "model_name": "chatgpt/gpt-6.1-sol",
+      "friendly_name": "ChatGPT (GPT-6.1 Sol)",
+      "aliases": [],
       "intelligence_score": 20,
       "aa_index": 50,
       "description": "gpt-6.1-sol through a ChatGPT plan via the Codex CLI (500K context) - upgrade to GPT-6 Sol, below the GPT-6 Astra flagship; AA Intelligence Index v5 50 at high (55 at max).",
@@ -68,9 +124,7 @@
     {
       "model_name": "chatgpt/gpt-6-astra",
       "friendly_name": "ChatGPT (GPT-6 Astra)",
-      "aliases": [
-        "chatgpt/astra"
-      ],
+      "aliases": [],
       "intelligence_score": 20,
       "aa_index": 55,
       "description": "gpt-6-astra through a ChatGPT plan via the Codex CLI (272K context) - OpenAI flagship; AA Intelligence Index v5 55 at high (57 at max).",
