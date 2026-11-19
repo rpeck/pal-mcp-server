@@ -34,7 +34,10 @@
       "supports_temperature": false,
       "max_image_size_mb": 20.0,
       "allow_code_generation": true,
-      "temperature_constraint": "fixed"
+      "temperature_constraint": "fixed",
+      "timeout_seconds_by_effort": {
+        "max": 3600
+      }
     },
     {
       "model_name": "chatgpt/gpt-6.2-sol",
