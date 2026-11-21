@@ -21,7 +21,6 @@ from tools.shared.base_tool import BaseTool
 from tools.shared.exceptions import ToolExecutionError
 from tools.shared.schema_builders import SchemaBuilder
 from utils.context_report import ContextReport
-from utils.conversation_memory import CONVERSATION_HISTORY_HEADER
 from utils.model_calls import run_model_call
 
 
@@ -341,17 +340,17 @@ class SimpleTool(BaseTool):
 
             # Handle conversation history and prompt preparation
             if continuation_id:
-                # Check if conversation history is already embedded
-                field_value = self.get_request_prompt(request)
-                if CONVERSATION_HISTORY_HEADER in field_value:
-                    # server.py stored the user's turn and embedded the history in the prompt field. Prepare the
-                    # prompt from it as is: the tool adds the new files of this turn, and the size check uses
-                    # _original_user_prompt.
+                if self._continuation_prepared_by_server():
+                    # server.py stored the user's turn and embedded the history (if the thread has turns) in the
+                    # prompt field. Prepare the prompt from it as is: the tool adds the new files of this turn, and
+                    # the size check uses _original_user_prompt.
                     prompt = await self.prepare_prompt(request)
-                    logger.debug(f"{self.get_name()}: Using pre-embedded conversation history")
+                    logger.debug(f"{self.get_name()}: Using the continuation prompt that server.py prepared")
                 else:
-                    # No embedded history - reconstruct it (for in-process calls)
-                    logger.debug(f"{self.get_name()}: No embedded history found, reconstructing conversation")
+                    # A call that did not pass through server.py (an in-process call): build the history here
+                    logger.debug(
+                        f"{self.get_name()}: server.py did not prepare this continuation, building the history"
+                    )
 
                     # Get thread context
                     from utils.conversation_memory import add_turn, build_conversation_history, get_thread
@@ -862,6 +861,19 @@ Please provide a thoughtful, comprehensive response:"""
 
         return full_prompt
 
+    def _continuation_prepared_by_server(self) -> bool:
+        """
+        Whether server.py already handled the continuation of this call (issue #32).
+
+        On a continuation, server.reconstruct_thread_context stores the user's turn, puts the conversation history
+        (if the thread has turns) and the follow-up instructions in the prompt field, and keeps the user's own input
+        in `_original_user_prompt`. That field marks the call: the history header does not, because a thread with
+        no turns gives no history. The chat and clink schemas allow no other properties, so an MCP client cannot
+        pass the field.
+        """
+        current_args = getattr(self, "_current_arguments", None) or {}
+        return "_original_user_prompt" in current_args
+
     def get_prompt_content_for_size_validation(self, user_content: str) -> str:
         """
         Override to use original user prompt for size validation when conversation history is embedded.
@@ -930,8 +942,9 @@ Please provide a thoughtful, comprehensive response:"""
 
         # Use prompt.txt content if available, otherwise use the prompt field
         request_prompt = self.get_request_prompt(request)
-        if prompt_content and CONVERSATION_HISTORY_HEADER in request_prompt:
-            # The prompt field holds the history that server.py embedded: keep it in front of the prompt.txt content
+        if prompt_content and self._continuation_prepared_by_server():
+            # The prompt field holds what server.py prepared (the history, if any, and the follow-up instructions):
+            # keep it in front of the prompt.txt content
             user_content = f"{request_prompt}\n\n{prompt_content}"
         else:
             user_content = prompt_content if prompt_content else request_prompt

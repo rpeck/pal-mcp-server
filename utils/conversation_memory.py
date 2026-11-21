@@ -148,8 +148,9 @@ except ValueError:
 
 CONVERSATION_TIMEOUT_SECONDS = CONVERSATION_TIMEOUT_HOURS * 3600
 
-# The first line of the history that build_conversation_history writes. A tool tests for it to tell whether
-# server.py already embedded the history in the prompt, so the writer and the check must share it (issue #26).
+# The first line of the history that build_conversation_history writes. A tool does not test for it to tell whether
+# server.py prepared a continuation: a thread with no turns gives no history, so the tool checks for
+# _original_user_prompt instead (issue #32).
 CONVERSATION_HISTORY_HEADER = "=== CONVERSATION HISTORY (CONTINUATION) ==="
 
 

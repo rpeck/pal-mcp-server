@@ -108,6 +108,16 @@
   - A directory that a later turn passes again adds only its files that the history does not hold yet.
   - A directory with no file to read (for example an empty one) is stored as given, so the history still reports
     it as `not_accessible`.
+- A `chat` continuation on a thread with no turns stores the user's turn once (#32). Before, the thread stored it
+  twice (the second time with the follow-up instructions from server.py), and the prompt held the user's prompt
+  3 times.
+  - With no earlier turns, server.py builds no history, so the prompt holds no history header. `chat` took the
+    missing header to mean that the call did not pass through server.py, so it stored the turn again and built a
+    history of it.
+  - Now `chat` and `clink` check for `_original_user_prompt`, which server.py sets on every continuation, not for
+    the header.
+  - With `prompt.txt` on such a continuation, the follow-up instructions from server.py stay in front of the
+    `prompt.txt` text. Before, the `prompt.txt` text replaced them.
 
 ### Documentation
 
