@@ -518,6 +518,40 @@ try_install_system_packages() {
 }
 
 # Bootstrap pip in virtual environment
+# Fill the array CLAUDE_ENV_ARGS with the `-e KEY=value` pairs for `claude mcp add`, from .env.
+# The values go to claude as plain arguments, with no eval, so that no value can run as shell code.
+build_claude_env_args() {
+    CLAUDE_ENV_ARGS=()
+    local env_vars line
+    env_vars=$(parse_env_variables)
+    if [[ -n "$env_vars" ]]; then
+        while IFS= read -r line; do
+            if [[ -n "$line" && "$line" =~ ^([^=]+)=(.*)$ ]]; then
+                CLAUDE_ENV_ARGS+=(-e "${BASH_REMATCH[1]}=${BASH_REMATCH[2]}")
+            fi
+        done <<< "$env_vars"
+    fi
+}
+
+# Register PAL with Claude Code. Usage: run_claude_mcp_add <python> <server.py>
+run_claude_mcp_add() {
+    build_claude_env_args
+    # ${array[@]+...} keeps an empty array safe under `set -u` in bash 3.2.
+    claude mcp add pal -s user ${CLAUDE_ENV_ARGS[@]+"${CLAUDE_ENV_ARGS[@]}"} -- "$1" "$2" 2>/dev/null
+}
+
+# Print the `claude mcp add` command for a manual run. It never prints a value: values can be API keys.
+# Usage: claude_add_command_text <python> <server.py>
+claude_add_command_text() {
+    build_claude_env_args
+    local text="claude mcp add pal -s user" index=1
+    while (( index < ${#CLAUDE_ENV_ARGS[@]} )); do
+        text+=" -e ${CLAUDE_ENV_ARGS[$index]%%=*}=<value from .env>"
+        index=$((index + 2))
+    done
+    echo "$text -- \"$1\" \"$2\""
+}
+
 bootstrap_pip() {
     local venv_python="$1"
     local python_cmd="$2"
@@ -530,44 +564,12 @@ bootstrap_pip() {
         return 0
     fi
 
-    # Try to download get-pip.py
-    print_info "Downloading pip installer..."
-    local get_pip_url="https://bootstrap.pypa.io/get-pip.py"
-    local temp_pip=$(mktemp)
-    local download_success=false
-
-    # Try curl first
-    if command -v curl &> /dev/null; then
-        if curl -sSL "$get_pip_url" -o "$temp_pip" 2>/dev/null; then
-            download_success=true
-        fi
+    # Then uv, which checks what it installs. Never run a downloaded installer script.
+    if command -v uv &> /dev/null && uv pip install -q --python "$venv_python" pip >/dev/null 2>&1; then
+        print_success "Successfully installed pip with uv"
+        return 0
     fi
 
-    # Try wget if curl failed
-    if [[ "$download_success" == false ]] && command -v wget &> /dev/null; then
-        if wget -qO "$temp_pip" "$get_pip_url" 2>/dev/null; then
-            download_success=true
-        fi
-    fi
-
-    # Try python urllib as last resort
-    if [[ "$download_success" == false ]]; then
-        print_info "Using Python to download pip installer..."
-        if $python_cmd -c "import urllib.request; urllib.request.urlretrieve('$get_pip_url', '$temp_pip')" 2>/dev/null; then
-            download_success=true
-        fi
-    fi
-
-    if [[ "$download_success" == true ]] && [[ -f "$temp_pip" ]] && [[ -s "$temp_pip" ]]; then
-        print_info "Installing pip..."
-        if $venv_python "$temp_pip" --no-warn-script-location >/dev/null 2>&1; then
-            rm -f "$temp_pip"
-            print_success "Successfully installed pip"
-            return 0
-        fi
-    fi
-
-    rm -f "$temp_pip" 2>/dev/null
     return 1
 }
 
@@ -613,7 +615,13 @@ setup_environment() {
         # Try Python 3.12 first (preferred)
         local uv_output
         # --managed-python: a uv-managed Python, not a Homebrew one; the 1Password keychain cache needs it.
-        if uv_output=$(uv venv --managed-python --python 3.12 "$VENV_PATH" 2>&1); then
+        local uv_managed=""
+        if uv venv --help 2>/dev/null | grep -q -- "--managed-python"; then
+            uv_managed="--managed-python"
+        else
+            print_warning "This uv has no --managed-python; run 'uv self update' for a uv-managed Python"
+        fi
+        if uv_output=$(uv venv ${uv_managed:+"$uv_managed"} --python 3.12 "$VENV_PATH" 2>&1); then
             # Use helper function for cross-platform path detection
             if venv_python=$(get_venv_python_path "$VENV_PATH"); then
                 touch "$VENV_PATH/uv_created"  # Mark as uv-created
@@ -633,7 +641,7 @@ setup_environment() {
                 print_warning "uv succeeded but Python executable not found in venv"
             fi
         # Fall back to any available Python through uv
-        elif uv_output=$(uv venv --managed-python "$VENV_PATH" 2>&1); then
+        elif uv_output=$(uv venv ${uv_managed:+"$uv_managed"} "$VENV_PATH" 2>&1); then
             # Use helper function for cross-platform path detection
             if venv_python=$(get_venv_python_path "$VENV_PATH"); then
                 touch "$VENV_PATH/uv_created"  # Mark as uv-created
@@ -1315,27 +1323,15 @@ check_claude_cli_integration() {
             claude mcp remove zen -s user 2>/dev/null || true
 
             # Re-add with correct Python command and environment variables
-            local env_vars=$(parse_env_variables)
-            local env_args=""
             
-            # Convert environment variables to -e arguments
-            if [[ -n "$env_vars" ]]; then
-                while IFS= read -r line; do
-                    if [[ -n "$line" && "$line" =~ ^([^=]+)=(.*)$ ]]; then
-                        env_args+=" -e ${BASH_REMATCH[1]}=\"${BASH_REMATCH[2]}\""
-                    fi
-                done <<< "$env_vars"
-            fi
-            
-            local claude_cmd="claude mcp add pal -s user$env_args -- \"$python_cmd\" \"$server_path\""
-            if eval "$claude_cmd" 2>/dev/null; then
+            if run_claude_mcp_add "$python_cmd" "$server_path"; then
                 print_success "Updated PAL to become a standalone script with environment variables"
                 return 0
             else
                 echo ""
                 echo "Failed to update MCP registration. Please run manually:"
                 echo "  claude mcp remove pal -s user"
-                echo "  $claude_cmd"
+                echo "  $(claude_add_command_text "$python_cmd" "$server_path")"
                 return 1
             fi
         else
@@ -1348,27 +1344,15 @@ check_claude_cli_integration() {
                 claude mcp remove pal -s user 2>/dev/null || true
 
                 # Re-add with current path and environment variables
-                local env_vars=$(parse_env_variables)
-                local env_args=""
                 
-                # Convert environment variables to -e arguments
-                if [[ -n "$env_vars" ]]; then
-                    while IFS= read -r line; do
-                        if [[ -n "$line" && "$line" =~ ^([^=]+)=(.*)$ ]]; then
-                            env_args+=" -e ${BASH_REMATCH[1]}=\"${BASH_REMATCH[2]}\""
-                        fi
-                    done <<< "$env_vars"
-                fi
-                
-                local claude_cmd="claude mcp add pal -s user$env_args -- \"$python_cmd\" \"$server_path\""
-                if eval "$claude_cmd" 2>/dev/null; then
+                if run_claude_mcp_add "$python_cmd" "$server_path"; then
                     print_success "Updated PAL with current path and environment variables"
                     return 0
                 else
                     echo ""
                     echo "Failed to update MCP registration. Please run manually:"
                     echo "  claude mcp remove pal -s user"
-                    echo "  $claude_cmd"
+                    echo "  $(claude_add_command_text "$python_cmd" "$server_path")"
                     return 1
                 fi
             fi
@@ -1379,46 +1363,23 @@ check_claude_cli_integration() {
         read -p "Add PAL to Claude Code? (Y/n): " -n 1 -r
         echo ""
         if [[ $REPLY =~ ^[Nn]$ ]]; then
-            local env_vars=$(parse_env_variables)
-            local env_args=""
-            
-            # Convert environment variables to -e arguments for manual command
-            if [[ -n "$env_vars" ]]; then
-                while IFS= read -r line; do
-                    if [[ -n "$line" && "$line" =~ ^([^=]+)=(.*)$ ]]; then
-                        env_args+=" -e ${BASH_REMATCH[1]}=\"${BASH_REMATCH[2]}\""
-                    fi
-                done <<< "$env_vars"
-            fi
             
             print_info "To add manually later, run:"
-            echo "  claude mcp add pal -s user$env_args -- $python_cmd $server_path"
+            echo "  $(claude_add_command_text "$python_cmd" "$server_path")"
             return 0
         fi
 
         print_info "Registering PAL with Claude Code..."
         
         # Add with environment variables
-        local env_vars=$(parse_env_variables)
-        local env_args=""
         
-        # Convert environment variables to -e arguments
-        if [[ -n "$env_vars" ]]; then
-            while IFS= read -r line; do
-                if [[ -n "$line" && "$line" =~ ^([^=]+)=(.*)$ ]]; then
-                    env_args+=" -e ${BASH_REMATCH[1]}=\"${BASH_REMATCH[2]}\""
-                fi
-            done <<< "$env_vars"
-        fi
-        
-        local claude_cmd="claude mcp add pal -s user$env_args -- \"$python_cmd\" \"$server_path\""
-        if eval "$claude_cmd" 2>/dev/null; then
+        if run_claude_mcp_add "$python_cmd" "$server_path"; then
             print_success "Successfully added PAL to Claude Code with environment variables"
             return 0
         else
             echo ""
             echo "Failed to add automatically. To add manually, run:"
-            echo "  $claude_cmd"
+            echo "  $(claude_add_command_text "$python_cmd" "$server_path")"
             return 1
         fi
     fi
@@ -2347,16 +2308,8 @@ display_config_instructions() {
 
     print_info "1. For Claude Code (CLI):"
     # Show command with environment variables
-    local env_vars=$(parse_env_variables)
-    local env_args=""
-    if [[ -n "$env_vars" ]]; then
-        while IFS= read -r line; do
-            if [[ -n "$line" && "$line" =~ ^([^=]+)=(.*)$ ]]; then
-                env_args+=" -e ${BASH_REMATCH[1]}=\"${BASH_REMATCH[2]}\""
-            fi
-        done <<< "$env_vars"
-    fi
-    echo -e "   ${GREEN}claude mcp add pal -s user$env_args -- $python_cmd $server_path${NC}"
+    echo -e "   ${GREEN}$(claude_add_command_text "$python_cmd" "$server_path")${NC}"
+    echo "   (Replace each <value from .env> with the value from .env.)"
     echo ""
 
     print_info "2. For Claude Desktop:"

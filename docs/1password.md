@@ -163,11 +163,12 @@ Do the [Setup](#setup) steps first. Then:
    account is not the default, for example `PAL_OP_ACCOUNT_OPENAI_API_KEY=client.1password.com`. A variable
    with no account is not cached: PAL logs one warning and runs `op read` for it.
 2. Check that PAL's venv uses a uv-managed Python: `grep '^home' .pal_venv/pyvenv.cfg` must show a folder under
-   `~/.local/share/uv/python/`.
+   the output of `uv python dir` (usually `~/.local/share/uv/python/`).
    - A venv with another Python, for example a Homebrew framework Python, does not work: `init` refuses it. A
      `uv =` line alone does not prove it, because uv can also build a venv on a Homebrew Python.
-   - To rebuild the venv, quit the MCP clients that run PAL, then run `./run-server.sh`. It asks uv for a
-     uv-managed Python, and after that it keeps the venv.
+   - To rebuild the venv, quit the MCP clients that run PAL, move the old venv aside (`mv .pal_venv
+     .pal_venv.old`), then run `./run-server.sh`. It asks uv for a uv-managed Python. `./run-server.sh` keeps a
+     venv that has its `uv_created` marker, so it does not replace the old one by itself.
 3. In the PAL folder, run `init` with PAL's own Python:
 
    ```bash
@@ -191,7 +192,7 @@ If PAL is installed as a package, the `pal-secrets` command does the same as `sc
 |---|---|
 | The cache has less than 1 hour left, and you are at the Mac | Within 15 minutes, launchd runs `refresh`. 1Password shows one Touch ID prompt for each account. |
 | The cache runs out while you are away | Nothing happens until you come back: the job does not prompt to a locked or idle screen. Then a prompt usually comes within 15 minutes: the job needs input in the minute before one of its runs. |
-| You deny or ignore the prompt | The job waits 1 hour before it asks again. Each further failure in a row doubles the wait, up to 24 hours. A success resets it. A `refresh` that you run in Terminal does not wait. |
+| You deny or ignore the prompt | The job waits 1 hour before it asks again. Each further failure in a row doubles the wait, up to 24 hours. A success resets it. A `refresh` that you run in Terminal does not wait, but if it fails, the job waits too. |
 | At login | The same check. After a restart the keychain is locked, so a prompt comes soon after login. |
 | A new session during the day | PAL reads the cache. No prompt. |
 | The cache expired, or the refresh did not run | PAL runs `op read`, as without the cache. |
@@ -204,8 +205,9 @@ The refresh LaunchAgent runs `refresh --if-needed --when-present --notify` every
 run it stops, without a log line, at the first of these checks that fails:
 
 1. **The back-off:** no failed refresh within the wait time: 1 hour after one failure, 2 hours after two in a row,
-   then 4, 8, 16 and at most 24 hours. Every error counts, also one before the job reads 1Password. A Ctrl-C does
-   not count.
+   then 4, 8, 16 and at most 24 hours. Every error counts, also one before the job reads 1Password, and
+   also a failed `refresh` that you run in Terminal or that `./run-server.sh` runs. A Ctrl-C does not count. `init`
+   clears the back-off.
 2. **Due:** the cache is missing, locked, or has less than 1 hour left, or a configured reference is not in it.
 3. **Present:** your session is on the console, the screen is not locked, and there was keyboard or mouse input
    within the last 60 seconds. A sleeping display counts as idle. The job reads these values with `ioreg`.

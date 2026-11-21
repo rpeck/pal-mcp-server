@@ -410,8 +410,8 @@ def _check_private_python(python: Path, identifier: str) -> None:
     if got != [identifier, True, None]:
         raise PalSecretsError(
             "this Python build runs another binary (for example a Homebrew framework Python), so a private copy "
-            "cannot give PAL its own cdhash. Rebuild PAL's venv with uv: quit the MCP clients that run PAL, then "
-            "run ./run-server.sh (see docs/1password.md, 'Turn it on')"
+            "cannot give PAL its own cdhash. Rebuild PAL's venv with a uv-managed Python: quit the MCP clients "
+            "that run PAL, move .pal_venv aside, then run ./run-server.sh (see docs/1password.md, 'Turn it on')"
         )
 
 
@@ -607,7 +607,8 @@ def _refresh_locked(args: argparse.Namespace, identity: cache.Identity, keychain
         for reference, value in read_secrets(account_references, op_path, account, args.timeout).items():
             values[(account, reference)] = value
     expires_at = _write_cache(keychain, identity.cdhash, values, args.ttl_minutes * 60)
-    _failure_path().unlink(missing_ok=True)
+    with contextlib.suppress(OSError):
+        _failure_path().unlink(missing_ok=True)
     print(f"Cached {len(values)} reference(s) until {_format_time(expires_at)}.")
     return 0
 
@@ -643,7 +644,9 @@ def _record_failure() -> None:
 def back_off_seconds(count: int) -> float:
     """Return the wait after ``count`` failures in a row: 1 h, 2 h, 4 h, ... up to 24 h."""
 
-    return min(RETRY_AFTER_FAILURE_SECONDS * 2 ** max(count - 1, 0), MAX_RETRY_AFTER_FAILURE_SECONDS)
+    # Cap the exponent before the power: 2 ** 5 hours is already more than the maximum.
+    doublings = min(max(count - 1, 0), 5)
+    return min(RETRY_AFTER_FAILURE_SECONDS * 2**doublings, MAX_RETRY_AFTER_FAILURE_SECONDS)
 
 
 def _in_back_off() -> bool:
@@ -794,6 +797,8 @@ def command_init(args: argparse.Namespace) -> int:
         print(f"warning: {exc}", file=sys.stderr)
         op_path = None
     python = install_private_python(venv)
+    # The refresh that launchd starts at load must not stay quiet in an old back-off.
+    _failure_path().unlink(missing_ok=True)
 
     search_path = ([str(Path(op_path).parent)] if op_path else []) + _OP_SEARCH_PATH.split(":")
     path_value = ":".join(dict.fromkeys(search_path))
@@ -833,6 +838,7 @@ def command_uninstall(args: argparse.Namespace) -> int:
             plist_path.unlink()
             print(f"Removed LaunchAgent {label}")
     command_clear(args)
+    _failure_path().unlink(missing_ok=True)
     try:
         restore_python_link(runtime_venv())
     except PalSecretsError as exc:
@@ -878,7 +884,8 @@ def _notify(message: str) -> None:
     """Show a macOS notification. The message goes to osascript as an argument, never as script text."""
 
     script = ["-e", "on run argv", "-e", 'display notification (item 1 of argv) with title "PAL secrets"']
-    subprocess.run(["osascript", *script, "-e", "end run", message], capture_output=True, check=False)
+    with contextlib.suppress(OSError, subprocess.SubprocessError):
+        subprocess.run(["osascript", *script, "-e", "end run", message], capture_output=True, check=False, timeout=15)
 
 
 # --- Entry point ------------------------------------------------------------------------------------------------
@@ -903,7 +910,8 @@ def build_parser() -> argparse.ArgumentParser:
     refresh.add_argument(
         "--when-present",
         action="store_true",
-        help="for launchd: skip quietly unless you are at the Mac, and for 1 hour after a failed refresh",
+        help="for launchd: skip quietly unless you are at the Mac, and during the back-off after a failed refresh "
+        "(1 hour, doubling up to 24 hours)",
     )
     refresh.add_argument("--notify", action="store_true", help="show a notification on failure (for launchd)")
     refresh.set_defaults(handler=command_refresh)

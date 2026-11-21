@@ -44,6 +44,10 @@
   with `requirements-dev.txt` too; `code_quality_checks.sh` creates it on first use, with the Python version of
   `.pal_venv`. Before, `code_quality_checks.sh` installed the dev tools into `.pal_venv`.
 - `./run-server.sh` asks uv for a uv-managed Python (`uv venv --managed-python`), not a Homebrew one.
+- `./run-server.sh` registers PAL with `claude mcp add` without `eval`, so a value in `.env` can no longer run as
+  shell code. It no longer prints the values of `.env` (which can be API keys) in a command for a manual run:
+  the command shows `<value from .env>`. It no longer downloads and runs `get-pip.py`; when `ensurepip` fails,
+  it installs pip with `uv pip install pip`.
 - `./run-server.sh` keeps a working uv venv: it no longer builds `.pal_venv` again on every run. It installs new
   or changed requirements into it with `uv pip install -r requirements.txt`.
 - The tool response tells the client which files and turns the model did not receive (#15). `chat`, `clink` and

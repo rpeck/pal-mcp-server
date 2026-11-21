@@ -1107,3 +1107,73 @@ def test_expire_keeps_the_failure_record(keychain):
     pal_secrets.command_clear(None)
 
     assert pal_secrets._failure_path().exists(), "the orphan clean-up removes *.json files only"
+
+
+# --- Second guardian review -------------------------------------------------------------------------------------
+
+
+def test_a_huge_failure_count_does_not_hang_the_job():
+    started = time.monotonic()
+
+    assert pal_secrets.back_off_seconds(10**12) == pal_secrets.MAX_RETRY_AFTER_FAILURE_SECONDS
+
+    assert time.monotonic() - started < 1
+
+
+def test_init_clears_an_old_back_off(monkeypatch, keychain, configured, tmp_path):
+    monkeypatch.setattr(pal_secrets, "LAUNCH_AGENTS_DIR", tmp_path / "LaunchAgents")
+    monkeypatch.setattr(pal_secrets, "LOG_PATH", tmp_path / "Logs" / "pal-secrets.log")
+    monkeypatch.setattr(pal_secrets, "find_op", lambda: "/opt/op-folder/op")
+    monkeypatch.setattr(pal_secrets, "_require_runtime_venv", lambda: tmp_path / "venv")
+    monkeypatch.setattr(pal_secrets, "install_private_python", lambda venv: venv / "bin" / "python")
+    monkeypatch.setattr(
+        pal_secrets, "_launchctl", MagicMock(return_value=subprocess.CompletedProcess(["launchctl"], 0, "", ""))
+    )
+    _write_failure(f"{time.time()} 3\n")
+
+    assert pal_secrets.main(["init"]) == 0
+
+    assert not pal_secrets._failure_path().exists(), "the refresh at load must be able to prompt"
+
+
+def test_uninstall_removes_the_failure_record(monkeypatch, keychain, tmp_path):
+    monkeypatch.setattr(pal_secrets, "LAUNCH_AGENTS_DIR", tmp_path / "LaunchAgents")
+    monkeypatch.setattr(pal_secrets, "_launchctl", MagicMock())
+    monkeypatch.setattr(pal_secrets, "restore_python_link", MagicMock(return_value=True))
+    _write_failure(f"{time.time()} 1\n")
+
+    assert pal_secrets.main(["uninstall"]) == 0
+
+    assert not pal_secrets._failure_path().exists()
+
+
+def test_a_failed_clean_up_after_a_success_is_not_a_failure(monkeypatch, keychain, configured):
+    _write_failure(f"{time.time() - 10 * 3600} 1\n")
+    real_unlink = Path.unlink
+
+    def unlink(self, missing_ok=False):
+        if self.name == pal_secrets.FAILURE_FILE_NAME:
+            raise PermissionError("read-only")
+        return real_unlink(self, missing_ok=missing_ok)
+
+    monkeypatch.setattr(Path, "unlink", unlink)
+    notify = MagicMock()
+    monkeypatch.setattr(pal_secrets, "_notify", notify)
+
+    assert pal_secrets.main(["refresh", "--notify"]) == 0
+
+    notify.assert_not_called()
+
+
+def test_a_failed_back_off_write_is_reported(monkeypatch, keychain, capsys):
+    monkeypatch.setattr(pal_secrets, "_failure_path", lambda: cache.STATE_DIR / "missing-folder" / "file")
+
+    pal_secrets._record_failure()
+
+    assert "cannot record the failed refresh" in capsys.readouterr().err
+
+
+def test_a_hung_notification_does_not_hang_the_job(monkeypatch):
+    monkeypatch.setattr(subprocess, "run", MagicMock(side_effect=subprocess.TimeoutExpired("osascript", 15)))
+
+    pal_secrets._notify("text")
