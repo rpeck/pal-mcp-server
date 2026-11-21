@@ -9,6 +9,9 @@ tool stored the whole enhanced prompt as a second user turn and built the histor
 These tests check that the prompt sent to the provider holds the history once, that the thread gains one user
 turn with the user's own prompt, that the new files of the turn are still embedded, and that a direct call
 (no server, so no embedded history) still builds the history itself.
+
+A direct call builds the history from the turns before the new one, as server.py does, so the new prompt appears
+once and the new files of the turn are embedded as context files (issue #34).
 """
 
 import json
@@ -226,3 +229,71 @@ class TestDirectContinuation:
         new_turns = get_thread(thread_id).turns[2:]
         assert [turn.role for turn in new_turns] == ["user", "assistant"]
         assert new_turns[0].content == SECOND_PROMPT
+
+    async def call_directly(self, arguments):
+        provider = answering_provider()
+        with patch.object(ModelProviderRegistry, "get_provider_for_model", return_value=provider):
+            result = await ChatTool().execute(arguments)
+        return json.loads(result[0].text), sent_prompt(provider)
+
+    @pytest.mark.asyncio
+    async def test_new_prompt_appears_once(self, workspace):
+        """The history holds the turns before this one, as on the server path (issue #34)."""
+        first_file = write_file(workspace, "first.py", "FIRST_FILE_MARK = 1\n")
+        thread_id = chat_thread(first_file)
+
+        _, prompt = await self.call_directly(
+            {
+                "prompt": SECOND_PROMPT,
+                "continuation_id": thread_id,
+                "model": "gemini-2.5-flash",
+                "working_directory_absolute_path": str(workspace),
+            }
+        )
+
+        assert prompt.count(SECOND_PROMPT) == 1
+        assert prompt.count(FIRST_PROMPT) == 1
+        assert prompt.index(FIRST_REPLY) < prompt.index("=== NEW USER INPUT ===") < prompt.index(SECOND_PROMPT)
+
+    @pytest.mark.asyncio
+    async def test_new_file_of_the_turn_is_embedded_once(self, workspace):
+        first_file = write_file(workspace, "first.py", "FIRST_FILE_MARK = 1\n")
+        new_file = write_file(workspace, "new.py", "NEW_FILE_MARK = 2\n")
+        thread_id = chat_thread(first_file)
+
+        output, prompt = await self.call_directly(
+            {
+                "prompt": SECOND_PROMPT,
+                "continuation_id": thread_id,
+                "absolute_file_paths": [new_file],
+                "model": "gemini-2.5-flash",
+                "working_directory_absolute_path": str(workspace),
+            }
+        )
+
+        assert prompt.count("NEW_FILE_MARK") == 1
+        assert prompt.count("FIRST_FILE_MARK") == 1
+        # The new file is a context file of this turn, not a file of the history
+        assert prompt.index("=== NEW USER INPUT ===") < prompt.index("NEW_FILE_MARK")
+        metadata = output["metadata"]
+        assert metadata["embedded_files"] == [first_file, new_file]
+        assert metadata["omitted_files"] == []
+        user_turn = get_thread(thread_id).turns[2]
+        assert (user_turn.role, user_turn.content, user_turn.files) == ("user", SECOND_PROMPT, [new_file])
+
+    @pytest.mark.asyncio
+    async def test_thread_with_no_turns_gives_no_history(self, workspace):
+        thread_id = create_thread("chat", {"prompt": SECOND_PROMPT})
+
+        _, prompt = await self.call_directly(
+            {
+                "prompt": SECOND_PROMPT,
+                "continuation_id": thread_id,
+                "model": "gemini-2.5-flash",
+                "working_directory_absolute_path": str(workspace),
+            }
+        )
+
+        assert prompt.count(SECOND_PROMPT) == 1
+        assert CONVERSATION_HISTORY_HEADER not in prompt
+        assert [turn.role for turn in get_thread(thread_id).turns] == ["user", "assistant"]

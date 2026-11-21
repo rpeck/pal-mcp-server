@@ -292,7 +292,7 @@ class SimpleTool(BaseTool):
             self._current_arguments = arguments
 
             # Records the files and turns that the model receives or misses, for the response metadata
-            server_context_report = self._start_context_report(arguments)
+            self._start_context_report(arguments)
 
             logger.info(f"🔧 {self.get_name()} tool called with arguments: {list(arguments.keys())}")
 
@@ -358,28 +358,24 @@ class SimpleTool(BaseTool):
                     thread_context = get_thread(continuation_id)
 
                     if thread_context:
-                        # Add user's new input to conversation
-                        user_prompt = self.get_request_prompt(request)
-                        user_files = self.get_request_files(request)
-                        if user_prompt:
-                            add_turn(continuation_id, "user", user_prompt, files=user_files)
-
-                            # Get updated thread context after adding the turn
-                            thread_context = get_thread(continuation_id)
-                            logger.debug(
-                                f"{self.get_name()}: Retrieved updated thread with {len(thread_context.turns)} turns"
-                            )
-
-                        # Build conversation history with updated thread context. When server.py built the
-                        # history too, its report already covers the same files, so keep that one.
+                        # Build the history from the turns before this one, as server.py does, so that it does not
+                        # hold the new prompt, which follows it after NEW USER INPUT (issue #34)
                         conversation_history, conversation_tokens = build_conversation_history(
-                            thread_context,
-                            self._model_context,
-                            report=None if server_context_report is not None else self._context_report,
+                            thread_context, self._model_context, report=self._context_report
                         )
 
-                        # Get the base prompt from the tool
+                        # Keep the user's input as given: prepare_prompt takes prompt.txt out of the request files
+                        user_prompt = self.get_request_prompt(request)
+                        user_files = self.get_request_files(request)
+
+                        # Prepare the prompt before the turn is stored. filter_new_files drops each file that the
+                        # thread lists, so the new files of this turn are embedded only while the thread does not
+                        # list them yet.
                         base_prompt = await self.prepare_prompt(request)
+
+                        # Add user's new input to conversation
+                        if user_prompt:
+                            add_turn(continuation_id, "user", user_prompt, files=user_files)
 
                         # Combine with conversation history
                         if conversation_history:

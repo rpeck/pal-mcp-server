@@ -118,6 +118,14 @@
     the header.
   - With `prompt.txt` on such a continuation, the follow-up instructions from server.py stay in front of the
     `prompt.txt` text. Before, the `prompt.txt` text replaced them.
+- A `chat` continuation that does not pass through server.py (a direct call of the tool, for example from a test)
+  sends the new prompt once (#34). Before, the tool stored the user's turn, then built the history from the
+  thread, so the history ended with the new prompt. The prompt then repeated it after `=== NEW USER INPUT ===`.
+  - The tool now builds the history from the turns before the new one, as server.py does. It stores the user's
+    turn after it prepares the prompt.
+  - The new files of the turn are embedded once, as context files after the new prompt, and `embedded_files`
+    lists them. Before, they were part of the history and used its token budget.
+  - When the tool rejects the prompt (for example for its size), it does not store the user's turn.
 
 ### Documentation
 
