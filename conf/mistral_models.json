@@ -2,7 +2,7 @@
   "_README": {
     "description": "Mistral via la Plateforme OpenAI-compatible API (native provider, MISTRAL_API_KEY).",
     "aa_version": "AA Intelligence Index v5.0.1 (leaderboard read 2026-11-10, checked again 2026-11-11), the values of the mistralai/* OpenRouter entries for the same models. The scores follow the v5.0.1 ladder in docs/model_ranking.md. Change this line at each AA regrade.",
-    "usage": "Base URL https://api.mistral.ai/v1. Mixed open/closed lineup. The model names are the versioned API names from Mistral's model docs (read 2026-11-21); the old `*-latest` names are aliases, because Mistral moves them to new releases without notice. Scores and AA values are pinned to the mistralai/* OpenRouter entries for the same models. Verify model IDs against /models if a call 404s."
+    "usage": "Base URL https://api.mistral.ai/v1. Mixed open/closed lineup. The model names are versioned API names, checked on 2026-11-21: mistral-small-2603 is in the API's model list (alias mistral-small-latest); mistral-large-4 is a valid name, but a subscription tier without Large gets 403 for it and does not list it. The old `*-latest` names are aliases. Scores and AA values are pinned to the mistralai/* OpenRouter entries for the same models. Verify model IDs against /models if a call fails."
   },
   "models": [
     {
@@ -15,7 +15,7 @@
         "mistral-large"
       ],
       "intelligence_score": 15,
-      "description": "Mistral Large 4 (v26.10) - flagship model for reasoning, coding and agentic work (1M context). Direct la Plateforme API. AA Intelligence Index v5 26 at high (23 at medium; read 2026-11-10), from the mistralai/mistral-large-4-0 OpenRouter entry. The old name mistral-large-latest is an alias.",
+      "description": "Mistral Large 4 (v26.10) - flagship model for reasoning, coding and agentic work (1M context). Direct la Plateforme API. AA Intelligence Index v5 26 at high (23 at medium; read 2026-11-10), from the mistralai/mistral-large-4-0 OpenRouter entry. The old name mistral-large-latest is an alias. Not every Mistral subscription tier includes it: on 2026-11-21 a call with the maintainer's key got 403 \"This model is not available in your subscription tier\" (the name itself is valid; an unknown name gets 400). OpenRouter serves it as mistralai/mistral-large-4-0.",
       "context_window": 1048576,
       "max_output_tokens": 65536,
       "supports_extended_thinking": false,
@@ -32,7 +32,7 @@
       }
     },
     {
-      "model_name": "mistral-small-4-0-26-03",
+      "model_name": "mistral-small-2603",
       "friendly_name": "Mistral Small 4",
       "aliases": [
         "mistral-small-latest",
@@ -40,8 +40,8 @@
         "mistral-small"
       ],
       "intelligence_score": 5,
-      "description": "Mistral Small 4 (v26.03) - fast, low-cost Apache-2.0 model. Direct la Plateforme API. AA Intelligence Index v5 4 (one row, read 2026-11-10), from the mistralai/mistral-small-2603 OpenRouter entry. The old name mistral-small-latest is an alias.",
-      "context_window": 131072,
+      "description": "Mistral Small 4 (2603) - fast, low-cost Apache-2.0 model. Direct la Plateforme API. The API's model list (read 2026-11-21) gives mistral-small-2603 with the aliases mistral-small-latest, and a 262,144-token context. AA Intelligence Index v5 4 (one row, read 2026-11-10), from the mistralai/mistral-small-2603 OpenRouter entry.",
+      "context_window": 262144,
       "max_output_tokens": 65536,
       "supports_extended_thinking": false,
       "supports_system_prompts": true,

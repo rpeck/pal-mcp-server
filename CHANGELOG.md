@@ -67,7 +67,7 @@
   high) drop from 16 to 15 on every route. See `docs/model_ranking.md`.
 
 - The native Mistral entries use the versioned API names from Mistral's docs: `mistral-large-4` (Mistral Large 4,
-  1M context) and `mistral-small-4-0-26-03` (Mistral Small 4). `mistral-large-latest` and `mistral-small-latest`
+  1M context) and `mistral-small-2603` (Mistral Small 4, 256K context; checked against the API's model list). `mistral-large-latest` and `mistral-small-latest`
   stay as aliases. Their scores and AA values now match the OpenRouter entries for the same models: Large 15
   (was an estimate of 10) and Small 5 (was 9).
 
