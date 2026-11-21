@@ -1222,6 +1222,7 @@ async def reconstruct_thread_context(arguments: dict[str, Any]) -> dict[str, Any
         4. Debug tool can reference specific findings from analyze tool
         5. Natural cross-tool collaboration without context loss
     """
+    from tools.shared.base_tool import read_prompt_file, user_turn_content
     from utils.context_report import ContextReport
     from utils.conversation_memory import add_turn, build_conversation_history, get_thread
 
@@ -1251,11 +1252,13 @@ async def reconstruct_thread_context(arguments: dict[str, Any]) -> dict[str, Any
             f"This will create a new conversation thread that can continue with follow-up exchanges."
         )
 
-    # Add user's new input to the conversation
-    user_prompt = arguments.get("prompt", "")
+    # Add user's new input to the conversation. prompt.txt holds the prompt, not a context file: the turn stores its
+    # text after the prompt and does not list the file (issue #39)
+    prompt_file_text, user_files = read_prompt_file(arguments.get("absolute_file_paths"))
+    user_prompt = user_turn_content(arguments.get("prompt", ""), prompt_file_text)
     if user_prompt:
         # Capture files referenced in this turn
-        user_files = arguments.get("absolute_file_paths") or []
+        user_files = user_files or []
         logger.debug(f"[CONVERSATION_DEBUG] Adding user turn to thread {continuation_id}")
         from utils.token_utils import estimate_tokens
 
