@@ -798,7 +798,8 @@ def command_init(args: argparse.Namespace) -> int:
         op_path = None
     python = install_private_python(venv)
     # The refresh that launchd starts at load must not stay quiet in an old back-off.
-    _failure_path().unlink(missing_ok=True)
+    with contextlib.suppress(OSError):
+        _failure_path().unlink(missing_ok=True)
 
     search_path = ([str(Path(op_path).parent)] if op_path else []) + _OP_SEARCH_PATH.split(":")
     path_value = ":".join(dict.fromkeys(search_path))
@@ -838,7 +839,8 @@ def command_uninstall(args: argparse.Namespace) -> int:
             plist_path.unlink()
             print(f"Removed LaunchAgent {label}")
     command_clear(args)
-    _failure_path().unlink(missing_ok=True)
+    with contextlib.suppress(OSError):
+        _failure_path().unlink(missing_ok=True)
     try:
         restore_python_link(runtime_venv())
     except PalSecretsError as exc:

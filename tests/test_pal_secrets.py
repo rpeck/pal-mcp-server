@@ -1177,3 +1177,21 @@ def test_a_hung_notification_does_not_hang_the_job(monkeypatch):
     monkeypatch.setattr(subprocess, "run", MagicMock(side_effect=subprocess.TimeoutExpired("osascript", 15)))
 
     pal_secrets._notify("text")
+
+
+def test_a_failed_unlink_does_not_stop_init_or_uninstall(monkeypatch, keychain, tmp_path):
+    real_unlink = Path.unlink
+
+    def unlink(self, missing_ok=False):
+        if self.name == pal_secrets.FAILURE_FILE_NAME:
+            raise PermissionError("read-only")
+        return real_unlink(self, missing_ok=missing_ok)
+
+    monkeypatch.setattr(Path, "unlink", unlink)
+    monkeypatch.setattr(pal_secrets, "LAUNCH_AGENTS_DIR", tmp_path / "LaunchAgents")
+    monkeypatch.setattr(pal_secrets, "_launchctl", MagicMock(return_value=subprocess.CompletedProcess([], 0, "", "")))
+    restore = MagicMock(return_value=True)
+    monkeypatch.setattr(pal_secrets, "restore_python_link", restore)
+
+    assert pal_secrets.main(["uninstall"]) == 0
+    restore.assert_called_once(), "the Python link is still restored"

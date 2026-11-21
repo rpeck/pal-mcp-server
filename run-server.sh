@@ -517,17 +517,24 @@ try_install_system_packages() {
     return 1
 }
 
-# Bootstrap pip in virtual environment
 # Fill the array CLAUDE_ENV_ARGS with the `-e KEY=value` pairs for `claude mcp add`, from .env.
 # The values go to claude as plain arguments, with no eval, so that no value can run as shell code.
 build_claude_env_args() {
     CLAUDE_ENV_ARGS=()
-    local env_vars line
+    local env_vars line key value
     env_vars=$(parse_env_variables)
     if [[ -n "$env_vars" ]]; then
         while IFS= read -r line; do
             if [[ -n "$line" && "$line" =~ ^([^=]+)=(.*)$ ]]; then
-                CLAUDE_ENV_ARGS+=(-e "${BASH_REMATCH[1]}=${BASH_REMATCH[2]}")
+                # Keep the parts: the next =~ test replaces BASH_REMATCH.
+                key="${BASH_REMATCH[1]}"
+                value="${BASH_REMATCH[2]}"
+                # A name such as "-x" or "A B" would reach claude as an option or break the command.
+                if [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+                    CLAUDE_ENV_ARGS+=(-e "$key=$value")
+                else
+                    print_warning "Skipping a .env entry with an invalid variable name"
+                fi
             fi
         done <<< "$env_vars"
     fi
@@ -535,6 +542,7 @@ build_claude_env_args() {
 
 # Register PAL with Claude Code. Usage: run_claude_mcp_add <python> <server.py>
 run_claude_mcp_add() {
+    local -a CLAUDE_ENV_ARGS
     build_claude_env_args
     # ${array[@]+...} keeps an empty array safe under `set -u` in bash 3.2.
     claude mcp add pal -s user ${CLAUDE_ENV_ARGS[@]+"${CLAUDE_ENV_ARGS[@]}"} -- "$1" "$2" 2>/dev/null
@@ -543,6 +551,7 @@ run_claude_mcp_add() {
 # Print the `claude mcp add` command for a manual run. It never prints a value: values can be API keys.
 # Usage: claude_add_command_text <python> <server.py>
 claude_add_command_text() {
+    local -a CLAUDE_ENV_ARGS
     build_claude_env_args
     local text="claude mcp add pal -s user" index=1
     while (( index < ${#CLAUDE_ENV_ARGS[@]} )); do
@@ -552,9 +561,9 @@ claude_add_command_text() {
     echo "$text -- \"$1\" \"$2\""
 }
 
+# Bootstrap pip in virtual environment
 bootstrap_pip() {
     local venv_python="$1"
-    local python_cmd="$2"
 
     print_info "Bootstrapping pip in virtual environment..."
 
@@ -564,7 +573,7 @@ bootstrap_pip() {
         return 0
     fi
 
-    # Then uv, which checks what it installs. Never run a downloaded installer script.
+    # Then uv, which installs the pip wheel from the package index. Never run a downloaded installer script.
     if command -v uv &> /dev/null && uv pip install -q --python "$venv_python" pip >/dev/null 2>&1; then
         print_success "Successfully installed pip with uv"
         return 0
@@ -619,7 +628,7 @@ setup_environment() {
         if uv venv --help 2>/dev/null | grep -q -- "--managed-python"; then
             uv_managed="--managed-python"
         else
-            print_warning "This uv has no --managed-python; run 'uv self update' for a uv-managed Python"
+            print_warning "This uv has no --managed-python. Update uv ('uv self update', or 'brew upgrade uv' for a Homebrew uv) to get a uv-managed Python"
         fi
         if uv_output=$(uv venv ${uv_managed:+"$uv_managed"} --python 3.12 "$VENV_PATH" 2>&1); then
             # Use helper function for cross-platform path detection
@@ -2309,7 +2318,11 @@ display_config_instructions() {
     print_info "1. For Claude Code (CLI):"
     # Show command with environment variables
     echo -e "   ${GREEN}$(claude_add_command_text "$python_cmd" "$server_path")${NC}"
-    echo "   (Replace each <value from .env> with the value from .env.)"
+    local -a CLAUDE_ENV_ARGS
+    build_claude_env_args
+    if (( ${#CLAUDE_ENV_ARGS[@]} > 0 )); then
+        echo "   (Replace each <value from .env> with the value from .env.)"
+    fi
     echo ""
 
     print_info "2. For Claude Desktop:"
