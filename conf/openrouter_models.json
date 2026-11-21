@@ -982,7 +982,7 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "description": "DeepSeek V4.1 Flash 1017 via OpenRouter (2026-10-17 build) - native image understanding, 1M context, up to 384K output; DeepSeek serves the same build as deepseek-flash. AA Intelligence Index v5 29 at high (33 at max, 19 non-reasoning; read 2026-11-10). $0.15/$0.60 per M. Live-tested through PAL's OpenRouter provider on 2026-10-20: it answered correctly.",
-      "intelligence_score": 16,
+      "intelligence_score": 15,
       "aa_index": 29,
       "aa_index_by_effort": {
         "non-reasoning": 19,
@@ -1142,7 +1142,7 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "description": "StepFun Step 5 Preview via OpenRouter (released 2026-10-08) - flagship agentic model, sparse MoE (27B active / 600B total), 1M context. AA Intelligence Index v5 29 (one row). $1.00/$2.70 per M. Preview: may change or be withdrawn.",
-      "intelligence_score": 16,
+      "intelligence_score": 15,
       "aa_index": 29,
       "aa_index_by_effort": {
         "default": 29
@@ -1771,7 +1771,7 @@
       "supports_images": true,
       "max_image_size_mb": 20.0,
       "description": "MiniMax M3.1 Flash via OpenRouter - multimodal MoE (1M context) for agentic coding; thinking is always on. $0.15/$0.60 per M (paid endpoint, checked 2026-10-27). AA Intelligence Index v5 29 (AA lists one row; MiniMax's default effort is max, so the score at the high-effort anchor may be a little high).",
-      "intelligence_score": 16,
+      "intelligence_score": 15,
       "aa_index": 29,
       "aa_index_by_effort": {
         "default": 29

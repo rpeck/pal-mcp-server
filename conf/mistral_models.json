@@ -1,17 +1,22 @@
 {
   "_README": {
     "description": "Mistral via la Plateforme OpenAI-compatible API (native provider, MISTRAL_API_KEY).",
-    "aa_version": "No entry here has an Artificial Analysis Intelligence Index value. The scores are estimates on the 1-20 scale that the v5.0.1 ladder in docs/model_ranking.md keeps (leaderboard read 2026-11-11). Change this line at each AA regrade.",
-    "usage": "Base URL https://api.mistral.ai/v1. Mixed open/closed lineup. Scores pinned to the mistralai/* OpenRouter mirrors. `*-latest` aliases track the current dated snapshot. Verify model IDs against /models if a call 404s."
+    "aa_version": "AA Intelligence Index v5.0.1 (leaderboard read 2026-11-10, checked again 2026-11-11), the values of the mistralai/* OpenRouter entries for the same models. The scores follow the v5.0.1 ladder in docs/model_ranking.md. Change this line at each AA regrade.",
+    "usage": "Base URL https://api.mistral.ai/v1. Mixed open/closed lineup. The model names are the versioned API names from Mistral's model docs (read 2026-11-21); the old `*-latest` names are aliases, because Mistral moves them to new releases without notice. Scores and AA values are pinned to the mistralai/* OpenRouter entries for the same models. Verify model IDs against /models if a call 404s."
   },
   "models": [
     {
-      "model_name": "mistral-large-latest",
-      "friendly_name": "Mistral Large",
-      "aliases": ["mistral", "mistral-large"],
-      "intelligence_score": 10,
-      "description": "Mistral Large - flagship general model. Direct la Plateforme API.",
-      "context_window": 131072,
+      "model_name": "mistral-large-4",
+      "friendly_name": "Mistral Large 4",
+      "aliases": [
+        "mistral-large-latest",
+        "mistral-large-4-0",
+        "mistral",
+        "mistral-large"
+      ],
+      "intelligence_score": 15,
+      "description": "Mistral Large 4 (v26.10) - flagship model for reasoning, coding and agentic work (1M context). Direct la Plateforme API. AA Intelligence Index v5 26 at high (23 at medium; read 2026-11-10), from the mistralai/mistral-large-4-0 OpenRouter entry. The old name mistral-large-latest is an alias.",
+      "context_window": 1048576,
       "max_output_tokens": 65536,
       "supports_extended_thinking": false,
       "supports_system_prompts": true,
@@ -19,14 +24,23 @@
       "supports_function_calling": true,
       "supports_json_mode": true,
       "supports_images": false,
-      "supports_temperature": true
+      "supports_temperature": true,
+      "aa_index": 26,
+      "aa_index_by_effort": {
+        "medium": 23,
+        "high": 26
+      }
     },
     {
-      "model_name": "mistral-small-latest",
-      "friendly_name": "Mistral Small",
-      "aliases": ["mistral-small"],
-      "intelligence_score": 9,
-      "description": "Mistral Small - cost-efficient Apache-2.0 model. Direct la Plateforme API.",
+      "model_name": "mistral-small-4-0-26-03",
+      "friendly_name": "Mistral Small 4",
+      "aliases": [
+        "mistral-small-latest",
+        "mistral-small-4",
+        "mistral-small"
+      ],
+      "intelligence_score": 5,
+      "description": "Mistral Small 4 (v26.03) - fast, low-cost Apache-2.0 model. Direct la Plateforme API. AA Intelligence Index v5 4 (one row, read 2026-11-10), from the mistralai/mistral-small-2603 OpenRouter entry. The old name mistral-small-latest is an alias.",
       "context_window": 131072,
       "max_output_tokens": 65536,
       "supports_extended_thinking": false,
@@ -35,7 +49,11 @@
       "supports_function_calling": true,
       "supports_json_mode": true,
       "supports_images": false,
-      "supports_temperature": true
+      "supports_temperature": true,
+      "aa_index": 4,
+      "aa_index_by_effort": {
+        "default": 4
+      }
     }
   ]
 }

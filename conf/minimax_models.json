@@ -9,7 +9,7 @@
       "model_name": "MiniMax-M3.1-Flash",
       "friendly_name": "MiniMax M3.1 Flash",
       "aliases": ["minimax", "minimax-m3.1-flash", "m3.1-flash"],
-      "intelligence_score": 16,
+      "intelligence_score": 15,
       "aa_index": 29,
       "aa_index_by_effort": {"default": 29},
       "description": "MiniMax M3.1 Flash (2026-10-19) - multimodal MoE (text and image input, 1M context) for agentic coding; thinking is always on. Direct MiniMax API, $0.15/$0.60 per M. AA Intelligence Index v5 29 (AA lists one row; MiniMax's default effort is max, so the score at the high-effort anchor may be a little high). Score pinned to the minimax/minimax-m3.1-flash OpenRouter mirror, which had a paid endpoint on 2026-10-27.",

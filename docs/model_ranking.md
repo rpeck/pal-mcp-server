@@ -46,8 +46,8 @@ that AA measures gets its score from its `high` value, rounded to a whole number
 | 44-48 | 19 | | 21-23 | 13 | | 7-8 | 7 |
 | 36-43 | 18 | | 18-20 | 12 | | 5-6 | 6 |
 | 32-35 | 17 | | 16-17 | 11 | | 3-4 | 5 |
-| 29-31 | 16 | | 13-15 | 10 | | 2 | 4 |
-| 26-28 | 15 | | 11-12 | 9 | | 0-1 | 3 |
+| 30-31 | 16 | | 13-15 | 10 | | 2 | 4 |
+| 26-29 | 15 | | 11-12 | 9 | | 0-1 | 3 |
 
 - **Why this ladder:** AA Intelligence Index v5 (launched 2026-10-27) replaced v4.3. It is harder and
   reorders models: frontier closed models moved by a few points (GPT-6 Astra 51 -> 55, Claude Opus 5.5
@@ -62,9 +62,18 @@ that AA measures gets its score from its `high` value, rounded to a whole number
   - The conf values come from v5.0.1 reads (2026-11-10, checked again 2026-11-11). Under v5.0.1, two
     values moved by 1 point: Gemini 4 Carbon at high (59 -> 60) and Claude Opus 5.5 at max (58 -> 59).
     No score changed.
-  - The ladder stays the same. A fit on v5.0.1 values moves the curve up by 0.2 to 0.6 points, less
-    than its residual SD. Bounds that are near a half point can move by 1 if you change the rounding
-    or the set of models, so a re-fit would change scores of models whose AA values did not change.
+  - **The ladder was fitted again on v5.0.1 (2026-11-21).** The fit uses the same 24 models and the same
+    method, with their v5.0.1 values: Beam 1.0, Claude Fable 5.1, Claude Haiku 5.5, Claude Opus 5.5, Claude
+    Sonnet 5.5, Command A+, Gemini 3.5 Flash-Lite, Gemini 3.8 Flash, Gemini 4 Argon, GPT-6 Astra, GPT-6 Luna,
+    GPT-6.1 Sol, GPT-6.1 Terra, Grok 4.7, Kimi K3.1 Pro, MiMo-V2.6 Flash, MiMo-V2.6 Pro, MiniMax M3, MiniMax
+    M3.1 Flash, Mistral Large 4, Nemotron 3 Ultra, Nemotron 3.5 Super VL, Qwen3.8-Max 0902 and Step 5 Preview.
+    - Two of the 24 values changed from v5.0 to v5.0.1: Claude Sonnet 5.5 (41 -> 42) and Mistral Large 4
+      (25 -> 26).
+    - The converted bounds move by 0.0 to 0.2 points (residual SD 1.5 with n - 3, 1.4 with n).
+    - Each bound is the converted value rounded to a whole number, as before. Only the bound of 16 changes,
+      from 29 to 30 (raw value 29.6). So the three models at AA 29 drop from 16 to 15: DeepSeek V4.1 Flash,
+      MiniMax M3.1 Flash and Step 5 Preview.
+    - The bound of 4 stays at 2, as in the first ladder; the curve gives 1.4 there.
   - Each conf file's `_README` names the AA version and the read date in `aa_version`. Change that line
     at each AA regrade.
 - **Effort anchor:** the score describes the model at `high` effort. PAL tools default to

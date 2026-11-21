@@ -63,7 +63,7 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
-| DeepSeek V4.1 Flash | 16 | non-reasoning 19, high 29, max 33 | native: `deepseek-flash`<br>openrouter: `deepseek/deepseek-v4.1-flash-1017` | `deepseek`, `deepseek-flash`, `deepseek-v4.1-flash`, `deepseek-v4.1-flash-1017`, `v4.1-flash` |  |
+| DeepSeek V4.1 Flash | 15 | non-reasoning 19, high 29, max 33 | native: `deepseek-flash`<br>openrouter: `deepseek/deepseek-v4.1-flash-1017` | `deepseek`, `deepseek-flash`, `deepseek-v4.1-flash`, `deepseek-v4.1-flash-1017`, `v4.1-flash` |  |
 | DeepSeek V4 Pro | 11 | non-reasoning 13, max 23 | native: `deepseek-v4-pro`<br>openrouter: `deepseek/deepseek-v4-pro` | `deepseek-v4`, `deepseek-v4-pro` |  |
 
 ## Alibaba (Qwen)
@@ -91,7 +91,7 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
-| MiniMax M3.1 Flash | 16 | default 29 | native: `MiniMax-M3.1-Flash`<br>openrouter: `minimax/minimax-m3.1-flash` | `m3.1-flash`, `minimax`, `minimax-m3.1-flash` |  |
+| MiniMax M3.1 Flash | 15 | default 29 | native: `MiniMax-M3.1-Flash`<br>openrouter: `minimax/minimax-m3.1-flash` | `m3.1-flash`, `minimax`, `minimax-m3.1-flash` |  |
 | MiniMax M3 | 12 | default 19 | native: `MiniMax-M3`<br>openrouter: `minimax/minimax-m3` | `minimax-m3` |  |
 
 ## Xiaomi
@@ -105,8 +105,10 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
+| Mistral Large 4 | 15 | medium 23, high 26 | native: `mistral-large-4` | `mistral`, `mistral-large`, `mistral-large-4-0`, `mistral-large-latest` |  |
 | Mistral Large 4 | 15 | medium 23, high 26 | openrouter: `mistralai/mistral-large-4-0` | `mistral`, `mistral-large`, `mistral-large-4`, `mistral-large-4-0` |  |
 | Mistral Small 4 | 5 | default 4 | openrouter: `mistralai/mistral-small-2603` | `ministral`, `mistral-small` |  |
+| Mistral Small 4 | 5 | default 4 | native: `mistral-small-4-0-26-03` | `mistral-small`, `mistral-small-4`, `mistral-small-latest` |  |
 
 ## NVIDIA
 
@@ -119,7 +121,7 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 
 | Model | Score | AA Index by effort | Routes (model ID) | Aliases | Notes |
 |---|---|---|---|---|---|
-| Step 5 Preview | 16 | default 29 | openrouter: `stepfun/step-5-preview` | `step-5`, `step-5-preview` |  |
+| Step 5 Preview | 15 | default 29 | openrouter: `stepfun/step-5-preview` | `step-5`, `step-5-preview` |  |
 
 ## Cohere
 

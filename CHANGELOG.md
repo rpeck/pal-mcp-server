@@ -62,6 +62,15 @@
   scores and AA values match the native entries, and new score-pinning tests keep the two routes equal. The
   aliases are `or-gemini-4-neon` / `gemini-4-neon-or` and `or-gemini-4-hydrogen` / `gemini-4-hydrogen-or`.
 
+- The AA Index ladder is fitted again on v5.0.1 values, with the same 24 models and method. Only the bound of
+  score 16 moves, from AA 29 to 30, so DeepSeek V4.1 Flash, MiniMax M3.1 Flash and Step 5 Preview (AA 29 at
+  high) drop from 16 to 15 on every route. See `docs/model_ranking.md`.
+
+- The native Mistral entries use the versioned API names from Mistral's docs: `mistral-large-4` (Mistral Large 4,
+  1M context) and `mistral-small-4-0-26-03` (Mistral Small 4). `mistral-large-latest` and `mistral-small-latest`
+  stay as aliases. Their scores and AA values now match the OpenRouter entries for the same models: Large 15
+  (was an estimate of 10) and Small 5 (was 9).
+
 ### Bug Fixes
 
 - Gemini auto mode (`DYNAMIC_MODEL_SELECTION`) ranks models with the same score by their AA Index value before the

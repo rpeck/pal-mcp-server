@@ -22,7 +22,7 @@ LIVE_VENDORS = [
     (ProviderType.ZAI, "ZAI_API_KEY", "providers.zai", "glm-5.3"),
     (ProviderType.MOONSHOT, "MOONSHOT_API_KEY", "providers.moonshot", "kimi-k3"),
     (ProviderType.MINIMAX, "MINIMAX_API_KEY", "providers.minimax", "MiniMax-M3"),
-    (ProviderType.MISTRAL, "MISTRAL_API_KEY", "providers.mistral", "mistral-small-latest"),
+    (ProviderType.MISTRAL, "MISTRAL_API_KEY", "providers.mistral", "mistral-small-4-0-26-03"),
     (ProviderType.NVIDIA, "NVIDIA_API_KEY", "providers.nvidia", "nemotron-nano"),
     (ProviderType.PERPLEXITY, "PERPLEXITY_API_KEY", "providers.perplexity", "sonar"),
 ]

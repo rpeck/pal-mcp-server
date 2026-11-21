@@ -10,7 +10,7 @@
       "model_name": "deepseek-flash",
       "friendly_name": "DeepSeek V4.1 Flash",
       "aliases": ["deepseek", "deepseek-v4.1-flash", "v4.1-flash", "deepseek-v4.1-flash-1017"],
-      "intelligence_score": 16,
+      "intelligence_score": 15,
       "aa_index": 29,
       "aa_index_by_effort": {"non-reasoning": 19, "high": 29, "max": 33},
       "description": "DeepSeek V4.1 Flash, 2026-10-17 build (V4.1-Flash-1017) - native image understanding, 1M context, up to 384K output. deepseek-flash is DeepSeek's API model ID and always serves the latest V4.1 Flash build; the API has no pinned ID for the 2026-09-10 build, and deepseek-v4.1-flash is not an API ID (kept as an alias). Supersedes V4 Flash and V4 Flash Vision Exp, which DeepSeek retired. AA Intelligence Index v5 29 at high (33 at max, 19 non-reasoning; read 2026-11-10).",
