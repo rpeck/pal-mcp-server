@@ -55,6 +55,81 @@ def is_prompt_file(file_path: str) -> bool:
     return os.path.basename(file_path) == "prompt.txt"
 
 
+def read_prompt_file(files: Optional[list[str]]) -> tuple[Optional[str], Optional[list[str]]]:
+    """
+    Check for and handle prompt.txt in the absolute file paths list.
+
+    If prompt.txt is found, reads its content and removes it from the files list.
+    This file is treated specially as the main prompt, not as an embedded file.
+
+    This mechanism allows us to work around MCP's ~25K token limit by having
+    the CLI save large prompts to a file, effectively using the file transfer
+    mechanism to bypass token constraints while preserving response capacity.
+
+    Args:
+        files: List of absolute file paths (will be translated for current environment)
+
+    Returns:
+        tuple: (prompt_content, updated_files_list). The list holds the files without prompt.txt, and is empty
+            when prompt.txt was the only file. When no files were given, it is the files as given.
+    """
+    if not files:
+        return None, files
+
+    prompt_content = None
+    updated_files = []
+
+    for file_path in files:
+
+        if is_prompt_file(file_path):
+            try:
+                # Read prompt.txt content and extract just the text
+                content, _ = read_file_content(file_path)
+                # Extract the content between the file markers
+                if "--- BEGIN FILE:" in content and "--- END FILE:" in content:
+                    lines = content.split("\n")
+                    in_content = False
+                    content_lines = []
+                    for line in lines:
+                        if line.startswith("--- BEGIN FILE:"):
+                            in_content = True
+                            continue
+                        elif line.startswith("--- END FILE:"):
+                            break
+                        elif in_content:
+                            content_lines.append(line)
+                    prompt_content = "\n".join(content_lines)
+                else:
+                    # Fallback: if it's already raw content (from tests or direct input)
+                    # and doesn't have error markers, use it directly
+                    if not content.startswith("\n--- ERROR"):
+                        prompt_content = content
+                    else:
+                        prompt_content = None
+            except Exception:
+                # If we can't read the file, we'll just skip it
+                # The error will be handled elsewhere
+                pass
+        else:
+            # Keep the original path in the files list (will be translated later by read_files)
+            updated_files.append(file_path)
+
+    # An empty list, not None, when prompt.txt was the only file: the caller must take prompt.txt out of the
+    # request files, or read_files embeds it as a context file (issue #39)
+    return prompt_content, updated_files
+
+
+def user_turn_content(prompt: Optional[str], prompt_file_text: Optional[str]) -> str:
+    """
+    Give the user's input as the conversation turn stores it.
+
+    The thread does not store prompt.txt as a file, so the turn holds its text after the prompt: the history of a
+    later turn then holds the question once (issue #39). The prompt stays when it has text, for example
+    "See prompt.txt" or an instruction about the file.
+    """
+    return "\n\n".join(part for part in (prompt, prompt_file_text) if part and part.strip())
+
+
 class BaseTool(ABC):
     """
     Abstract base class for all PAL MCP tools.
@@ -952,66 +1027,12 @@ class BaseTool(ABC):
 
     def handle_prompt_file(self, files: Optional[list[str]]) -> tuple[Optional[str], Optional[list[str]]]:
         """
-        Check for and handle prompt.txt in the absolute file paths list.
-
-        If prompt.txt is found, reads its content and removes it from the files list.
-        This file is treated specially as the main prompt, not as an embedded file.
-
-        This mechanism allows us to work around MCP's ~25K token limit by having
-        the CLI save large prompts to a file, effectively using the file transfer
-        mechanism to bypass token constraints while preserving response capacity.
-
-        Args:
-            files: List of absolute file paths (will be translated for current environment)
+        Check for and handle prompt.txt in the absolute file paths list. See read_prompt_file.
 
         Returns:
-            tuple: (prompt_content, updated_files_list). The list holds the files without prompt.txt, and is empty
-                when prompt.txt was the only file. When no files were given, it is the files as given.
+            tuple: (prompt_content, updated_files_list)
         """
-        if not files:
-            return None, files
-
-        prompt_content = None
-        updated_files = []
-
-        for file_path in files:
-
-            if is_prompt_file(file_path):
-                try:
-                    # Read prompt.txt content and extract just the text
-                    content, _ = read_file_content(file_path)
-                    # Extract the content between the file markers
-                    if "--- BEGIN FILE:" in content and "--- END FILE:" in content:
-                        lines = content.split("\n")
-                        in_content = False
-                        content_lines = []
-                        for line in lines:
-                            if line.startswith("--- BEGIN FILE:"):
-                                in_content = True
-                                continue
-                            elif line.startswith("--- END FILE:"):
-                                break
-                            elif in_content:
-                                content_lines.append(line)
-                        prompt_content = "\n".join(content_lines)
-                    else:
-                        # Fallback: if it's already raw content (from tests or direct input)
-                        # and doesn't have error markers, use it directly
-                        if not content.startswith("\n--- ERROR"):
-                            prompt_content = content
-                        else:
-                            prompt_content = None
-                except Exception:
-                    # If we can't read the file, we'll just skip it
-                    # The error will be handled elsewhere
-                    pass
-            else:
-                # Keep the original path in the files list (will be translated later by read_files)
-                updated_files.append(file_path)
-
-        # An empty list, not None, when prompt.txt was the only file: the caller must take prompt.txt out of the
-        # request files, or read_files embeds it as a context file (issue #39)
-        return prompt_content, updated_files
+        return read_prompt_file(files)
 
     def get_prompt_content_for_size_validation(self, user_content: str) -> str:
         """

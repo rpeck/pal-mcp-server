@@ -8,6 +8,9 @@ it as a file of the turn. This happened on a first turn and on a continuation.
 
 These tests check that the prompt text appears once, that embedded_files and the stored turns do not list
 prompt.txt, and that the other files of the request are still embedded once.
+
+The thread stores the prompt.txt text in the user's turn, after the prompt, so that a follow-up holds the question
+once, in its history. A long turn is left out of the history by the history budget, as any long turn is.
 """
 
 import json
@@ -24,8 +27,11 @@ from tests.mock_helpers import create_mock_provider
 from tools.chat import ChatTool
 from tools.clink import CLinkTool
 from utils.conversation_memory import add_turn, create_thread, get_thread
+from utils.model_context import TokenAllocation
 
 PROMPT_MARK = "PROMPT_FILE_MARK: the long question"
+FOLLOW_UP = "FOLLOW_UP_MARK: and why?"
+NEW_INPUT = "=== NEW USER INPUT ==="
 FIRST_PROMPT = "FIRST_QUESTION_MARK: what does first.py do?"
 FIRST_REPLY = "FIRST_REPLY_MARK: it sets a constant."
 
@@ -246,3 +252,122 @@ class TestClinkPromptFile:
 
         assert sent["prompt"].count(PROMPT_MARK) == 1
         assert "=== FILE REFERENCES ===" not in sent["prompt"]
+
+
+def follow_up_arguments(thread_id: str, workspace: Path) -> dict:
+    """A follow-up with no files, as a client sends it after a turn with prompt.txt."""
+    return {
+        "prompt": FOLLOW_UP,
+        "continuation_id": thread_id,
+        "model": "gemini-2.5-flash",
+        "working_directory_absolute_path": str(workspace),
+    }
+
+
+def assert_question_once_in_the_history(prompt: str) -> None:
+    assert prompt.count(PROMPT_MARK) == 1
+    assert prompt.index(PROMPT_MARK) < prompt.index(NEW_INPUT) < prompt.index(FOLLOW_UP)
+
+
+class TestFollowUp:
+    """The thread stores the prompt.txt text in the user's turn, so a follow-up holds the question once."""
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("through_server", [True, False])
+    async def test_after_a_first_turn(self, workspace, through_server):
+        prompt_file = write_file(workspace, "prompt.txt", f"{PROMPT_MARK}\n")
+        output, _ = await call_chat(
+            {
+                "prompt": "See prompt.txt",
+                "absolute_file_paths": [prompt_file],
+                "model": "gemini-2.5-flash",
+                "working_directory_absolute_path": str(workspace),
+            },
+            through_server=through_server,
+        )
+        thread_id = output["continuation_offer"]["continuation_id"]
+
+        user_turn = get_thread(thread_id).turns[0]
+        assert user_turn.content == f"See prompt.txt\n\n{PROMPT_MARK}\n"
+        assert user_turn.files == []
+
+        _, prompt = await call_chat(follow_up_arguments(thread_id, workspace), through_server=through_server)
+
+        assert_question_once_in_the_history(prompt)
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("through_server", [True, False])
+    async def test_after_a_continuation_turn(self, workspace, through_server):
+        first_file = write_file(workspace, "first.py", "FIRST_FILE_MARK = 1\n")
+        prompt_file = write_file(workspace, "prompt.txt", f"{PROMPT_MARK}\n")
+        thread_id = chat_thread(first_file)
+        await call_chat(
+            {
+                "prompt": "See prompt.txt",
+                "continuation_id": thread_id,
+                "absolute_file_paths": [prompt_file],
+                "model": "gemini-2.5-flash",
+                "working_directory_absolute_path": str(workspace),
+            },
+            through_server=through_server,
+        )
+
+        user_turn = get_thread(thread_id).turns[2]
+        assert user_turn.content == f"See prompt.txt\n\n{PROMPT_MARK}\n"
+        assert user_turn.files == []
+
+        _, prompt = await call_chat(follow_up_arguments(thread_id, workspace), through_server=through_server)
+
+        assert_question_once_in_the_history(prompt)
+        assert prompt.count("FIRST_FILE_MARK") == 1
+
+    @pytest.mark.asyncio
+    async def test_other_file_is_embedded_once_in_the_history(self, workspace):
+        prompt_file = write_file(workspace, "prompt.txt", f"{PROMPT_MARK}\n")
+        other_file = write_file(workspace, "other.py", "OTHER_FILE_MARK = 1\n")
+        output, _ = await call_chat(
+            {
+                "prompt": "See prompt.txt",
+                "absolute_file_paths": [prompt_file, other_file],
+                "model": "gemini-2.5-flash",
+                "working_directory_absolute_path": str(workspace),
+            }
+        )
+        thread_id = output["continuation_offer"]["continuation_id"]
+
+        output, prompt = await call_chat(follow_up_arguments(thread_id, workspace))
+
+        assert_question_once_in_the_history(prompt)
+        assert prompt.count("OTHER_FILE_MARK") == 1
+        assert output["metadata"]["embedded_files"] == [other_file]
+
+    @pytest.mark.asyncio
+    async def test_long_turn_is_dropped_by_the_history_budget(self, workspace):
+        long_text = PROMPT_MARK + "\n" + "x" * 40_000
+        prompt_file = write_file(workspace, "prompt.txt", long_text)
+        output, _ = await call_chat(
+            {
+                "prompt": "See prompt.txt",
+                "absolute_file_paths": [prompt_file],
+                "model": "gemini-2.5-flash",
+                "working_directory_absolute_path": str(workspace),
+            }
+        )
+        thread_id = output["continuation_offer"]["continuation_id"]
+
+        # A history budget that holds the short reply, not the long user turn
+        small_history = TokenAllocation(
+            total_tokens=1_000_000,
+            content_tokens=800_000,
+            response_tokens=200_000,
+            file_tokens=300_000,
+            history_tokens=2_000,
+        )
+        # Patch by name: some tests reload utils.model_context, and server.py imports ModelContext when it runs
+        with patch("utils.model_context.ModelContext.calculate_token_allocation", return_value=small_history):
+            output, prompt = await call_chat(follow_up_arguments(thread_id, workspace))
+
+        assert output["status"] == "continuation_available"
+        assert output["metadata"]["dropped_turns"] == 1
+        assert PROMPT_MARK not in prompt
+        assert prompt.count(FOLLOW_UP) == 1

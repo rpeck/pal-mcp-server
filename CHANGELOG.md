@@ -160,6 +160,12 @@
     with it. Before, a later continuation with no files took `prompt.txt` from the first request and sent its
     text again, and the history embedded it as a file.
   - `clink` no longer lists `prompt.txt` under `=== FILE REFERENCES ===`.
+  - The user's turn that the thread stores holds the `prompt.txt` text after the prompt (for example
+    `See prompt.txt`). So a follow-up holds the question once, in its history. This covers the first turn, a
+    continuation through server.py, and a direct continuation. Before, the turn held only the prompt, and the
+    history embedded `prompt.txt` as it was at that time, which was wrong once the client overwrote the file.
+  - A long `prompt.txt` makes a long turn. The history budget leaves it out like any long turn, and
+    `dropped_turns` counts it.
 
 ### Documentation
 

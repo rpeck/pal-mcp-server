@@ -17,7 +17,7 @@ from typing import Any, Optional
 
 from tools.shared.argument_errors import build_request
 from tools.shared.base_models import ToolRequest
-from tools.shared.base_tool import BaseTool
+from tools.shared.base_tool import BaseTool, user_turn_content
 from tools.shared.exceptions import ToolExecutionError
 from tools.shared.schema_builders import SchemaBuilder
 from utils.context_report import ContextReport
@@ -290,6 +290,8 @@ class SimpleTool(BaseTool):
         try:
             # Store arguments for access by helper methods
             self._current_arguments = arguments
+            # The prompt.txt text of this call, which handle_prompt_file_with_fallback reads for the stored user turn
+            self._prompt_file_text = None
 
             # Records the files and turns that the model receives or misses, for the response metadata
             self._start_context_report(arguments)
@@ -364,15 +366,14 @@ class SimpleTool(BaseTool):
                             thread_context, self._model_context, report=self._context_report
                         )
 
-                        user_prompt = self.get_request_prompt(request)
-
                         # Prepare the prompt before the turn is stored. filter_new_files drops each file that the
                         # thread lists, so the new files of this turn are embedded only while the thread does not
                         # list them yet.
                         base_prompt = await self.prepare_prompt(request)
 
-                        # prepare_prompt took prompt.txt out of the request files: the turn does not list it, as
-                        # prompt.txt holds the prompt, not a context file (issue #39)
+                        # prepare_prompt took prompt.txt out of the request files: the turn stores its text after
+                        # the prompt and does not list the file, as prompt.txt holds the prompt (issue #39)
+                        user_prompt = user_turn_content(self.get_request_prompt(request), self._prompt_file_text)
                         user_files = self.get_request_files(request)
 
                         # Add user's new input to conversation
@@ -696,7 +697,11 @@ class SimpleTool(BaseTool):
                 # Add the initial user turn to the new thread
                 from utils.conversation_memory import MAX_CONVERSATION_TURNS, add_turn
 
-                user_prompt = self.get_request_prompt(request)
+                # The turn stores the prompt.txt text after the prompt; prepare_prompt took prompt.txt out of the
+                # request files (issue #39)
+                user_prompt = user_turn_content(
+                    self.get_request_prompt(request), getattr(self, "_prompt_file_text", None)
+                )
                 user_files = self.get_request_files(request)
                 user_images = self.get_request_images(request)
 
@@ -939,6 +944,7 @@ Please provide a thoughtful, comprehensive response:"""
             self.set_request_files(request, updated_files)
         else:
             prompt_content = None
+        self._prompt_file_text = prompt_content
 
         # Use prompt.txt content if available, otherwise use the prompt field
         request_prompt = self.get_request_prompt(request)
