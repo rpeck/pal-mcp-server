@@ -126,6 +126,14 @@
   - The new files of the turn are embedded once, as context files after the new prompt, and `embedded_files`
     lists them. Before, they were part of the history and used its token budget.
   - When the tool rejects the prompt (for example for its size), it does not store the user's turn.
+- `chat` sends its web search instruction to the model (#33). The instruction tells the model to ask the agent
+  for a web search when current information would help. Before, the model never got it.
+  - `build_standard_prompt` put the instruction between the system prompt and `=== USER REQUEST ===`.
+    `prepare_chat_style_prompt` cuts off everything before that marker, because the provider gets the system
+    prompt separately, so the instruction was cut off too.
+  - The instruction now follows `=== END REQUEST ===` in the user prompt, once. `chat` is the only tool that
+    sends it; the other tools do not use `build_standard_prompt`.
+  - The cassettes of the `chat` integration tests hold the new request. Their recorded responses do not change.
 
 ### Documentation
 

@@ -813,7 +813,7 @@ class SimpleTool(BaseTool):
         This is a convenience method that handles the common pattern of:
         1. Adding file content if present
         2. Checking token limits
-        3. Adding web search instructions
+        3. Adding web search instructions, after the user request
         4. Combining everything into a well-formatted prompt
 
         Args:
@@ -843,15 +843,17 @@ class SimpleTool(BaseTool):
             if file_content:
                 user_content = f"{user_content}\n\n=== {file_context_title} ===\n{file_content}\n=== END CONTEXT ===="
 
-        # Add standardized web search guidance
+        # Add standardized web search guidance. It goes in the user section, after the request:
+        # prepare_chat_style_prompt sends only that section, because the provider gets the system prompt separately
+        # (issue #33).
         websearch_instruction = self.get_websearch_instruction(self.get_websearch_guidance())
 
         # Combine system prompt with user content
-        full_prompt = f"""{system_prompt}{websearch_instruction}
+        full_prompt = f"""{system_prompt}
 
 === USER REQUEST ===
 {user_content}
-=== END REQUEST ===
+=== END REQUEST ==={websearch_instruction}
 
 Please provide a thoughtful, comprehensive response:"""
 
@@ -1027,7 +1029,8 @@ Please provide a thoughtful, comprehensive response:"""
             system_prompt: System prompt to use (uses get_system_prompt() if None)
 
         Returns:
-            Complete formatted prompt
+            The user section of the prompt, web search guidance included. The system prompt is cut off, because the
+            provider gets it separately. With no system prompt, the whole prompt.
         """
         # Use provided system prompt or get from tool
         if system_prompt is None:
