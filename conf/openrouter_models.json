@@ -724,6 +724,69 @@
       "output_price_per_m": 10.0
     },
     {
+      "model_name": "google/gemini-4-neon",
+      "aliases": [
+        "or-gemini-4-neon",
+        "gemini-4-neon-or"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "description": "Google Gemini 4 Neon via OpenRouter (listed 2026-11-18) - Google's newest reasoning model; AA Intelligence Index v5.0.1 60 at high (55 at medium, 61 at xhigh), third overall behind GPT-6.2 Astra and Claude Fable 5.2; first on the AA Coding Agent Index (59 at xhigh). $3/$15 per M ($0.15 cached input). Multimodal input (text, image, audio, video, files). Served by Google and Google AI Studio.",
+      "intelligence_score": 20,
+      "aa_index": 60,
+      "aa_index_by_effort": {
+        "medium": 55,
+        "high": 60,
+        "xhigh": 61
+      },
+      "effort_levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "allow_code_generation": true,
+      "input_price_per_m": 3.0,
+      "output_price_per_m": 15.0
+    },
+    {
+      "model_name": "google/gemini-4-hydrogen",
+      "aliases": [
+        "or-gemini-4-hydrogen",
+        "gemini-4-hydrogen-or"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 20.0,
+      "description": "Google Gemini 4 Hydrogen via OpenRouter (listed 2026-11-12) - the fast tier of the Gemini 4 family; AA Intelligence Index v5.0.1 51 at high (54 at xhigh), about 38% of Argon's cost per task. $1.50/$7.50 per M ($0.075 cached input). Multimodal input (text, image, audio, video, files). Served by Google and Google AI Studio.",
+      "intelligence_score": 20,
+      "aa_index": 51,
+      "aa_index_by_effort": {
+        "high": 51,
+        "xhigh": 54
+      },
+      "effort_levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "allow_code_generation": true,
+      "input_price_per_m": 1.5,
+      "output_price_per_m": 7.5
+    },
+    {
       "model_name": "google/gemini-4-argon",
       "aliases": [
         "or-gemini-4-argon",

@@ -48,6 +48,10 @@
   `not_accessible`) and `dropped_turns` to `metadata`. Before, only the prompt and the log recorded files that a
   continuation or `read_files` left out. See
   [What the Tool Response Reports](docs/context-revival.md#what-the-tool-response-reports).
+- OpenRouter routes for Gemini 4 Neon (`google/gemini-4-neon`, $3/$15 per M) and Gemini 4 Hydrogen
+  (`google/gemini-4-hydrogen`, $1.50/$7.50 per M). Before, PAL reached them only with a Gemini API key. Their
+  scores and AA values match the native entries, and new score-pinning tests keep the two routes equal. The
+  aliases are `or-gemini-4-neon` / `gemini-4-neon-or` and `or-gemini-4-hydrogen` / `gemini-4-hydrogen-or`.
 
 ### Bug Fixes
 
