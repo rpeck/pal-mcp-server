@@ -21,7 +21,6 @@ from tools.shared.base_tool import BaseTool
 from tools.shared.exceptions import ToolExecutionError
 from tools.shared.schema_builders import SchemaBuilder
 from utils.context_report import ContextReport
-from utils.conversation_memory import CONVERSATION_HISTORY_HEADER
 from utils.model_calls import run_model_call
 
 
@@ -293,7 +292,7 @@ class SimpleTool(BaseTool):
             self._current_arguments = arguments
 
             # Records the files and turns that the model receives or misses, for the response metadata
-            server_context_report = self._start_context_report(arguments)
+            self._start_context_report(arguments)
 
             logger.info(f"🔧 {self.get_name()} tool called with arguments: {list(arguments.keys())}")
 
@@ -341,17 +340,17 @@ class SimpleTool(BaseTool):
 
             # Handle conversation history and prompt preparation
             if continuation_id:
-                # Check if conversation history is already embedded
-                field_value = self.get_request_prompt(request)
-                if CONVERSATION_HISTORY_HEADER in field_value:
-                    # server.py stored the user's turn and embedded the history in the prompt field. Prepare the
-                    # prompt from it as is: the tool adds the new files of this turn, and the size check uses
-                    # _original_user_prompt.
+                if self._continuation_prepared_by_server():
+                    # server.py stored the user's turn and embedded the history (if the thread has turns) in the
+                    # prompt field. Prepare the prompt from it as is: the tool adds the new files of this turn, and
+                    # the size check uses _original_user_prompt.
                     prompt = await self.prepare_prompt(request)
-                    logger.debug(f"{self.get_name()}: Using pre-embedded conversation history")
+                    logger.debug(f"{self.get_name()}: Using the continuation prompt that server.py prepared")
                 else:
-                    # No embedded history - reconstruct it (for in-process calls)
-                    logger.debug(f"{self.get_name()}: No embedded history found, reconstructing conversation")
+                    # A call that did not pass through server.py (an in-process call): build the history here
+                    logger.debug(
+                        f"{self.get_name()}: server.py did not prepare this continuation, building the history"
+                    )
 
                     # Get thread context
                     from utils.conversation_memory import add_turn, build_conversation_history, get_thread
@@ -359,28 +358,24 @@ class SimpleTool(BaseTool):
                     thread_context = get_thread(continuation_id)
 
                     if thread_context:
-                        # Add user's new input to conversation
-                        user_prompt = self.get_request_prompt(request)
-                        user_files = self.get_request_files(request)
-                        if user_prompt:
-                            add_turn(continuation_id, "user", user_prompt, files=user_files)
-
-                            # Get updated thread context after adding the turn
-                            thread_context = get_thread(continuation_id)
-                            logger.debug(
-                                f"{self.get_name()}: Retrieved updated thread with {len(thread_context.turns)} turns"
-                            )
-
-                        # Build conversation history with updated thread context. When server.py built the
-                        # history too, its report already covers the same files, so keep that one.
+                        # Build the history from the turns before this one, as server.py does, so that it does not
+                        # hold the new prompt, which follows it after NEW USER INPUT (issue #34)
                         conversation_history, conversation_tokens = build_conversation_history(
-                            thread_context,
-                            self._model_context,
-                            report=None if server_context_report is not None else self._context_report,
+                            thread_context, self._model_context, report=self._context_report
                         )
 
-                        # Get the base prompt from the tool
+                        # Keep the user's input as given: prepare_prompt takes prompt.txt out of the request files
+                        user_prompt = self.get_request_prompt(request)
+                        user_files = self.get_request_files(request)
+
+                        # Prepare the prompt before the turn is stored. filter_new_files drops each file that the
+                        # thread lists, so the new files of this turn are embedded only while the thread does not
+                        # list them yet.
                         base_prompt = await self.prepare_prompt(request)
+
+                        # Add user's new input to conversation
+                        if user_prompt:
+                            add_turn(continuation_id, "user", user_prompt, files=user_files)
 
                         # Combine with conversation history
                         if conversation_history:
@@ -818,7 +813,7 @@ class SimpleTool(BaseTool):
         This is a convenience method that handles the common pattern of:
         1. Adding file content if present
         2. Checking token limits
-        3. Adding web search instructions
+        3. Adding web search instructions, after the user request
         4. Combining everything into a well-formatted prompt
 
         Args:
@@ -848,19 +843,34 @@ class SimpleTool(BaseTool):
             if file_content:
                 user_content = f"{user_content}\n\n=== {file_context_title} ===\n{file_content}\n=== END CONTEXT ===="
 
-        # Add standardized web search guidance
+        # Add standardized web search guidance. It goes in the user section, after the request:
+        # prepare_chat_style_prompt sends only that section, because the provider gets the system prompt separately
+        # (issue #33).
         websearch_instruction = self.get_websearch_instruction(self.get_websearch_guidance())
 
         # Combine system prompt with user content
-        full_prompt = f"""{system_prompt}{websearch_instruction}
+        full_prompt = f"""{system_prompt}
 
 === USER REQUEST ===
 {user_content}
-=== END REQUEST ===
+=== END REQUEST ==={websearch_instruction}
 
 Please provide a thoughtful, comprehensive response:"""
 
         return full_prompt
+
+    def _continuation_prepared_by_server(self) -> bool:
+        """
+        Whether server.py already handled the continuation of this call (issue #32).
+
+        On a continuation, server.reconstruct_thread_context stores the user's turn, puts the conversation history
+        (if the thread has turns) and the follow-up instructions in the prompt field, and keeps the user's own input
+        in `_original_user_prompt`. That field marks the call: the history header does not, because a thread with
+        no turns gives no history. The chat and clink schemas allow no other properties, so an MCP client cannot
+        pass the field.
+        """
+        current_args = getattr(self, "_current_arguments", None) or {}
+        return "_original_user_prompt" in current_args
 
     def get_prompt_content_for_size_validation(self, user_content: str) -> str:
         """
@@ -930,8 +940,9 @@ Please provide a thoughtful, comprehensive response:"""
 
         # Use prompt.txt content if available, otherwise use the prompt field
         request_prompt = self.get_request_prompt(request)
-        if prompt_content and CONVERSATION_HISTORY_HEADER in request_prompt:
-            # The prompt field holds the history that server.py embedded: keep it in front of the prompt.txt content
+        if prompt_content and self._continuation_prepared_by_server():
+            # The prompt field holds what server.py prepared (the history, if any, and the follow-up instructions):
+            # keep it in front of the prompt.txt content
             user_content = f"{request_prompt}\n\n{prompt_content}"
         else:
             user_content = prompt_content if prompt_content else request_prompt
@@ -1018,7 +1029,8 @@ Please provide a thoughtful, comprehensive response:"""
             system_prompt: System prompt to use (uses get_system_prompt() if None)
 
         Returns:
-            Complete formatted prompt
+            The user section of the prompt, web search guidance included. The system prompt is cut off, because the
+            provider gets it separately. With no system prompt, the whole prompt.
         """
         # Use provided system prompt or get from tool
         if system_prompt is None:
