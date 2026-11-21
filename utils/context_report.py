@@ -2,13 +2,14 @@
 Context report: what the model received in one tool call.
 
 The conversation history and read_files leave files out when they do not fit, are missing, or cannot be read,
-and the history drops its oldest turns when they do not fit. The prompt tells the model about this, and the log
-records it. A ContextReport collects the same facts while the prompt is built, so that the tool response can
-tell the MCP client in `metadata` (issue #15):
+and the history leaves out each turn that does not fit its budget (issue #45). The prompt tells the model about
+this, and the log records it. A ContextReport collects the same facts while the prompt is built, so that the tool
+response can tell the MCP client in `metadata` (issue #15):
 
 - `embedded_files`: the paths whose content the model received, in the order they were embedded.
 - `omitted_files`: the paths that were left out, each as {"path": ..., "reason": ...}.
-- `dropped_turns`: the number of older turns left out of the conversation history.
+- `dropped_turns`: the number of turns left out of the conversation history. The omission notes in the history
+  are not turns.
 
 The three fields are always present on a response that carries them; a call that omits nothing has empty lists
 and 0.

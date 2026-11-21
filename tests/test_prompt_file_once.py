@@ -10,7 +10,8 @@ These tests check that the prompt text appears once, that embedded_files and the
 prompt.txt, and that the other files of the request are still embedded once.
 
 The thread stores the prompt.txt text in the user's turn, after the prompt, so that a follow-up holds the question
-once, in its history. A long turn is left out of the history by the history budget, as any long turn is.
+once, in its history. A long turn is left out of the history by the history budget, as any long turn is, and the
+older short turns stay (issue #45).
 """
 
 import json
@@ -371,3 +372,45 @@ class TestFollowUp:
         assert output["metadata"]["dropped_turns"] == 1
         assert PROMPT_MARK not in prompt
         assert prompt.count(FOLLOW_UP) == 1
+
+    @pytest.mark.asyncio
+    async def test_long_turn_keeps_the_older_short_turns(self, workspace):
+        # Turns 1 and 2: a short exchange. Turn 3: a long prompt.txt. Turn 4: the reply to it (issue #45).
+        thread_id = create_thread("chat", {"prompt": FIRST_PROMPT})
+        add_turn(thread_id, "user", FIRST_PROMPT, tool_name="chat")
+        add_turn(thread_id, "assistant", FIRST_REPLY, tool_name="chat", model_name="gemini-2.5-flash")
+        prompt_file = write_file(workspace, "prompt.txt", PROMPT_MARK + "\n" + "x" * 40_000)
+        await call_chat(
+            {
+                "prompt": "See prompt.txt",
+                "continuation_id": thread_id,
+                "absolute_file_paths": [prompt_file],
+                "model": "gemini-2.5-flash",
+                "working_directory_absolute_path": str(workspace),
+            }
+        )
+        assert len(get_thread(thread_id).turns) == 4
+
+        # A history budget that holds the short turns, not the long user turn
+        small_history = TokenAllocation(
+            total_tokens=1_000_000,
+            content_tokens=800_000,
+            response_tokens=200_000,
+            file_tokens=300_000,
+            history_tokens=2_000,
+        )
+        with patch("utils.model_context.ModelContext.calculate_token_allocation", return_value=small_history):
+            output, prompt = await call_chat(follow_up_arguments(thread_id, workspace))
+
+        assert output["metadata"]["dropped_turns"] == 1
+        assert PROMPT_MARK not in prompt
+        marks = [
+            FIRST_PROMPT,
+            FIRST_REPLY,
+            "\n[Turn 3 omitted: too large for the history budget]\n",
+            "--- Turn 4 (",
+            "=== END CONVERSATION HISTORY ===",
+            FOLLOW_UP,
+        ]
+        positions = [prompt.index(mark) for mark in marks]
+        assert positions == sorted(positions)

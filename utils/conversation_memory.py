@@ -72,11 +72,16 @@ FILE PRIORITIZATION (Newest-First Throughout):
 
 CONVERSATION TURN PRIORITIZATION (Newest-First Collection, Chronological Presentation):
 1. COLLECTION PHASE: Processes turns newest-to-oldest to prioritize recent context
-   - When token budget is tight, OLDER turns are excluded first
-   - Ensures most contextually relevant recent exchanges are preserved
+   - Newer turns get the history budget first, so when it is tight, older turns are left out first
+   - A turn that does not fit the budget left is skipped, and the walk goes on to the older turns:
+     one long turn does not hide the older short turns that fit (issue #45)
+   - A turn is never cut: it is in the history whole, or it is left out
 2. PRESENTATION PHASE: Reverses collected turns to chronological order (oldest-first)
    - LLM sees natural conversation flow: "Turn 1 → Turn 2 → Turn 3..."
-   - Maintains proper sequential understanding while preserving recency prioritization
+   - A one-line note takes the place of each run of skipped turns, for example
+     "[Turn 3 omitted: too large for the history budget]", so the LLM knows the history has a gap.
+     The note's tokens count against the history budget; the note is not a turn.
+   - Turn numbers stay the real turn numbers of the thread
 
 This dual approach ensures optimal context preservation (newest-first) with natural
 conversation flow (chronological) for maximum LLM comprehension and relevance.
@@ -89,16 +94,25 @@ USAGE EXAMPLE:
 5. Tool B adds its response: add_turn(UUID, "assistant", response, tool_name="codereview")
 
 DUAL STRATEGY EXAMPLE:
-Conversation has 5 turns, token budget allows only 3 turns:
+Conversation has 5 short turns, token budget allows only 3 turns:
 
 Collection Phase (Newest-First Priority):
 - Evaluates: Turn 5 → Turn 4 → Turn 3 → Turn 2 → Turn 1
 - Includes: Turn 5, Turn 4, Turn 3 (newest 3 fit in budget)
-- Excludes: Turn 2, Turn 1 (oldest, dropped due to token limits)
+- Excludes: Turn 2, Turn 1 (oldest, they do not fit the budget left)
 
 Presentation Phase (Chronological Order):
-- LLM sees: "--- Turn 3 (Agent) ---", "--- Turn 4 (Model) ---", "--- Turn 5 (Agent) ---"
+- LLM sees: "[Turns 1-2 omitted: too large for the history budget]",
+  "--- Turn 3 (Agent) ---", "--- Turn 4 (Model) ---", "--- Turn 5 (Agent) ---"
 - Natural conversation flow maintained despite prioritizing recent context
+
+LONG TURN EXAMPLE:
+Conversation has 5 turns; Turn 3 holds a long prompt.txt that does not fit the budget:
+
+- Evaluates: Turn 5 → Turn 4 → Turn 3 (skipped) → Turn 2 → Turn 1
+- LLM sees: "--- Turn 1 (Agent) ---", "--- Turn 2 (Model) ---",
+  "[Turn 3 omitted: too large for the history budget]", "--- Turn 4 (Model) ---", "--- Turn 5 (Agent) ---"
+- dropped_turns in the tool response metadata is 1
 
 This enables true AI-to-AI collaboration across the entire tool ecosystem with optimal
 context preservation and natural conversation understanding.
@@ -688,13 +702,15 @@ def build_conversation_history(
     PHASE 1 - COLLECTION (Newest-First for Token Budget):
     - Processes conversation turns in REVERSE chronological order (newest to oldest)
     - Prioritizes recent turns within token constraints
-    - If token budget is exceeded, OLDER turns are excluded first
+    - A turn that does not fit the budget left is skipped, and older turns that fit are still included
     - Ensures the most contextually relevant recent exchanges are preserved
 
     PHASE 2 - PRESENTATION (Chronological for LLM Understanding):
     - Reverses the collected turns back to chronological order (oldest to newest)
     - Presents conversation flow naturally for LLM comprehension
-    - Maintains "--- Turn 1, Turn 2, Turn 3..." sequential numbering
+    - Keeps the real turn numbers: "--- Turn 1, Turn 2, Turn 3..."
+    - Puts "[Turn N omitted: too large for the history budget]" where a turn was skipped, one note for each
+      run of consecutive skipped turns ("[Turns 2-4 omitted: ...]")
     - Enables LLM to follow conversation progression logically
 
     This approach balances recency prioritization with natural conversation flow.
@@ -702,8 +718,10 @@ def build_conversation_history(
     TOKEN MANAGEMENT:
     - Uses model-specific token allocation (file_tokens + history_tokens)
     - Files are embedded ONCE at the start to prevent duplication
+    - The file budget and the turn budget are planned separately
     - Turn collection prioritizes newest-first, presentation shows chronologically
-    - Stops adding turns when token budget would be exceeded
+    - Skips each turn that would exceed the token budget; the omission notes count against the budget
+    - Never cuts a turn: a turn is shown whole or left out
     - Gracefully handles token limits with informative notes
 
     Args:
@@ -711,7 +729,8 @@ def build_conversation_history(
         model_context: ModelContext for token allocation (optional, uses DEFAULT_MODEL fallback)
         read_files_func: Optional function to read files (primarily for testing)
         report: Optional ContextReport that receives the files embedded, the files omitted with their reason,
-                and the number of dropped turns, for the tool response metadata
+                and the number of dropped turns (every turn left out, wherever it is), for the tool response
+                metadata
 
     Returns:
         tuple[str, int]: (formatted_conversation_history, total_tokens_used)
@@ -744,6 +763,14 @@ def build_conversation_history(
         Files used in this turn: file3.py
 
         <turn_content>
+
+        [Turn 3 omitted: too large for the history budget]
+
+        --- Turn 4 (Claude) ---
+
+        <turn_content>
+
+        [Note: Showing 3 of 4 turns; the notes above mark the turns left out]
 
         === END CONVERSATION HISTORY ===
 
@@ -963,12 +990,16 @@ def build_conversation_history(
     history_parts.append("Previous conversation turns:")
 
     # === PHASE 1: COLLECTION (Newest-First for Token Budget) ===
-    # Build conversation turns bottom-up (most recent first) to prioritize recent context within token limits
-    # This ensures we include as many recent turns as possible within the token budget by excluding
-    # OLDER turns first when space runs out, preserving the most contextually relevant exchanges
-    turn_entries = []  # Will store (index, formatted_turn_content) for chronological ordering later
-    total_turn_tokens = 0
+    # Build conversation turns bottom-up (most recent first) to prioritize recent context within token limits.
+    # A turn that does not fit the budget left is skipped, and the older turns still get their chance (issue #45):
+    # one long turn no longer hides every older turn. A note takes the place of each run of skipped turns.
+    turn_entries = []  # Formatted turns and omission notes, newest first; reversed later for chronological order
+    total_turn_tokens = 0  # The included turns and the notes of the closed runs of skipped turns
     file_embedding_tokens = sum(model_context.estimate_tokens(part) for part in history_parts)
+    included_turn_numbers: list[int] = []
+    skipped_turn_numbers: list[int] = []
+    skipped_run: list[int] = []  # The current run of consecutive skipped turns, newest first
+    skipped_run_tokens = 0  # The tokens of the note for skipped_run, kept free in the budget
 
     # CRITICAL: Process turns in REVERSE chronological order (newest to oldest)
     # This prioritization strategy ensures recent context is preserved when token budget is tight
@@ -1010,21 +1041,39 @@ def build_conversation_history(
         turn_content = "\n".join(turn_parts)
         turn_tokens = model_context.estimate_tokens(turn_content)
 
-        # Check if adding this turn would exceed history budget
-        if file_embedding_tokens + total_turn_tokens + turn_tokens > max_history_tokens:
-            # Stop adding turns - we've reached the limit
-            logger.debug(f"[HISTORY] Stopping at turn {turn_num} - would exceed history budget")
+        # Check if adding this turn would exceed history budget. The note of the open run of skipped turns
+        # goes in front of this turn if it is included, so its tokens count too.
+        would_total = file_embedding_tokens + total_turn_tokens + skipped_run_tokens + turn_tokens
+        if would_total > max_history_tokens:
+            # Skip this turn, and try the older turns: a shorter one can still fit
+            logger.debug(f"[HISTORY] Skipping turn {turn_num} - would exceed history budget")
             logger.debug(f"[HISTORY]   File tokens: {file_embedding_tokens:,}")
-            logger.debug(f"[HISTORY]   Turn tokens so far: {total_turn_tokens:,}")
+            logger.debug(f"[HISTORY]   Turn tokens so far: {total_turn_tokens + skipped_run_tokens:,}")
             logger.debug(f"[HISTORY]   This turn: {turn_tokens:,}")
-            logger.debug(f"[HISTORY]   Would total: {file_embedding_tokens + total_turn_tokens + turn_tokens:,}")
+            logger.debug(f"[HISTORY]   Would total: {would_total:,}")
             logger.debug(f"[HISTORY]   Budget: {max_history_tokens:,}")
-            break
+            skipped_turn_numbers.append(turn_num)
+            skipped_run.append(turn_num)
+            skipped_run_tokens = model_context.estimate_tokens(_omitted_turns_note(skipped_run))
+            continue
 
-        # Add this turn to our collection (we'll reverse it later for chronological presentation)
-        # Store the original index to maintain proper turn numbering in final output
-        turn_entries.append((idx, turn_content))
+        # This turn is older than the run of skipped turns, so the run's note goes after it in the history
+        if skipped_run:
+            turn_entries.append(_omitted_turns_note(skipped_run))
+            total_turn_tokens += skipped_run_tokens
+            skipped_run, skipped_run_tokens = [], 0
+
+        # Add this turn to our collection (we'll reverse it later for chronological presentation).
+        # turn_num is the turn's place in the whole thread, so the numbers in the history stay the real ones.
+        turn_entries.append(turn_content)
         total_turn_tokens += turn_tokens
+        included_turn_numbers.append(turn_num)
+
+    # The oldest turns were skipped: their note opens the history. The note is always written, so that the model
+    # knows about the gap; when the turns already fill the budget, its few tokens can pass it, as the closing
+    # lines of the history do.
+    if skipped_run:
+        turn_entries.append(_omitted_turns_note(skipped_run))
 
     # === PHASE 2: PRESENTATION (Chronological for LLM Understanding) ===
     # Reverse the collected turns to restore chronological order (oldest first)
@@ -1033,18 +1082,27 @@ def build_conversation_history(
     turn_entries.reverse()
 
     # Add the turns in chronological order for natural LLM comprehension
-    # The LLM will see: "--- Turn 1 (Agent) ---" followed by "--- Turn 2 (Model) ---" etc.
-    for _, turn_content in turn_entries:
-        history_parts.append(turn_content)
+    # The LLM will see: "--- Turn 1 (Agent) ---" followed by "--- Turn 2 (Model) ---" etc.,
+    # with "[Turn N omitted: ...]" where a turn did not fit
+    history_parts.extend(turn_entries)
 
     # Log what we included
-    included_turns = len(turn_entries)
+    included_turns = len(included_turn_numbers)
     total_turns = len(all_turns)
     if report is not None:
         report.dropped_turns = total_turns - included_turns
     if included_turns < total_turns:
-        logger.info(f"[HISTORY] Included {included_turns}/{total_turns} turns due to token limit")
-        history_parts.append(f"\n[Note: Showing {included_turns} most recent turns out of {total_turns} total]")
+        logger.info(
+            f"[HISTORY] Included {included_turns}/{total_turns} turns due to token limit; "
+            f"skipped turns {sorted(skipped_turn_numbers)}"
+        )
+        if not included_turn_numbers or max(skipped_turn_numbers) < min(included_turn_numbers):
+            # Only the oldest turns are left out, so the turns shown are the most recent ones
+            history_parts.append(f"\n[Note: Showing {included_turns} most recent turns out of {total_turns} total]")
+        else:
+            history_parts.append(
+                f"\n[Note: Showing {included_turns} of {total_turns} turns; the notes above mark the turns left out]"
+            )
 
     history_parts.extend(
         [
@@ -1076,6 +1134,24 @@ def build_conversation_history(
     )
 
     return complete_history, total_conversation_tokens
+
+
+def _omitted_turns_note(turn_numbers: list[int]) -> str:
+    """
+    The one-line note that takes the place of a run of consecutive turns left out of the history (issue #45).
+
+    The note is not a turn: dropped_turns counts the turns it stands for. A run of more than one turn gets one
+    note with the range, for example "[Turns 2-4 omitted: too large for the history budget]".
+
+    Args:
+        turn_numbers: The real numbers of the consecutive turns left out, in any order
+
+    Returns:
+        str: The note, formatted to sit between the turn entries of the history
+    """
+    first, last = min(turn_numbers), max(turn_numbers)
+    turns = f"Turn {first}" if first == last else f"Turns {first}-{last}"
+    return f"\n[{turns} omitted: too large for the history budget]"
 
 
 def _get_tool_formatted_content(turn: ConversationTurn) -> list[str]:
