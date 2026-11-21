@@ -46,6 +46,15 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+def is_prompt_file(file_path: str) -> bool:
+    """
+    Tell whether a path is a prompt.txt file, which holds the user's prompt, not a context file.
+
+    Only the exact name matches, not names like "myprompt.txt" or "prompt.txt.bak".
+    """
+    return os.path.basename(file_path) == "prompt.txt"
+
+
 class BaseTool(ABC):
     """
     Abstract base class for all PAL MCP tools.
@@ -956,7 +965,8 @@ class BaseTool(ABC):
             files: List of absolute file paths (will be translated for current environment)
 
         Returns:
-            tuple: (prompt_content, updated_files_list)
+            tuple: (prompt_content, updated_files_list). The list holds the files without prompt.txt, and is empty
+                when prompt.txt was the only file. When no files were given, it is the files as given.
         """
         if not files:
             return None, files
@@ -966,9 +976,7 @@ class BaseTool(ABC):
 
         for file_path in files:
 
-            # Check if the filename is exactly "prompt.txt"
-            # This ensures we don't match files like "myprompt.txt" or "prompt.txt.bak"
-            if os.path.basename(file_path) == "prompt.txt":
+            if is_prompt_file(file_path):
                 try:
                     # Read prompt.txt content and extract just the text
                     content, _ = read_file_content(file_path)
@@ -1001,7 +1009,9 @@ class BaseTool(ABC):
                 # Keep the original path in the files list (will be translated later by read_files)
                 updated_files.append(file_path)
 
-        return prompt_content, updated_files if updated_files else None
+        # An empty list, not None, when prompt.txt was the only file: the caller must take prompt.txt out of the
+        # request files, or read_files embeds it as a context file (issue #39)
+        return prompt_content, updated_files
 
     def get_prompt_content_for_size_validation(self, user_content: str) -> str:
         """

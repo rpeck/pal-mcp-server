@@ -152,6 +152,14 @@
   - The instruction now follows `=== END REQUEST ===` in the user prompt, once. `chat` is the only tool that
     sends it; the other tools do not use `build_standard_prompt`.
   - The cassettes of the `chat` integration tests hold the new request. Their recorded responses do not change.
+- `prompt.txt` reaches the model once, as the prompt (#39). Before, when `prompt.txt` was the only file in
+  `absolute_file_paths`, its text was also embedded as a context file, on a first turn and on a continuation.
+  - `handle_prompt_file` returned `None`, not an empty list, when no other file remained, so the tool kept
+    `prompt.txt` in the request files. It now returns an empty list.
+  - `embedded_files` and the turns that the thread stores no longer list `prompt.txt`, also when other files come
+    with it. Before, a later continuation with no files took `prompt.txt` from the first request and sent its
+    text again, and the history embedded it as a file.
+  - `clink` no longer lists `prompt.txt` under `=== FILE REFERENCES ===`.
 
 ### Documentation
 

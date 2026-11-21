@@ -364,14 +364,16 @@ class SimpleTool(BaseTool):
                             thread_context, self._model_context, report=self._context_report
                         )
 
-                        # Keep the user's input as given: prepare_prompt takes prompt.txt out of the request files
                         user_prompt = self.get_request_prompt(request)
-                        user_files = self.get_request_files(request)
 
                         # Prepare the prompt before the turn is stored. filter_new_files drops each file that the
                         # thread lists, so the new files of this turn are embedded only while the thread does not
                         # list them yet.
                         base_prompt = await self.prepare_prompt(request)
+
+                        # prepare_prompt took prompt.txt out of the request files: the turn does not list it, as
+                        # prompt.txt holds the prompt, not a context file (issue #39)
+                        user_files = self.get_request_files(request)
 
                         # Add user's new input to conversation
                         if user_prompt:
@@ -932,9 +934,9 @@ Please provide a thoughtful, comprehensive response:"""
         if files:
             prompt_content, updated_files = self.handle_prompt_file(files)
 
-            # Update request files list if needed
-            if updated_files is not None:
-                self.set_request_files(request, updated_files)
+            # prompt.txt is the prompt, not a context file: take it out of the request files, also when no other
+            # file remains (issue #39)
+            self.set_request_files(request, updated_files)
         else:
             prompt_content = None
 
