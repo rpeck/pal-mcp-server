@@ -57,6 +57,8 @@ SCORE_PINS = [
     ("anthropic_models.json", "claude-fable-5-2", "anthropic/claude-fable-5.2"),
     ("gemini_models.json", "gemini-4-carbon", "google/gemini-4-carbon"),
     ("zai_models.json", "glm-5.3-flash", "z-ai/glm-5.3-flash"),
+    ("gemini_models.json", "gemini-4-neon", "google/gemini-4-neon"),
+    ("gemini_models.json", "gemini-4-hydrogen", "google/gemini-4-hydrogen"),
 ]
 
 
