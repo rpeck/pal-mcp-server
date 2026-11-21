@@ -12,12 +12,14 @@
   key as not set. See [1Password Secret References](docs/1password.md).
 - 1Password references from more than one account: `PAL_OP_ACCOUNT_<NAME>` sets the account for one
   variable, and `PAL_OP_ACCOUNT` stays the default. PAL keeps each secret by account and reference.
-- Optional on macOS, off by default: a keychain cache for 1Password secrets, so that one Touch ID in the morning
-  covers every PAL process for up to 24 hours. Set `PAL_OP_CACHE=keychain` and `PAL_OP_ACCOUNT`, then run
+- Optional on macOS, off by default: a keychain cache for 1Password secrets, so that one Touch ID a day covers
+  every PAL process for up to 24 hours. Set `PAL_OP_CACHE=keychain` and `PAL_OP_ACCOUNT`, then run
   `.pal_venv/bin/python scripts/pal_secrets.py init` (also `pal-secrets init`).
   - `init` gives PAL's venv a private, re-signed copy of its Python binary, so that only PAL's Python can read
-    the cache. It installs LaunchAgents that run `refresh` every morning and at login, and `expire` every 15
-    minutes. `uninstall` undoes all of it.
+    the cache. It installs LaunchAgents that run `refresh` and `expire` every 15 minutes and at login. The
+    refresh job asks 1Password only when the cache has less than 1 hour left and somebody is at the Mac (the
+    screen is unlocked, with input in the last minute). After a failed refresh it waits 1 hour, and each
+    further failure in a row doubles the wait, up to 24 hours. `uninstall` undoes all of it.
   - `refresh` reads all references with one `op inject`, and writes a new keychain whose random password is
     never stored. PAL reads the cache only while it is unlocked and not expired; in every other case it runs
     `op read` as before.
@@ -41,6 +43,13 @@
   `requirements.txt`. `./code_quality_checks.sh` and `./run_integration_tests.sh` use a dev venv, `.dev_venv`,
   with `requirements-dev.txt` too; `code_quality_checks.sh` creates it on first use, with the Python version of
   `.pal_venv`. Before, `code_quality_checks.sh` installed the dev tools into `.pal_venv`.
+- `./run-server.sh` asks uv for a uv-managed Python (`uv venv --managed-python`), not a Homebrew one.
+- `./run-server.sh` registers PAL with `claude mcp add` without `eval`, so a value in `.env` can no longer run as
+  shell code. `.env` values are now passed literally: `$VAR` and `${VAR}` in a value are no longer expanded.
+  Entries with a name that is not a valid variable name are skipped. It no longer prints the values of `.env`
+  (which can be API keys) in a command for a manual run:
+  the command shows `<value from .env>`. It no longer downloads and runs `get-pip.py`; when `ensurepip` fails,
+  it installs pip with `uv pip install pip`.
 - `./run-server.sh` keeps a working uv venv: it no longer builds `.pal_venv` again on every run. It installs new
   or changed requirements into it with `uv pip install -r requirements.txt`.
 - The tool response tells the client which files and turns the model did not receive (#15). `chat`, `clink` and
