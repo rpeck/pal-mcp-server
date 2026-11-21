@@ -478,9 +478,12 @@ class GeminiModelProvider(RegistryBackedProviderMixin, ModelProvider):
             allowed_models = canonical_allowed
 
         # Helper to find best model from candidates.
-        # With DYNAMIC_MODEL_SELECTION enabled, pick the highest-capability candidate by effective
-        # capability rank (driven by intelligence_score), ties broken reverse-alphabetically. The
-        # default (upstream) behaviour is plain reverse-alphabetical ordering.
+        # With DYNAMIC_MODEL_SELECTION enabled, pick the highest-scored candidate: intelligence_score,
+        # then the raw AA Index value, then the effective capability rank, then the name. The 1-20
+        # scale saturates at 20 (AA 49+), and the effective rank adds points such as the output limit,
+        # so without the AA value a weaker model (Gemini 4 Hydrogen, AA 51) could beat a stronger one
+        # (Gemini 4 Carbon, AA 60). This matches the Anthropic and ChatGPT providers. The default
+        # (upstream) behaviour is plain reverse-alphabetical ordering.
         def find_best(candidates: list[str]) -> Optional[str]:
             """Return best model from candidates."""
             if not candidates:
@@ -490,11 +493,14 @@ class GeminiModelProvider(RegistryBackedProviderMixin, ModelProvider):
 
             if dynamic_model_selection_enabled():
 
-                def rank(model_name: str) -> int:
+                def rank(model_name: str) -> tuple:
                     caps = capability_map.get(model_name)
-                    return caps.get_effective_capability_rank() if caps else 0
+                    if not caps:
+                        return (0, -1.0, 0, model_name)
+                    aa_index = caps.aa_index if caps.aa_index is not None else -1.0
+                    return (caps.intelligence_score, aa_index, caps.get_effective_capability_rank(), model_name)
 
-                return max(candidates, key=lambda m: (rank(m), m))
+                return max(candidates, key=rank)
 
             return sorted(candidates, reverse=True)[0]
 

@@ -767,9 +767,10 @@ def test_server_logs_the_chatgpt_timeouts_at_startup(monkeypatch, clean_registry
         if added:
             root.removeHandler(caplog.handler)
 
-    assert (
-        "ChatGPT call timeouts: default 900s (CHATGPT_TIMEOUT_SECONDS); chatgpt/gpt-6-astra: max 3600s" in caplog.text
-    )
+    # Check the parts, not the whole line: each new model with its own timeout adds a part (for example
+    # chatgpt/gpt-6.2-astra in PR #35).
+    assert "ChatGPT call timeouts: default 900s (CHATGPT_TIMEOUT_SECONDS);" in caplog.text
+    assert "chatgpt/gpt-6-astra: max 3600s" in caplog.text
 
 
 def test_server_skips_chatgpt_without_codex_cli(monkeypatch, clean_registry):
@@ -812,7 +813,8 @@ async def test_listmodels_shows_chatgpt_models(monkeypatch, clean_registry):
 
     assert "## ChatGPT (via Codex CLI) ✅" in content
     assert "`chatgpt/gpt-6.1-sol`" in content
-    assert "`chatgpt/sol` → `chatgpt/gpt-6.1-sol`" in content
+    # PR #35 moved the chatgpt/sol alias to GPT-6.2 Sol.
+    assert "`chatgpt/sol` → `chatgpt/gpt-6.2-sol`" in content
 
 
 def test_october_19_additions():
@@ -909,8 +911,10 @@ def test_gemini_4_carbon_is_generally_available():
     assert "auto_selectable" not in orc
 
 
-def test_gemini_4_carbon_auto_mode_picks_it_for_extended_reasoning(monkeypatch):
-    # Issue #14: with only a Gemini key and no allow-list, auto mode must offer and pick Gemini 4 Carbon.
+def test_gemini_4_auto_mode_offers_carbon_and_picks_neon_for_extended_reasoning(monkeypatch):
+    # Issue #14: with only a Gemini key and no allow-list, auto mode must offer Gemini 4 Carbon. Since PR #35 it
+    # picks Gemini 4 Neon: both score 20, and Raymond chose Neon (2026-11-21: on AA, Neon at xhigh performs
+    # better overall and costs less per task than Carbon).
     from providers.gemini import GeminiModelProvider
     from providers.registry import ModelProviderRegistry
     from providers.shared import ProviderType
@@ -932,8 +936,7 @@ def test_gemini_4_carbon_auto_mode_picks_it_for_extended_reasoning(monkeypatch):
             provider, ProviderType.GOOGLE
         )
         assert (
-            ModelProviderRegistry.get_preferred_fallback_model(ToolModelCategory.EXTENDED_REASONING)
-            == "gemini-4-carbon"
+            ModelProviderRegistry.get_preferred_fallback_model(ToolModelCategory.EXTENDED_REASONING) == "gemini-4-neon"
         )
     finally:
         ModelProviderRegistry.reset_for_testing()

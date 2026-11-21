@@ -51,6 +51,11 @@
 
 ### Bug Fixes
 
+- Gemini auto mode (`DYNAMIC_MODEL_SELECTION`) ranks models with the same score by their AA Index value before the
+  output limit, as the Anthropic and ChatGPT providers do. The 1-20 scale stops at 20 for AA 49 and higher, so
+  before, Gemini 4 Hydrogen (AA 51) could rank above Gemini 4 Carbon (AA 60). Gemini 4 Neon stays the pick for
+  extended reasoning.
+
 - A tool call with invalid arguments fails before anything runs, with one error that lists every problem: each
   missing, unknown or wrong parameter by name, with the start of its description, and the instruction to fix them
   and call the tool again. Before, the error named only the first problem, did not name the parameter for a type
