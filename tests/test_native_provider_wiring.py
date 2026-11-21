@@ -259,7 +259,7 @@ def test_deepseek_flash_is_the_api_model_id_and_tracks_the_1017_build():
     flash = ds["deepseek-flash"]
     assert "deepseek-v4.1-flash" not in ds
     assert {"deepseek", "deepseek-v4.1-flash"} <= set(flash["aliases"])
-    assert flash["intelligence_score"] == 16  # AA v5 29 at high (read 2026-11-10)
+    assert flash["intelligence_score"] == 15  # AA v5 29 at high (read 2026-11-10); 15 since the v5.0.1 ladder refit
     assert flash["aa_index_by_effort"] == {"non-reasoning": 19, "high": 29, "max": 33}
     assert flash["supports_images"] is True
     assert "deepseek" not in ds["deepseek-v4-pro"]["aliases"]
@@ -448,7 +448,7 @@ def test_october_releases():
         "google/gemini-4-argon": 20,
         "meta/muse-wonder": 18,
         "mistralai/mistral-large-4-0": 15,
-        "stepfun/step-5-preview": 16,
+        "stepfun/step-5-preview": 15,
         "openai/gpt-6-luna-pro": 13,
     }
     for name, score in expected.items():
@@ -481,13 +481,13 @@ def test_model_catalog_doc_is_current():
     assert not missing, f"regenerate docs/model_catalog.md; missing: {missing}"
 
 
-# AA Index v5 (at the high-effort anchor) -> intelligence_score. Mirrors the ladder in docs/model_ranking.md.
+# AA Index v5.0.1 (at the high-effort anchor) -> intelligence_score. Mirrors the ladder in docs/model_ranking.md.
 AA_LADDER = [
     (49, 20),
     (44, 19),
     (36, 18),
     (32, 17),
-    (29, 16),
+    (30, 16),
     (26, 15),
     (24, 14),
     (21, 13),
@@ -823,7 +823,7 @@ def test_october_19_additions():
     # Models released or listed 2026-10-13..19: AA values read 2026-10-19, scored on the high-effort ladder.
     orm = _orm()
     expected = {
-        "deepseek/deepseek-v4.1-flash-1017": 16,  # AA v5 high 29 (high row added after 2026-10-28)
+        "deepseek/deepseek-v4.1-flash-1017": 15,  # AA v5 high 29 (high row added after 2026-10-28)
         "meta/muse-spark-open": 13,  # AA v5 xhigh 25, high estimated at 23
         "reflection/beam-1.0-501b-a23b": 12,  # AA v5 18, one row
         "nvidia/nemotron-3.5-super-vl": 10,  # AA v5 14, one row
@@ -841,7 +841,7 @@ def test_october_19_additions():
         assert "effort_levels" not in orm[name], name
 
     mm = _models("minimax_models.json")
-    assert mm["MiniMax-M3.1-Flash"]["intelligence_score"] == 16  # AA v5 29, one row
+    assert mm["MiniMax-M3.1-Flash"]["intelligence_score"] == 15  # AA v5 29, one row
     assert "minimax" in mm["MiniMax-M3.1-Flash"]["aliases"]
     assert "minimax" not in mm["MiniMax-M3"]["aliases"]
 
@@ -857,7 +857,7 @@ def test_october_26_additions():
         "openai/gpt-6.1-terra": 18,  # AA v5 42 at high
         "openai/gpt-6.1-terra-pro": 18,  # not measured by AA: provisional, pinned to Terra
         "moonshotai/kimi-k3.1-pro": 19,  # AA v5 46, one row
-        "minimax/minimax-m3.1-flash": 16,  # AA v5 29, one row
+        "minimax/minimax-m3.1-flash": 15,  # AA v5 29, one row
     }
     for name, score in expected.items():
         assert orm[name]["intelligence_score"] == score, name
