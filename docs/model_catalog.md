@@ -107,8 +107,7 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 |---|---|---|---|---|---|
 | Mistral Large 4 | 15 | medium 23, high 26 | native: `mistral-large-4` | `mistral`, `mistral-large`, `mistral-large-4-0`, `mistral-large-latest` |  |
 | Mistral Large 4 | 15 | medium 23, high 26 | openrouter: `mistralai/mistral-large-4-0` | `mistral`, `mistral-large`, `mistral-large-4`, `mistral-large-4-0` |  |
-| Mistral Small 4 | 5 | default 4 | openrouter: `mistralai/mistral-small-2603` | `ministral`, `mistral-small` |  |
-| Mistral Small 4 | 5 | default 4 | native: `mistral-small-4-0-26-03` | `mistral-small`, `mistral-small-4`, `mistral-small-latest` |  |
+| Mistral Small 4 | 5 | default 4 | native: `mistral-small-2603`<br>openrouter: `mistralai/mistral-small-2603` | `ministral`, `mistral-small`, `mistral-small-4`, `mistral-small-latest` |  |
 
 ## NVIDIA
 
