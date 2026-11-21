@@ -416,6 +416,11 @@ The MCP protocol has a combined request+response limit of approximately 25K toke
 4. The server reads the file content directly into Gemini's 1M token context
 5. The full MCP token capacity is preserved for the response
 
+**What the limit counts:**
+- The limit counts only the text that crosses the MCP transport: the `prompt` field. The server reads `prompt.txt` from disk, so its text does not count, on a first turn and on a continuation.
+- The real limit for `prompt.txt` is the model's context window. If the whole prompt does not fit it, the tool answers with an error that gives the prompt size and the window size. It does not ask for `prompt.txt` again.
+- The file budget for `absolute_file_paths` does not count `prompt.txt`, because it holds the prompt, not a context file.
+
 **Example scenario:**
 ```
 # You have a massive code review request with detailed context

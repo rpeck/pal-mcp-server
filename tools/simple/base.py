@@ -340,6 +340,9 @@ class SimpleTool(BaseTool):
             images = self.get_request_images(request)
             continuation_id = self.get_request_continuation_id(request)
 
+            # The user's turn of a direct continuation, which is stored once the prompt passes every check
+            pending_user_turn = None
+
             # Handle conversation history and prompt preparation
             if continuation_id:
                 if self._continuation_prepared_by_server():
@@ -355,7 +358,7 @@ class SimpleTool(BaseTool):
                     )
 
                     # Get thread context
-                    from utils.conversation_memory import add_turn, build_conversation_history, get_thread
+                    from utils.conversation_memory import build_conversation_history, get_thread
 
                     thread_context = get_thread(continuation_id)
 
@@ -376,9 +379,9 @@ class SimpleTool(BaseTool):
                         user_prompt = user_turn_content(self.get_request_prompt(request), self._prompt_file_text)
                         user_files = self.get_request_files(request)
 
-                        # Add user's new input to conversation
+                        # Add user's new input to conversation, after the context window check below
                         if user_prompt:
-                            add_turn(continuation_id, "user", user_prompt, files=user_files)
+                            pending_user_turn = (user_prompt, user_files)
 
                         # Combine with conversation history
                         if conversation_history:
@@ -438,6 +441,16 @@ class SimpleTool(BaseTool):
             )
             language_instruction = self.get_language_instruction()
             system_prompt = language_instruction + capability_augmented_prompt
+
+            # The MCP size limit holds only for the text that crossed the transport, so a large prompt.txt gets here:
+            # its limit is the model's context window (issue #44)
+            self._check_prompt_fits_context_window(system_prompt, prompt, capabilities)
+
+            if pending_user_turn:
+                from utils.conversation_memory import add_turn
+
+                user_prompt, user_files = pending_user_turn
+                add_turn(continuation_id, "user", user_prompt, files=user_files)
 
             # Generate AI response using the provider
             logger.info(f"Sending request to {provider.get_provider_type().value} API for {self.get_name()}")
@@ -832,8 +845,9 @@ class SimpleTool(BaseTool):
         Returns:
             Complete formatted prompt ready for the AI model
         """
-        # Check size limits against raw user input before enriching with internal context
-        content_to_validate = self.get_prompt_content_for_size_validation(user_content)
+        # Check size limits against the user input that crossed the MCP transport: the prompt field, not the prompt.txt
+        # text that user_content may hold (issue #44), and not the internal context added below
+        content_to_validate = self.get_prompt_content_for_size_validation(self.get_request_prompt(request))
         self._validate_token_limit(content_to_validate, "Content")
 
         # Add context files if provided (does not affect MCP boundary enforcement)
@@ -887,8 +901,11 @@ Please provide a thoughtful, comprehensive response:"""
         the original user prompt in _original_user_prompt. We use that for size validation
         to avoid incorrectly triggering size limits due to conversation history.
 
+        The callers pass the prompt field, never the prompt.txt text: PAL reads prompt.txt from disk, so its text
+        does not cross the MCP transport (issue #44).
+
         Args:
-            user_content: The user content (may include conversation history)
+            user_content: The prompt field of the request (may include conversation history)
 
         Returns:
             The original user prompt if available, otherwise the full user content
@@ -904,6 +921,57 @@ Please provide a thoughtful, comprehensive response:"""
 
         # Fallback to default behavior (validate full user content)
         return user_content
+
+    def _check_prompt_fits_context_window(self, system_prompt: str, prompt: str, capabilities) -> None:
+        """
+        Reject a prompt that does not fit the model's context window, before the provider call (issue #44).
+
+        The MCP size limit holds only for the text that crossed the transport, so a large prompt.txt reaches the
+        model call. The conversation history and the files have token budgets, the prompt text has none: without
+        this check, the provider would reject the request with its own error. The estimate is the one that the
+        budgets use, about 4 characters a token.
+
+        Raises:
+            ToolExecutionError: With status "error", when the system prompt and the prompt are larger than the
+                context window
+        """
+        from utils.token_utils import estimate_tokens
+
+        context_window = getattr(capabilities, "context_window", None)
+        if not isinstance(context_window, int) or context_window <= 0:
+            return
+
+        prompt_tokens = estimate_tokens(system_prompt or "") + estimate_tokens(prompt or "")
+        if prompt_tokens <= context_window:
+            return
+
+        from tools.models import ToolOutput
+
+        model_name = self._model_context.model_name
+        error_output = ToolOutput(
+            status="error",
+            content=(
+                f"The prompt does not fit the context window of {model_name}: it is about {prompt_tokens:,} tokens, "
+                f"and the window holds {context_window:,} tokens. Shorten the prompt (or prompt.txt), send fewer "
+                "files, or use a model with a larger context window."
+            ),
+            content_type="text",
+            metadata={
+                "prompt_tokens": prompt_tokens,
+                "context_window": context_window,
+                "model_name": model_name,
+            },
+        )
+        import logging
+
+        logging.getLogger(f"tools.{self.get_name()}").error(
+            "%s: the prompt (~%s tokens) does not fit the context window of %s (%s tokens)",
+            self.get_name(),
+            f"{prompt_tokens:,}",
+            model_name,
+            f"{context_window:,}",
+        )
+        raise ToolExecutionError(error_output.model_dump_json())
 
     def get_websearch_guidance(self) -> Optional[str]:
         """
@@ -932,7 +1000,7 @@ Please provide a thoughtful, comprehensive response:"""
             The effective prompt content
 
         Raises:
-            ValueError: If prompt is too large for MCP transport
+            ValueError: If the prompt field is too large for MCP transport. The prompt.txt text does not count.
         """
         # Check for prompt.txt in provided absolute file paths
         files = self.get_request_files(request)
@@ -955,8 +1023,10 @@ Please provide a thoughtful, comprehensive response:"""
         else:
             user_content = prompt_content if prompt_content else request_prompt
 
-        # Check user input size at MCP transport boundary (excluding conversation history)
-        validation_content = self.get_prompt_content_for_size_validation(user_content)
+        # Check the size of the text that crossed the MCP transport: the prompt field, without the conversation history
+        # that server.py adds. PAL reads prompt.txt from disk, so its text does not count: the model's context window
+        # limits it (issue #44).
+        validation_content = self.get_prompt_content_for_size_validation(request_prompt)
         size_check = self.check_prompt_size(validation_content)
         if size_check:
             from tools.models import ToolOutput

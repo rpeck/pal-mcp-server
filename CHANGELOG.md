@@ -166,6 +166,20 @@
     history embedded `prompt.txt` as it was at that time, which was wrong once the client overwrote the file.
   - A long `prompt.txt` makes a long turn. The history budget leaves it out like any long turn, and
     `dropped_turns` counts it.
+- A `prompt.txt` larger than `MCP_PROMPT_SIZE_LIMIT` (60,000 characters by default) reaches the model (#44).
+  Before, `chat` and `clink` checked its text against that limit on a first turn and on a direct continuation, and
+  answered `resend_prompt`: they told the client to use `prompt.txt`, which it already did.
+  - The limit is for the MCP transport, and PAL reads `prompt.txt` from disk. The check now counts only the
+    `prompt` field, or the user's input that server.py keeps in `_original_user_prompt` on a continuation. A
+    `prompt` field over the limit still gets `resend_prompt`, also when `prompt.txt` comes with it.
+  - The model's context window is the real limit. When the system prompt and the prompt do not fit it, `chat`
+    answers with an error that gives both sizes, and calls no model. On a direct continuation, the tool then
+    does not store the user's turn.
+  - server.py no longer counts `prompt.txt` against the file budget of `absolute_file_paths`. Before, through
+    server.py, a `prompt.txt` larger than that budget (a part of the context window) got `code_too_large`, which
+    told the client to select fewer files.
+  - `clink` answers a `prompt` field over the limit with `resend_prompt`. Before, it gave an error that held the
+    `resend_prompt` answer as text.
 
 ### Documentation
 

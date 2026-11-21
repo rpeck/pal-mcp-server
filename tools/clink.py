@@ -208,6 +208,10 @@ class CLinkTool(SimpleTool):
                 include_system_prompt=include_system_prompt,
             )
         except Exception as exc:
+            if str(exc).startswith("MCP_SIZE_CHECK:"):
+                # The prompt field is too large for the MCP transport: return the resend_prompt answer as is, as
+                # SimpleTool does, so that the client saves the prompt to prompt.txt
+                raise ToolExecutionError(str(exc)[len("MCP_SIZE_CHECK:") :]) from exc
             logger.exception("Failed to prepare clink prompt")
             self._raise_tool_error(f"Failed to prepare prompt: {exc}")
 
