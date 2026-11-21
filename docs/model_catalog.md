@@ -1,6 +1,6 @@
 # Model catalog (measured models and explicit-only presets)
 
-Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-11-11. Do not edit by hand; run the script after a catalog change.
+Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 2026-11-21. Do not edit by hand; run the script after a catalog change.
 
 - **Scope:** every model with a measured Artificial Analysis (AA) Intelligence Index value, plus the explicit-only presets. Older and unmeasured entries are in the conf files only.
 - **Score:** the 1-20 `intelligence_score` that auto mode ranks by. See [model_ranking.md](model_ranking.md) for how it is anchored to the AA Index.
@@ -39,6 +39,8 @@ Generated from `conf/*_models.json` by `scripts/generate_model_catalog.py` on 20
 |---|---|---|---|---|---|
 | Gemini (4 Argon) | 20 | high 50 | native: `gemini-4-argon`<br>openrouter: `google/gemini-4-argon` | `argon`, `gemini-4-argon-or`, `gemini-argon`, `or-gemini-4-argon` |  |
 | Gemini (4 Carbon) | 20 | low 54, medium 58, high 60 | native: `gemini-4-carbon`<br>openrouter: `google/gemini-4-carbon` | `carbon`, `gemini-4-carbon-or`, `gemini-carbon`, `or-gemini-4-carbon` |  |
+| Gemini (4 Hydrogen) | 20 | high 51, xhigh 54 | native: `gemini-4-hydrogen` | `gemini-hydrogen`, `hydrogen` |  |
+| Gemini (4 Neon) | 20 | medium 55, high 60, xhigh 61 | native: `gemini-4-neon` | `gemini-neon`, `neon` |  |
 | Gemini 3.8 Flash | 16 | low 23, medium 30, high 31 | native: `gemini-3.8-flash`<br>openrouter: `google/gemini-3.8-flash` | `flash3.8`, `gemini-3.8-flash`, `gemini-flash-latest`; flag-only: `flash` |  |
 | Gemini 3.5 Flash-Lite | 9 | default 12 | native: `gemini-3.5-flash-lite` | `flashlite3.5`, `gemini-flash-lite-latest`; flag-only: `flash-lite`, `flashlite` |  |
 | Gemma 4 31B | 5 | default 4 | openrouter: `google/gemma-4-31b-it` | `gemma`, `gemma-4`, `gemma-4-31b` |  |
