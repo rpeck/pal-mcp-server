@@ -3,6 +3,7 @@
 import json
 import os
 import plistlib
+import re
 import subprocess
 import sys
 import threading
@@ -404,8 +405,8 @@ def test_refresh_needs_references_and_an_account(monkeypatch, keychain):
 
 @pytest.mark.parametrize(
     ("hours_left", "state", "refreshed"),
-    [(20, cache.UNLOCKED, False), (11, cache.UNLOCKED, True), (20, cache.LOCKED, True)],
-    ids=["valid", "less-than-12-hours", "locked"],
+    [(20, cache.UNLOCKED, False), (2, cache.UNLOCKED, False), (0.5, cache.UNLOCKED, True), (20, cache.LOCKED, True)],
+    ids=["valid", "two-hours-left", "less-than-1-hour", "locked"],
 )
 def test_refresh_if_needed(keychain, configured, hours_left, state, refreshed):
     keychain.make(state=state, expires_at=time.time() + hours_left * 3600)
@@ -742,15 +743,23 @@ def test_init_installs_two_launch_agents_that_run_the_private_copy(monkeypatch, 
     launchctl = MagicMock(return_value=subprocess.CompletedProcess(["launchctl"], 0, "", ""))
     monkeypatch.setattr(pal_secrets, "_launchctl", launchctl)
 
-    assert pal_secrets.main(["init", "--refresh-at", "7:05"]) == 0
+    assert pal_secrets.main(["init"]) == 0
 
     with open(agents / f"{pal_secrets.REFRESH_LABEL}.plist", "rb") as handle:
         refresh = plistlib.load(handle)
     with open(agents / f"{pal_secrets.EXPIRE_LABEL}.plist", "rb") as handle:
         expire = plistlib.load(handle)
     python = str(tmp_path / "venv" / "bin" / "python")
-    assert refresh["ProgramArguments"] == [python, str(pal_secrets.SCRIPT_PATH), "refresh", "--if-needed", "--notify"]
-    assert refresh["StartCalendarInterval"] == {"Hour": 7, "Minute": 5} and refresh["RunAtLoad"] is True
+    assert refresh["ProgramArguments"] == [
+        python,
+        str(pal_secrets.SCRIPT_PATH),
+        "refresh",
+        "--if-needed",
+        "--when-present",
+        "--notify",
+    ]
+    assert refresh["StartInterval"] == 15 * 60 and refresh["RunAtLoad"] is True
+    assert "StartCalendarInterval" not in refresh, "no fixed time: a prompt at a fixed minute can find nobody"
     assert refresh["EnvironmentVariables"]["PATH"].startswith("/opt/op-folder:")
     assert "ProcessType" not in refresh
     assert expire["ProgramArguments"][2:] == ["expire"]
@@ -844,3 +853,257 @@ def test_the_notification_text_is_an_argument_not_script(monkeypatch):
     command = run.call_args.args[0]
     assert command[0] == "osascript" and command[-1] == 'a "quoted" text'
     assert all('"quoted"' not in part for part in command[:-1])
+
+
+# --- The launchd job: prompt only when somebody is at the Mac ---------------------------------------------------
+
+
+def _session(locked=None, on_console=True, uid=501):
+    user = {"kCGSSessionUserIDKey": uid, "kCGSSessionOnConsoleKey": on_console}
+    if locked is not None:
+        user["CGSSessionScreenIsLocked"] = locked
+    return [{"IOConsoleUsers": [{"kCGSSessionUserIDKey": 999, "kCGSSessionOnConsoleKey": True}, user]}]
+
+
+def _hid(*seconds):
+    return [{"IOClass": "IOHIDSystem", "HIDIdleTime": int(value * 1e9)} for value in seconds]
+
+
+@pytest.mark.parametrize(
+    ("session", "idle", "present", "reason"),
+    [
+        (_session(), 5, True, "present"),
+        (_session(locked=False), 5, True, "present"),
+        (_session(locked=True), 5, False, "the screen is locked"),
+        (_session(on_console=False), 5, False, "this user is not on the console"),
+        (_session(uid=1234), 5, False, "this user is not on the console"),
+        (_session(), 300, False, "no keyboard or mouse input for 300s"),
+        ([{}], 5, False, "this user is not on the console"),
+        (_session()[0], 5, True, "present"),
+        (
+            [{"IOConsoleUsers": ["not a dict", {"kCGSSessionUserIDKey": 501, "kCGSSessionOnConsoleKey": True}]}],
+            5,
+            True,
+            "present",
+        ),
+    ],
+    ids=[
+        "unlocked",
+        "unlock-key-false",
+        "locked",
+        "switched-out",
+        "other-user",
+        "idle",
+        "no-session",
+        "dict-shape",
+        "bad-entry",
+    ],
+)
+def test_presence(session, idle, present, reason):
+    assert pal_secrets._presence(session, _hid(idle), 501, 60) == (present, reason)
+
+
+def test_presence_needs_an_idle_time():
+    assert pal_secrets._presence(_session(), [{"IOClass": "IOHIDSystem"}], 501, 60) == (False, "no input idle time")
+    assert pal_secrets._presence(_session(), "not a plist list", 501, 60) == (False, "no input idle time")
+
+
+def test_presence_uses_the_smallest_idle_time():
+    assert pal_secrets._presence(_session(), _hid(900, 3), 501, 60) == (True, "present")
+
+
+def test_user_present_calls_ioreg_by_its_full_path(monkeypatch):
+    # launchd gives the job a PATH without /usr/sbin, where ioreg is.
+    import plistlib
+
+    commands = []
+
+    def run(command, **kwargs):
+        commands.append(command)
+        data = _session()[0] if "Root" in command else _hid(1)
+        return subprocess.CompletedProcess(command, 0, plistlib.dumps(data), b"")
+
+    monkeypatch.setattr(subprocess, "run", run)
+    monkeypatch.setattr(pal_secrets.os, "getuid", lambda: 501)
+
+    assert pal_secrets.user_present() == (True, "present")
+    assert [command[0] for command in commands] == ["/usr/sbin/ioreg", "/usr/sbin/ioreg"]
+    assert "-d" in commands[1] and commands[1][commands[1].index("-d") + 1] == "1", "independent of the tree depth"
+
+
+@pytest.mark.parametrize(
+    "error",
+    [FileNotFoundError("ioreg"), subprocess.TimeoutExpired("ioreg", 10), subprocess.CalledProcessError(1, "ioreg")],
+    ids=["missing", "timeout", "exit-status"],
+)
+def test_user_present_is_false_when_ioreg_fails(monkeypatch, error):
+    monkeypatch.setattr(subprocess, "run", MagicMock(side_effect=error))
+
+    present, reason = pal_secrets.user_present()
+
+    assert present is False and reason.startswith("cannot read the session state")
+
+
+def test_user_present_is_false_on_bad_plist(monkeypatch):
+    monkeypatch.setattr(
+        subprocess, "run", lambda command, **kwargs: subprocess.CompletedProcess(command, 0, b"not a plist", b"")
+    )
+
+    assert pal_secrets.user_present()[0] is False
+
+
+def _launchd_refresh():
+    return pal_secrets.main(["refresh", "--if-needed", "--when-present", "--notify"])
+
+
+def test_the_launchd_job_skips_quietly_when_nobody_is_there(monkeypatch, keychain, configured, capsys):
+    monkeypatch.setattr(pal_secrets, "user_present", lambda: (False, "the screen is locked"))
+    notify = MagicMock()
+    monkeypatch.setattr(pal_secrets, "_notify", notify)
+
+    assert _launchd_refresh() == 0
+
+    configured.assert_not_called()
+    notify.assert_not_called()
+    assert capsys.readouterr().out == "", "a skip every 15 minutes must not fill the log"
+
+
+def test_the_launchd_job_skips_quietly_when_the_cache_is_valid(monkeypatch, keychain, configured, capsys):
+    keychain.make(expires_at=time.time() + 20 * 3600)
+    monkeypatch.setattr(pal_secrets, "user_present", MagicMock(side_effect=AssertionError("not needed")))
+
+    assert _launchd_refresh() == 0
+
+    configured.assert_not_called()
+    assert capsys.readouterr().out == ""
+
+
+def test_the_launchd_job_refreshes_when_due_and_present(monkeypatch, keychain, configured, capsys):
+    monkeypatch.setattr(pal_secrets, "user_present", lambda: (True, "present"))
+
+    assert _launchd_refresh() == 0
+
+    configured.assert_called_once()
+    assert "due, and the user is present" in capsys.readouterr().out
+
+
+def test_after_a_failed_prompt_the_job_waits_one_hour(monkeypatch, keychain, configured):
+    monkeypatch.setattr(pal_secrets, "user_present", lambda: (True, "present"))
+    monkeypatch.setattr(pal_secrets, "_notify", MagicMock())
+    configured.side_effect = pal_secrets.PalSecretsError("op inject failed: authorization timeout")
+
+    assert _launchd_refresh() == 1
+    assert pal_secrets._failure_path().exists()
+    assert _launchd_refresh() == 0
+    assert configured.call_count == 1, "no second prompt within the hour"
+
+    # A manual refresh ignores the wait; a success clears it.
+    configured.side_effect = None
+    assert pal_secrets.main(["refresh"]) == 0
+    assert configured.call_count == 2
+    assert not pal_secrets._failure_path().exists()
+
+
+def _write_failure(text):
+    cache.STATE_DIR.mkdir(parents=True, exist_ok=True)
+    pal_secrets._failure_path().write_text(text)
+
+
+def test_the_wait_ends_after_one_hour(monkeypatch, keychain, configured):
+    monkeypatch.setattr(pal_secrets, "user_present", lambda: (True, "present"))
+    _write_failure(f"{time.time() - pal_secrets.RETRY_AFTER_FAILURE_SECONDS - 1} 1\n")
+
+    assert _launchd_refresh() == 0
+
+    configured.assert_called_once()
+
+
+def test_the_back_off_doubles_up_to_24_hours():
+    hours = [pal_secrets.back_off_seconds(count) / 3600 for count in range(1, 8)]
+
+    assert hours == [1, 2, 4, 8, 16, 24, 24]
+
+
+def test_failures_in_a_row_escalate_the_back_off(monkeypatch, keychain, configured):
+    monkeypatch.setattr(pal_secrets, "user_present", lambda: (True, "present"))
+    monkeypatch.setattr(pal_secrets, "_notify", MagicMock())
+    configured.side_effect = pal_secrets.PalSecretsError("op inject failed: item not found")
+    _write_failure(f"{time.time() - 3 * 3600} 2\n")  # two failures, the last one 3 hours ago: the 2-hour wait is over
+
+    assert _launchd_refresh() == 1
+
+    assert pal_secrets._failure_path().read_text().split()[1] == "3"
+    # Third failure: a 4-hour wait.
+    _write_failure(f"{time.time() - 3 * 3600} 3\n")
+    assert _launchd_refresh() == 0
+    assert configured.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["garbage", "inf 1", "nan 1", f"{time.time() + 7200} 1", "123.0 0"],
+    ids=["garbage", "inf", "nan", "future", "zero-count"],
+)
+def test_a_bad_failure_file_does_not_hold_the_back_off(monkeypatch, keychain, configured, text):
+    monkeypatch.setattr(pal_secrets, "user_present", lambda: (True, "present"))
+    _write_failure(text)
+
+    assert _launchd_refresh() == 0
+
+    configured.assert_called_once()
+
+
+def test_an_error_before_the_lock_starts_the_back_off(monkeypatch, keychain):
+    monkeypatch.setattr(pal_secrets, "_notify", MagicMock())
+    monkeypatch.setattr(
+        pal_secrets, "_require_runtime_venv", MagicMock(side_effect=pal_secrets.PalSecretsError("not PAL's venv"))
+    )
+
+    assert _launchd_refresh() == 1
+    assert pal_secrets._failure_path().exists()
+    assert _launchd_refresh() == 0, "the next run within the hour stays quiet"
+    assert pal_secrets._require_runtime_venv.call_count == 1
+
+
+def test_the_launchd_job_skips_a_busy_lock_quietly(monkeypatch, keychain, configured, capsys):
+    monkeypatch.setattr(pal_secrets, "LOCK_WAIT_SECONDS", 0.2)
+    notify = MagicMock()
+    monkeypatch.setattr(pal_secrets, "_notify", notify)
+
+    thread = _hold_lock(0.6)
+    assert _launchd_refresh() == 0
+    thread.join()
+
+    notify.assert_not_called()
+    assert not pal_secrets._failure_path().exists()
+    assert capsys.readouterr().out == ""
+
+
+def test_ctrl_c_does_not_start_the_back_off(monkeypatch, keychain, configured):
+    configured.side_effect = KeyboardInterrupt
+
+    with pytest.raises(KeyboardInterrupt):
+        pal_secrets.main(["refresh"])
+
+    assert not pal_secrets._failure_path().exists()
+
+
+def test_error_lines_of_the_launchd_job_have_a_time_stamp(monkeypatch, keychain, configured, capsys):
+    monkeypatch.setattr(pal_secrets, "user_present", lambda: (True, "present"))
+    monkeypatch.setattr(pal_secrets, "_notify", MagicMock())
+    configured.side_effect = pal_secrets.PalSecretsError("op inject failed")
+
+    _launchd_refresh()
+
+    error_line = capsys.readouterr().err.strip().splitlines()[-1]
+    assert re.match(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} pal-secrets refresh: op inject failed", error_line)
+
+
+def test_expire_keeps_the_failure_record(keychain):
+    cache.STATE_DIR.mkdir(parents=True, exist_ok=True)
+    pal_secrets._failure_path().write_text("1.0\n")
+
+    pal_secrets.command_expire(None)
+    pal_secrets.command_clear(None)
+
+    assert pal_secrets._failure_path().exists(), "the orphan clean-up removes *.json files only"

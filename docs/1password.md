@@ -128,8 +128,8 @@ waits.
 ## Keychain cache (macOS)
 
 Each MCP client session starts its own PAL process, and each PAL process runs `op read` again. So each new
-session can show a Touch ID prompt. The optional keychain cache lets one Touch ID in the morning cover every
-PAL process for up to 24 hours.
+session can show a Touch ID prompt. The optional keychain cache lets one Touch ID a day cover every PAL process
+for up to 24 hours.
 
 **The cache is off by default.** Without `PAL_OP_CACHE=keychain`, PAL does not touch a keychain, and nothing
 in this section applies.
@@ -162,7 +162,13 @@ Do the [Setup](#setup) steps first. Then:
    your references are in more than one account, also set `PAL_OP_ACCOUNT_<NAME>` for each variable whose
    account is not the default, for example `PAL_OP_ACCOUNT_OPENAI_API_KEY=client.1password.com`. A variable
    with no account is not cached: PAL logs one warning and runs `op read` for it.
-2. In the PAL folder, run `init` with PAL's own Python:
+2. Check that PAL's venv uses a uv-managed Python: `grep '^home' .pal_venv/pyvenv.cfg` must show a folder under
+   `~/.local/share/uv/python/`.
+   - A venv with another Python, for example a Homebrew framework Python, does not work: `init` refuses it. A
+     `uv =` line alone does not prove it, because uv can also build a venv on a Homebrew Python.
+   - To rebuild the venv, quit the MCP clients that run PAL, then run `./run-server.sh`. It asks uv for a
+     uv-managed Python, and after that it keeps the venv.
+3. In the PAL folder, run `init` with PAL's own Python:
 
    ```bash
    .pal_venv/bin/python scripts/pal_secrets.py init
@@ -170,10 +176,10 @@ Do the [Setup](#setup) steps first. Then:
 
    - `init` gives PAL's venv a private Python copy (see below).
    - It installs two LaunchAgents. The refresh agent starts at once, so 1Password shows one Touch ID prompt.
-   - The morning refresh runs at 08:30. To change the time, add `--refresh-at 07:45`.
-3. Restart PAL, so that it runs on the private copy. In Claude Code, run `/mcp`, select `pal`, and select
+   - After an update of PAL, run `init` again, so that the LaunchAgents get the new schedule.
+4. Restart PAL, so that it runs on the private copy. In Claude Code, run `/mcp`, select `pal`, and select
    **Reconnect**.
-4. Check the result:
+5. Check the result:
 
    ```bash
    .pal_venv/bin/python scripts/pal_secrets.py status
@@ -183,12 +189,34 @@ If PAL is installed as a package, the `pal-secrets` command does the same as `sc
 
 | When | What happens |
 |---|---|
-| Every morning at 08:30 | launchd runs `refresh`. 1Password shows one Touch ID prompt. If the Mac sleeps at 08:30, the job runs when it wakes. |
-| At login | launchd runs `refresh` if the cache has less than 12 hours left or is locked. After a restart, this gives one prompt soon after login. |
+| The cache has less than 1 hour left, and you are at the Mac | Within 15 minutes, launchd runs `refresh`. 1Password shows one Touch ID prompt for each account. |
+| The cache runs out while you are away | Nothing happens until you come back: the job does not prompt to a locked or idle screen. Then a prompt usually comes within 15 minutes: the job needs input in the minute before one of its runs. |
+| You deny or ignore the prompt | The job waits 1 hour before it asks again. Each further failure in a row doubles the wait, up to 24 hours. A success resets it. A `refresh` that you run in Terminal does not wait. |
+| At login | The same check. After a restart the keychain is locked, so a prompt comes soon after login. |
 | A new session during the day | PAL reads the cache. No prompt. |
 | The cache expired, or the refresh did not run | PAL runs `op read`, as without the cache. |
-| A refresh fails | The old cache stays until its own expiry. A notification shows the error and tells you to run `refresh` in Terminal. The log is `~/Library/Logs/pal-secrets.log`. |
+| A refresh fails | The old cache stays until its own expiry. A notification tells you to look in the log, `~/Library/Logs/pal-secrets.log`, and to run `refresh` in Terminal. The error itself is only in the log. |
 | `./run-server.sh` rebuilt the venv | The script repairs the private copy and runs `refresh` (one prompt). |
+
+### The refresh job
+
+The refresh LaunchAgent runs `refresh --if-needed --when-present --notify` every 15 minutes and at login. In each
+run it stops, without a log line, at the first of these checks that fails:
+
+1. **The back-off:** no failed refresh within the wait time: 1 hour after one failure, 2 hours after two in a row,
+   then 4, 8, 16 and at most 24 hours. Every error counts, also one before the job reads 1Password. A Ctrl-C does
+   not count.
+2. **Due:** the cache is missing, locked, or has less than 1 hour left, or a configured reference is not in it.
+3. **Present:** your session is on the console, the screen is not locked, and there was keyboard or mouse input
+   within the last 60 seconds. A sleeping display counts as idle. The job reads these values with `ioreg`.
+
+A prompt to an empty screen times out after about a minute, and the job would then wait an hour. The presence
+check stops that: the job asks only when somebody can answer. The log gets a line only when the job reads
+1Password or fails. If another pal-secrets command holds the lock (for example a `refresh` in Terminal that waits
+for your Touch ID), the job skips that run quietly.
+
+The cache is replaced when it has less than 1 hour left, so the daily prompt comes up to about an hour earlier
+each day, until it falls in a time when you are away. Then it moves to the next time that you are back.
 
 ### The private Python copy
 
@@ -288,7 +316,7 @@ The `PAL_OP_ACCOUNT` settings, `PAL_OP_TIMEOUT_SECONDS` and the cache settings a
 | Command | What it does |
 |---|---|
 | `init` | Makes the private Python copy and installs the two LaunchAgents. Safe to run again. |
-| `refresh` | Reads the references from 1Password and writes a new cache. `--if-needed` skips when the cache has more than 12 hours left. `--ttl-minutes` sets a shorter expiry, for a test. |
+| `refresh` | Reads the references from 1Password and writes a new cache. `--if-needed` skips when the cache has more than 1 hour left. `--when-present` (for launchd) also skips when nobody is at the Mac, and during the back-off after a failed refresh. `--ttl-minutes` sets a shorter expiry, for a test: stop the refresh agent first (`launchctl bootout gui/$(id -u)/org.pal-mcp-server.pal-secrets.refresh`), or it replaces the short cache within 15 minutes. `init` starts it again. |
 | `status` | Shows the settings, the LaunchAgents, the Python, the cache state and expiry, and which references are cached. Never shows a value. |
 | `expire` | Deletes the cache if it has expired or is locked. launchd runs it every 15 minutes. |
 | `clear` | Deletes the cache now. |
@@ -302,11 +330,10 @@ The `PAL_OP_ACCOUNT` settings, `PAL_OP_TIMEOUT_SECONDS` and the cache settings a
   runs `op read`.
 - **A PAL process that started before a refresh** sees the new cache as locked. Values that it read before stay
   in its memory. For a value that it reads for the first time after the refresh, it runs `op read`.
-- **A manual refresh late in the day** can make the next morning refresh skip, because more than 12 hours are
-  left. The cache then expires in the evening. Run `refresh` again, or wait for the next morning.
 - **An SSH session** does not see the keychain as unlocked. PAL in an SSH session runs `op read`.
-- **The morning prompt needs the 1Password app.** If `op` cannot show its prompt from launchd, the refresh
-  fails and the notification appears. Run `refresh` in Terminal.
+- **The prompt needs the 1Password app and somebody at the Mac.** launchd can show the 1Password prompt
+  (tested on macOS 27.2). If it fails, the notification appears, and the job tries again after the back-off.
+  You can also run `refresh` in Terminal.
 - **One PAL folder per user.** The LaunchAgents, the state folder and the lock are the same for every PAL
   folder, and each `refresh` deletes the caches of other Python copies. Turn on the cache in one PAL folder
   only.

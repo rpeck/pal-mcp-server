@@ -3,8 +3,8 @@
 Run it with the Python of PAL's virtual environment: ``.pal_venv/bin/python scripts/pal_secrets.py <command>``.
 Commands:
 
-- ``init``: give the venv a private Python copy, and install two LaunchAgents (``refresh`` every morning and at
-  login, ``expire`` every 15 minutes).
+- ``init``: give the venv a private Python copy, and install two LaunchAgents (``refresh`` and ``expire``, each
+  every 15 minutes and at login). The refresh job prompts only when the cache runs out and the user is present.
 - ``refresh``: read every cached reference from 1Password in one ``op`` process, then write a new keychain.
 - ``status``: show the state of the cache. Never shows a value.
 - ``expire``: delete the cache if it has expired or locked.
@@ -21,6 +21,7 @@ import contextlib
 import fcntl
 import hashlib
 import json
+import math
 import os
 import plistlib
 import re
@@ -56,8 +57,19 @@ LOCK_PATH = Path.home() / "Library" / "Caches" / "pal-secrets.lock"
 
 # Before a delete, wait this long, so that a PAL read that started before the state file went away can end.
 DELETE_GRACE_SECONDS = 2
-# `refresh --if-needed` (launchd, also at login) keeps a cache that stays valid for more than this time.
-IF_NEEDED_SECONDS = 12 * 60 * 60
+# `refresh --if-needed` keeps a cache that stays valid for more than this time.
+IF_NEEDED_SECONDS = 60 * 60
+# The launchd refresh job runs this often, and at login. It reads 1Password only when a refresh is due.
+REFRESH_INTERVAL_SECONDS = 15 * 60
+# `refresh --when-present` prompts only if there was keyboard or mouse input within this time.
+PRESENT_IDLE_SECONDS = 60
+# After a failed refresh (for example a denied or timed-out prompt), `--when-present` waits this long. Each
+# further failure in a row doubles the wait, up to the maximum; a success resets it.
+RETRY_AFTER_FAILURE_SECONDS = 60 * 60
+MAX_RETRY_AFTER_FAILURE_SECONDS = 24 * 60 * 60
+# launchd gives the job a short PATH without /usr/sbin, so call ioreg by its full path.
+IOREG = "/usr/sbin/ioreg"
+FAILURE_FILE_NAME = "last-refresh-failure"
 # How long refresh and the Python copy install wait for another pal-secrets command (for example expire).
 LOCK_WAIT_SECONDS = 30
 # The venv keeps a record of its private Python copy here, so that `uninstall` can restore the link.
@@ -397,8 +409,9 @@ def _check_private_python(python: Path, identifier: str) -> None:
         raise PalSecretsError(f"the private Python copy does not start: {result.stderr.strip()[-300:]}") from None
     if got != [identifier, True, None]:
         raise PalSecretsError(
-            "this Python build runs another binary, so a private copy cannot give PAL its own cdhash; use a "
-            "uv or python-build-standalone Python for PAL's venv"
+            "this Python build runs another binary (for example a Homebrew framework Python), so a private copy "
+            "cannot give PAL its own cdhash. Rebuild PAL's venv with uv: quit the MCP clients that run PAL, then "
+            "run ./run-server.sh (see docs/1password.md, 'Turn it on')"
         )
 
 
@@ -533,50 +546,164 @@ def _write_cache(keychain, cdhash: str, values: dict[tuple[str, str], str], ttl:
 
 
 def command_refresh(args: argparse.Namespace) -> int:
-    _require_runtime_venv()
-    identity = _run_as_private_python(args.argv)
-    keychain = cache.backend()
-    with _exclusive_lock(timeout=LOCK_WAIT_SECONDS) as locked:
-        if not locked:
-            raise PalSecretsError(f"another pal-secrets command held the lock for {LOCK_WAIT_SECONDS}s")
-        references = _accounted_references(configuration_sources())
-        if not references:
-            raise PalSecretsError(
-                "found no op:// references in .env, ~/.claude.json, the Claude Desktop config or "
-                "PAL_OP_CACHE_REFERENCES"
-            )
-        if args.if_needed:
-            state = cache.read_state(identity.cdhash)
-            path = cache.keychain_path(identity.cdhash)
-            if (
-                state is not None
-                and set(references) <= set(state.entries)
-                and state.expires_at - time.time() > IF_NEEDED_SECONDS
-                and keychain.state(path) == cache.UNLOCKED
-            ):
-                print(f"The cache is valid until {_format_time(state.expires_at)}; no refresh needed.")
+    # The launchd job runs every 15 minutes, so it stays quiet when it skips. An unlocked read of the back-off is
+    # fine: the file is advisory.
+    if args.when_present and _in_back_off():
+        return 0
+    try:
+        _require_runtime_venv()
+        identity = _run_as_private_python(args.argv)
+        keychain = cache.backend()
+        with _exclusive_lock(timeout=LOCK_WAIT_SECONDS) as locked:
+            if not locked:
+                if args.when_present:
+                    # For example a refresh in Terminal that waits on its Touch ID prompt: not a failure.
+                    return 0
+                raise PalSecretsError(f"another pal-secrets command held the lock for {LOCK_WAIT_SECONDS}s")
+            if args.when_present and _in_back_off():
                 return 0
-        by_account: dict[str, list[str]] = {}
-        for account, reference in references:
-            by_account.setdefault(account, []).append(reference)
-        op_path = find_op()
-        values: dict[tuple[str, str], str] = {}
-        # All or nothing over every account: if one read fails, the old cache stays until its own expiry.
-        for account, account_references in sorted(by_account.items()):
-            print(
-                f"Reading {len(account_references)} reference(s) of {account} from 1Password. "
-                "Approve the 1Password prompt."
-            )
-            for reference, value in read_secrets(account_references, op_path, account, args.timeout).items():
-                values[(account, reference)] = value
-        expires_at = _write_cache(keychain, identity.cdhash, values, args.ttl_minutes * 60)
+            return _refresh_locked(args, identity, keychain)
+    except Exception:
+        # A Ctrl-C (KeyboardInterrupt) only stops; it does not start the back-off.
+        _record_failure()
+        raise
+
+
+def _refresh_locked(args: argparse.Namespace, identity: cache.Identity, keychain) -> int:
+    references = _accounted_references(configuration_sources())
+    if not references:
+        raise PalSecretsError(
+            "found no op:// references in .env, ~/.claude.json, the Claude Desktop config or PAL_OP_CACHE_REFERENCES"
+        )
+    if args.if_needed:
+        state = cache.read_state(identity.cdhash)
+        path = cache.keychain_path(identity.cdhash)
+        if (
+            state is not None
+            and set(references) <= set(state.entries)
+            and state.expires_at - time.time() > IF_NEEDED_SECONDS
+            and keychain.state(path) == cache.UNLOCKED
+        ):
+            if not args.when_present:
+                print(f"The cache is valid until {_format_time(state.expires_at)}; no refresh needed.")
+            return 0
+    if args.when_present:
+        present, _ = user_present()
+        if not present:
+            # Nobody would see the prompt, and it would time out: try again in 15 minutes.
+            return 0
+        print(f"{time.strftime('%Y-%m-%d %H:%M:%S')} pal-secrets refresh (due, and the user is present)", flush=True)
+    by_account: dict[str, list[str]] = {}
+    for account, reference in references:
+        by_account.setdefault(account, []).append(reference)
+    op_path = find_op()
+    values: dict[tuple[str, str], str] = {}
+    # All or nothing over every account: if one read fails, the old cache stays until its own expiry.
+    for account, account_references in sorted(by_account.items()):
+        print(
+            f"Reading {len(account_references)} reference(s) of {account} from 1Password. "
+            "Approve the 1Password prompt."
+        )
+        for reference, value in read_secrets(account_references, op_path, account, args.timeout).items():
+            values[(account, reference)] = value
+    expires_at = _write_cache(keychain, identity.cdhash, values, args.ttl_minutes * 60)
+    _failure_path().unlink(missing_ok=True)
     print(f"Cached {len(values)} reference(s) until {_format_time(expires_at)}.")
     return 0
 
 
+def _failure_path() -> Path:
+    return cache.STATE_DIR / FAILURE_FILE_NAME
+
+
+def _read_failure() -> tuple[float, int] | None:
+    """Return ``(time of the last failure, failures in a row)``, or None. A bad file counts as no failure."""
+
+    try:
+        failed_at, count = _failure_path().read_text(encoding="utf-8").split()[:2]
+        failed_at_value, count_value = float(failed_at), int(count)
+    except (OSError, ValueError):
+        return None
+    if not math.isfinite(failed_at_value) or count_value < 1:
+        return None
+    return failed_at_value, count_value
+
+
+def _record_failure() -> None:
+    previous = _read_failure()
+    count = previous[1] + 1 if previous else 1
+    try:
+        cache.STATE_DIR.mkdir(mode=0o700, parents=True, exist_ok=True)
+        _failure_path().write_text(f"{time.time()} {count}\n", encoding="utf-8")
+    except OSError as exc:
+        # Without the file there is no back-off, so say so in the log.
+        print(f"warning: cannot record the failed refresh ({type(exc).__name__}); no back-off", file=sys.stderr)
+
+
+def back_off_seconds(count: int) -> float:
+    """Return the wait after ``count`` failures in a row: 1 h, 2 h, 4 h, ... up to 24 h."""
+
+    return min(RETRY_AFTER_FAILURE_SECONDS * 2 ** max(count - 1, 0), MAX_RETRY_AFTER_FAILURE_SECONDS)
+
+
+def _in_back_off() -> bool:
+    failure = _read_failure()
+    if failure is None:
+        return False
+    failed_at, count = failure
+    elapsed = time.time() - failed_at
+    # A time in the future (for example after a clock change) does not hold the back-off.
+    return 0 <= elapsed < back_off_seconds(count)
+
+
+def user_present(max_idle: float = PRESENT_IDLE_SECONDS) -> tuple[bool, str]:
+    """Return ``(present, reason)``: is somebody at this Mac to see a 1Password prompt?
+
+    Present means: this user's session is on the console, the screen is not locked, and there was keyboard or
+    mouse input within ``max_idle`` seconds. A sleeping display gives a long idle time. Both values come from
+    ``/usr/sbin/ioreg``, which is part of macOS.
+    """
+
+    try:
+        root = subprocess.run([IOREG, "-n", "Root", "-d1", "-a"], capture_output=True, check=True, timeout=10).stdout
+        hid = subprocess.run(
+            [IOREG, "-r", "-c", "IOHIDSystem", "-d", "1", "-a"], capture_output=True, check=True, timeout=10
+        ).stdout
+        session, hid_entries = plistlib.loads(root), plistlib.loads(hid)
+    except (OSError, subprocess.SubprocessError, ValueError) as exc:
+        return False, f"cannot read the session state ({type(exc).__name__})"
+    return _presence(session, hid_entries, os.getuid(), max_idle)
+
+
+def _presence(session, hid_entries, uid: int, max_idle: float) -> tuple[bool, str]:
+    if isinstance(session, list):
+        session = session[0] if session else {}
+    users = (session.get("IOConsoleUsers") or []) if isinstance(session, dict) else []
+    mine = [user for user in users if isinstance(user, dict) and user.get("kCGSSessionUserIDKey") == uid]
+    on_console = [user for user in mine if user.get("kCGSSessionOnConsoleKey")]
+    if not on_console:
+        return False, "this user is not on the console"
+    if any(user.get("CGSSessionScreenIsLocked") for user in on_console):
+        return False, "the screen is locked"
+    if isinstance(hid_entries, dict):
+        hid_entries = [hid_entries]
+    idle_values = [
+        entry["HIDIdleTime"]
+        for entry in (hid_entries if isinstance(hid_entries, list) else [])
+        if isinstance(entry, dict) and isinstance(entry.get("HIDIdleTime"), int)
+    ]
+    if not idle_values:
+        return False, "no input idle time"
+    idle = min(idle_values) / 1e9
+    if idle > max_idle:
+        return False, f"no keyboard or mouse input for {idle:.0f}s"
+    return True, "present"
+
+
 def command_expire(args: argparse.Namespace) -> int:
     keychain = cache.backend()
-    with _exclusive_lock(timeout=0) as locked:
+    # Both jobs start together at login and after sleep. Wait out a short refresh check; still skip a prompt.
+    with _exclusive_lock(timeout=2) as locked:
         if not locked:
             print(f"{time.strftime('%Y-%m-%d %H:%M:%S')} pal-secrets expire: a refresh runs now; skipped.")
             return 0
@@ -668,12 +795,13 @@ def command_init(args: argparse.Namespace) -> int:
         op_path = None
     python = install_private_python(venv)
 
-    hour, minute = args.refresh_at
     search_path = ([str(Path(op_path).parent)] if op_path else []) + _OP_SEARCH_PATH.split(":")
     path_value = ":".join(dict.fromkeys(search_path))
-    refresh = _agent_plist(python, REFRESH_LABEL, ["refresh", "--if-needed", "--notify"], path_value)
-    refresh["StartCalendarInterval"] = {"Hour": hour, "Minute": minute}
-    # Also at login: after a restart the keychain is locked, and only a refresh makes a new one.
+    arguments = ["refresh", "--if-needed", "--when-present", "--notify"]
+    refresh = _agent_plist(python, REFRESH_LABEL, arguments, path_value)
+    # Every 15 minutes, so that a refresh happens soon after the cache runs out and somebody is at the Mac; also
+    # at login, because after a restart the keychain is locked and only a refresh makes a new one.
+    refresh["StartInterval"] = REFRESH_INTERVAL_SECONDS
     refresh["RunAtLoad"] = True
     expire = _agent_plist(python, EXPIRE_LABEL, ["expire"], path_value)
     expire["StartInterval"] = EXPIRE_INTERVAL_SECONDS
@@ -685,7 +813,10 @@ def command_init(args: argparse.Namespace) -> int:
         _install_agent(label, plist)
         print(f"Installed LaunchAgent {label}")
 
-    print(f"\nrefresh runs every day at {hour:02d}:{minute:02d} and at login; expire runs every 15 minutes.")
+    print(
+        "\nrefresh and expire run every 15 minutes and at login. refresh asks 1Password only when the cache has less "
+        "than 1 hour left and you are at the Mac."
+    )
     print(f"launchd started the first refresh now: approve the 1Password prompt. Log: {LOG_PATH}")
     print("Next steps:")
     print("  1. Set PAL_OP_CACHE=keychain in .env or in the env block of the pal MCP server.")
@@ -753,13 +884,6 @@ def _notify(message: str) -> None:
 # --- Entry point ------------------------------------------------------------------------------------------------
 
 
-def _refresh_time(text: str) -> tuple[int, int]:
-    match = re.fullmatch(r"([01]?\d|2[0-3]):([0-5]\d)", text)
-    if not match:
-        raise argparse.ArgumentTypeError("use HH:MM, for example 08:30")
-    return int(match.group(1)), int(match.group(2))
-
-
 def _ttl_minutes(text: str) -> int:
     value = int(text)
     if not 1 <= value <= cache.MAX_TTL_SECONDS // 60:
@@ -771,12 +895,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="pal-secrets", description=(__doc__ or "").split("\n\n")[0])
     commands = parser.add_subparsers(dest="command", required=True)
     init = commands.add_parser("init", help="make the private Python copy and install the LaunchAgents")
-    init.add_argument("--refresh-at", type=_refresh_time, default=(8, 30), metavar="HH:MM", help="default 08:30")
     init.set_defaults(handler=command_init)
     refresh = commands.add_parser("refresh", help="read the references from 1Password and write a new cache")
     refresh.add_argument("--ttl-minutes", type=_ttl_minutes, default=cache.MAX_TTL_SECONDS // 60)
     refresh.add_argument("--timeout", type=int, default=_DEFAULT_OP_TIMEOUT_SECONDS, help="seconds to wait for op")
-    refresh.add_argument("--if-needed", action="store_true", help="skip if the cache stays valid for 12 more hours")
+    refresh.add_argument("--if-needed", action="store_true", help="skip if the cache stays valid for 1 more hour")
+    refresh.add_argument(
+        "--when-present",
+        action="store_true",
+        help="for launchd: skip quietly unless you are at the Mac, and for 1 hour after a failed refresh",
+    )
     refresh.add_argument("--notify", action="store_true", help="show a notification on failure (for launchd)")
     refresh.set_defaults(handler=command_refresh)
     for name, handler, text in (
@@ -787,6 +915,12 @@ def build_parser() -> argparse.ArgumentParser:
     ):
         commands.add_parser(name, help=text).set_defaults(handler=handler)
     return parser
+
+
+def _stamp(args: argparse.Namespace) -> str:
+    """Return a time stamp for an error line of the launchd job, which prints no header line."""
+
+    return f"{time.strftime('%Y-%m-%d %H:%M:%S')} " if getattr(args, "when_present", False) else ""
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -802,19 +936,19 @@ def main(argv: list[str] | None = None) -> int:
     if sys.platform != "darwin":
         print("pal-secrets: the keychain cache needs macOS", file=sys.stderr)
         return 2
-    if args.command != "expire":
+    if args.command != "expire" and not getattr(args, "when_present", False):
         print(f"{time.strftime('%Y-%m-%d %H:%M:%S')} pal-secrets {args.command}", flush=True)
     try:
         return args.handler(args)
     except (PalSecretsError, cache.KeychainCacheError) as exc:
-        print(f"pal-secrets {args.command}: {exc}", file=sys.stderr)
+        print(f"{_stamp(args)}pal-secrets {args.command}: {exc}", file=sys.stderr)
     except Exception as exc:  # noqa: BLE001 - a launchd job must still notify
         # Only the type and the place: the text of an unexpected error could hold data.
         trace = exc.__traceback__
         while trace is not None and trace.tb_next is not None:
             trace = trace.tb_next
         where = f" at {Path(trace.tb_frame.f_code.co_filename).name}:{trace.tb_lineno}" if trace else ""
-        print(f"pal-secrets {args.command}: unexpected {type(exc).__name__}{where}", file=sys.stderr)
+        print(f"{_stamp(args)}pal-secrets {args.command}: unexpected {type(exc).__name__}{where}", file=sys.stderr)
     if getattr(args, "notify", False):
         # A fixed text: the error, which can name references, stays in the log.
         _notify(f"The refresh failed. See {LOG_PATH}, then run pal-secrets refresh in Terminal.")

@@ -612,7 +612,8 @@ setup_environment() {
 
         # Try Python 3.12 first (preferred)
         local uv_output
-        if uv_output=$(uv venv --python 3.12 "$VENV_PATH" 2>&1); then
+        # --managed-python: a uv-managed Python, not a Homebrew one; the 1Password keychain cache needs it.
+        if uv_output=$(uv venv --managed-python --python 3.12 "$VENV_PATH" 2>&1); then
             # Use helper function for cross-platform path detection
             if venv_python=$(get_venv_python_path "$VENV_PATH"); then
                 touch "$VENV_PATH/uv_created"  # Mark as uv-created
@@ -632,7 +633,7 @@ setup_environment() {
                 print_warning "uv succeeded but Python executable not found in venv"
             fi
         # Fall back to any available Python through uv
-        elif uv_output=$(uv venv "$VENV_PATH" 2>&1); then
+        elif uv_output=$(uv venv --managed-python "$VENV_PATH" 2>&1); then
             # Use helper function for cross-platform path detection
             if venv_python=$(get_venv_python_path "$VENV_PATH"); then
                 touch "$VENV_PATH/uv_created"  # Mark as uv-created
