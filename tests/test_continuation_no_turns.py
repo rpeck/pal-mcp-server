@@ -1,7 +1,7 @@
 """
 A continuation on a thread with no turns stores the user's turn once (issue #32).
 
-server.reconstruct_thread_context stores the user's turn and builds the history from the turns before it. With no
+server.reconstruct_thread_context prepares the user's turn and builds the history from the turns before it. With no
 earlier turns, the history is empty, so the prompt holds no history header. Before the fix, SimpleTool decided from
 that header whether server.py had handled the continuation. It found none, so it stored the user's turn a second
 time and built the history itself, which repeated the user's prompt.

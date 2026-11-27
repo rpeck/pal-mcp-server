@@ -166,7 +166,7 @@ class TestServerContinuation:
         assert prompt.count(PROMPT_MARK) == 1
         assert prompt.count("FIRST_FILE_MARK") == 1
         assert output["metadata"]["embedded_files"] == [first_file]
-        # server.py stores the user's turn, the tool stores the reply: neither lists prompt.txt
+        # server.py prepares the user's turn, the tool stores it with the reply: neither lists prompt.txt
         assert turn_files(thread_id)[2:] == [[], []]
 
     @pytest.mark.asyncio

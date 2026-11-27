@@ -194,6 +194,23 @@
     out, it keeps its words (`Showing N most recent turns out of M total`).
   - The file budget and the turn budget are still planned separately. See
     [Context Revival](docs/context-revival.md#the-dual-prioritization-strategy).
+- A continuation that the tool rejects or that fails no longer leaves the user's turn in the thread (#49). Before,
+  server.py stored the turn before the tool ran. When the tool then stopped (for example the context window check,
+  a provider error or a CLI error), the thread kept a user turn with no answer. The next continuation sent that
+  request to the model again, and `remaining_turns` counted it.
+  - server.py still prepares the turn (the prompt, the `prompt.txt` text and the files) and builds the history
+    from the turns before it. `chat` and `clink` store the turn just before their answer, so the thread gains a
+    user turn and its answer, in that order, or no turn.
+  - A direct continuation (no server.py) follows the same rule. Before, it stored the turn after the context
+    window check but before the model call, so a provider error left the turn.
+  - Two calls on the same thread no longer interleave their turns: each call stores its user turn and its answer
+    together.
+  - `challenge` and `apilookup` call no model and store no answer, so a continuation through them stores no turn.
+  - The workflow tools take a `step`, not a `prompt`, so server.py prepares no user turn for them, as before.
+  - A direct `clink` continuation (no server.py) now stores the user's turn too, with the `prompt.txt` text and
+    without the file. Before, it stored only the answer.
+- A continuation whose `prompt` holds only spaces no longer fails in server.py with `UnboundLocalError`
+  (`estimate_tokens` was imported only when the turn had text).
 
 ### Documentation
 
