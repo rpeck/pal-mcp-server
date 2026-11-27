@@ -31,6 +31,23 @@ The system employs a sophisticated **"newest-first"** approach that ensures opti
 - **Collection Phase**: Processes turns newest-to-oldest to prioritize recent context
 - **Presentation Phase**: Reverses to chronological order for natural LLM flow
 - When token budget is tight, **older turns are excluded first**
+- A turn that does not fit the budget left is skipped, and older turns that fit stay. So one long turn, for
+  example a large `prompt.txt`, does not hide the short turns before it.
+- A turn is never cut: it is in the history whole, or it is left out.
+- A one-line note takes the place of each run of skipped turns, so the model knows that the history has a gap.
+  Its tokens count against the history budget. Turn numbers stay the real ones:
+
+```text
+--- Turn 2 (gemini-2.5-flash using chat via google) ---
+...
+
+[Turn 3 omitted: too large for the history budget]
+
+--- Turn 4 (gemini-2.5-flash using chat via google) ---
+...
+```
+
+- Consecutive skipped turns share one note, for example `[Turns 3-5 omitted: too large for the history budget]`.
 
 ### What the Tool Response Reports
 
@@ -43,7 +60,7 @@ The prompt tells the model which files and turns were left out. The tool respons
   - `missing`: the path does not exist, for example it was moved or deleted after an earlier turn.
   - `not_accessible`: the path exists but PAL cannot read it, for example the home directory, which PAL does
     not scan.
-- `dropped_turns`: the number of older turns left out of the conversation history.
+- `dropped_turns`: the number of turns left out of the conversation history. The omission notes are not turns.
 
 ```json
 "metadata": {

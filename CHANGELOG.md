@@ -180,6 +180,20 @@
     told the client to select fewer files.
   - `clink` answers a `prompt` field over the limit with `resend_prompt`. Before, it gave an error that held the
     `resend_prompt` answer as text.
+- One long turn no longer hides the older turns from the conversation history (#45). Before, the history walked
+  the turns from the newest to the oldest and stopped at the first turn that did not fit the history budget. So
+  a long turn (for example a large `prompt.txt`) also dropped every older turn, even the short ones that fit.
+  - Now the history skips a turn that does not fit and goes on with the older turns. A turn is never cut.
+  - A one-line note takes the place of the skipped turn, for example
+    `[Turn 3 omitted: too large for the history budget]`, so the model knows that the history has a gap.
+    Consecutive skipped turns share one note (`[Turns 3-5 omitted: ...]`). The notes count against the history
+    budget.
+  - Turn numbers stay the real ones. `dropped_turns` counts every turn left out; a note is not a turn.
+  - When the turns left out are not all older than the turns shown, the closing note reads
+    `[Note: Showing 3 of 4 turns; the notes above mark the turns left out]`. When only the oldest turns are left
+    out, it keeps its words (`Showing N most recent turns out of M total`).
+  - The file budget and the turn budget are still planned separately. See
+    [Context Revival](docs/context-revival.md#the-dual-prioritization-strategy).
 
 ### Documentation
 

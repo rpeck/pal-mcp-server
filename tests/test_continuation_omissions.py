@@ -2,9 +2,9 @@
 The tool response tells the client which files and turns the model did not receive (issue #15).
 
 On a continuation, build_conversation_history embeds the thread's files newest-first within the file budget and
-drops the oldest turns when the history budget is passed; read_files skips new files for the token limit. The
-model sees notes about this in the prompt. These tests check that the MCP tool response carries the same facts
-in `metadata`: `embedded_files`, `omitted_files` (each with a reason) and `dropped_turns`.
+leaves out each turn that does not fit the history budget (issue #45); read_files skips new files for the token
+limit. The model sees notes about this in the prompt. These tests check that the MCP tool response carries the
+same facts in `metadata`: `embedded_files`, `omitted_files` (each with a reason) and `dropped_turns`.
 """
 
 import json
@@ -23,6 +23,7 @@ from tools.clink import CLinkTool
 from tools.codereview import CodeReviewTool
 from utils.context_report import ContextReport
 from utils.conversation_memory import (
+    MAX_CONVERSATION_TURNS,
     ConversationTurn,
     ThreadContext,
     add_turn,
@@ -168,6 +169,190 @@ class TestConversationHistoryReport:
         result = build_conversation_history(context, history_model_context())
 
         assert isinstance(result, tuple) and len(result) == 2
+
+
+# About 10,000 tokens at 1 token per 4 characters: more than the history budgets below
+LONG_TEXT = "LONG_TURN_MARK " + "z" * 40_000
+
+
+def turn_order(history: str, *marks: str) -> list[int]:
+    """The positions of marks in history; each mark must be present."""
+    return [history.index(mark) for mark in marks]
+
+
+class TestLongTurnInTheHistory:
+    """A turn that does not fit the history budget is left out, and older turns that fit stay (issue #45)."""
+
+    def test_long_turn_is_noted_and_older_short_turns_stay(self):
+        turns = [user_turn("short one"), assistant_turn(LONG_TEXT), user_turn("short three"), assistant_turn("four")]
+        report = ContextReport()
+
+        history, _ = build_conversation_history(
+            thread(turns), history_model_context(history_tokens=2_000), report=report
+        )
+
+        assert "LONG_TURN_MARK" not in history
+        assert "--- Turn 2 " not in history
+        positions = turn_order(
+            history,
+            "--- Turn 1 (Agent) ---\nshort one",
+            "\n[Turn 2 omitted: too large for the history budget]\n",
+            "--- Turn 3 (Agent) ---\nshort three",
+            "--- Turn 4 (m) ---\nfour",
+        )
+        assert positions == sorted(positions)
+        assert report.dropped_turns == 1
+        assert "[Note: Showing 3 of 4 turns; the notes above mark the turns left out]" in history
+
+    def test_history_that_fits_is_unchanged(self):
+        turns = [user_turn("first question"), assistant_turn("first answer"), user_turn("second question")]
+        report = ContextReport()
+
+        history, _ = build_conversation_history(thread(turns), history_model_context(), report=report)
+
+        # The output of the history before issue #45, for a thread that fits
+        assert history == (
+            "=== CONVERSATION HISTORY (CONTINUATION) ===\n"
+            "Thread: test-thread\n"
+            "Tool: chat\n"
+            f"Turn 3/{MAX_CONVERSATION_TURNS}\n"
+            "You are continuing this conversation thread from where it left off.\n"
+            "\n"
+            "Previous conversation turns:\n"
+            "\n"
+            "--- Turn 1 (Agent) ---\n"
+            "first question\n"
+            "\n"
+            "--- Turn 2 (m) ---\n"
+            "first answer\n"
+            "\n"
+            "--- Turn 3 (Agent) ---\n"
+            "second question\n"
+            "\n"
+            "=== END CONVERSATION HISTORY ===\n"
+            "\n"
+            "IMPORTANT: You are continuing an existing conversation thread. Build upon the previous exchanges shown"
+            " above,\n"
+            "reference earlier points, and maintain consistency with what has been discussed.\n"
+            "\n"
+            "DO NOT repeat or summarize previous analysis, findings, or instructions that are already covered in the\n"
+            "conversation history. Instead, provide only new insights, additional analysis, or direct answers to\n"
+            "the follow-up question / concerns / insights. Assume the user has read the prior conversation.\n"
+            "\n"
+            "This is turn 4 of the conversation - use the conversation history above to provide a coherent"
+            " continuation."
+        )
+        assert report.dropped_turns == 0
+
+    def test_long_turns_in_a_row_share_one_note(self):
+        turns = [
+            user_turn("short one"),
+            assistant_turn(LONG_TEXT),
+            user_turn(LONG_TEXT),
+            assistant_turn("four"),
+        ]
+        report = ContextReport()
+
+        history, _ = build_conversation_history(
+            thread(turns), history_model_context(history_tokens=2_000), report=report
+        )
+
+        positions = turn_order(
+            history,
+            "--- Turn 1 (Agent) ---\nshort one",
+            "\n[Turns 2-3 omitted: too large for the history budget]\n",
+            "--- Turn 4 (m) ---\nfour",
+        )
+        assert positions == sorted(positions)
+        assert history.count("omitted: too large for the history budget]") == 1
+        assert report.dropped_turns == 2
+
+    def test_long_turns_apart_each_get_a_note(self):
+        turns = [
+            user_turn("short one"),
+            assistant_turn(LONG_TEXT),
+            user_turn("short three"),
+            assistant_turn(LONG_TEXT),
+            user_turn("short five"),
+        ]
+        report = ContextReport()
+
+        history, _ = build_conversation_history(
+            thread(turns), history_model_context(history_tokens=2_000), report=report
+        )
+
+        positions = turn_order(
+            history,
+            "--- Turn 1 (Agent) ---\nshort one",
+            "\n[Turn 2 omitted: too large for the history budget]\n",
+            "--- Turn 3 (Agent) ---\nshort three",
+            "\n[Turn 4 omitted: too large for the history budget]\n",
+            "--- Turn 5 (Agent) ---\nshort five",
+        )
+        assert positions == sorted(positions)
+        assert report.dropped_turns == 2
+
+    def test_newest_turn_too_long_keeps_the_older_turns(self):
+        turns = [user_turn("short one"), assistant_turn("two"), user_turn(LONG_TEXT)]
+        report = ContextReport()
+
+        history, _ = build_conversation_history(
+            thread(turns), history_model_context(history_tokens=2_000), report=report
+        )
+
+        positions = turn_order(
+            history,
+            "--- Turn 1 (Agent) ---\nshort one",
+            "--- Turn 2 (m) ---\ntwo",
+            "\n[Turn 3 omitted: too large for the history budget]\n",
+            "=== END CONVERSATION HISTORY ===",
+        )
+        assert positions == sorted(positions)
+        assert report.dropped_turns == 1
+
+    def test_oldest_turns_past_the_budget_share_one_note_and_keep_the_old_summary(self):
+        # Five turns of about 1,000 tokens each; the budget holds the two newest.
+        turns = [user_turn(f"turn {i} " + "y" * 4_000) for i in range(5)]
+        report = ContextReport()
+
+        history, _ = build_conversation_history(
+            thread(turns), history_model_context(history_tokens=2_500), report=report
+        )
+
+        positions = turn_order(
+            history,
+            "Previous conversation turns:\n\n[Turns 1-3 omitted: too large for the history budget]\n",
+            "--- Turn 4 (Agent) ---",
+            "--- Turn 5 (Agent) ---",
+        )
+        assert positions == sorted(positions)
+        assert report.dropped_turns == 3
+        # The shown turns are the newest ones, so the summary note keeps its words.
+        assert "[Note: Showing 2 most recent turns out of 5 total]" in history
+
+    def test_the_note_counts_against_the_history_budget(self):
+        # The turns cost 1 token per 4 characters, the note 1,000 tokens, and the other lines nothing.
+        def estimate(text):
+            if "omitted: too large for the history budget]" in text:
+                return 1_000
+            return len(text) // 4 if text.startswith("\n--- Turn") else 0
+
+        turns = [user_turn("short one"), assistant_turn(LONG_TEXT)]
+        tight = history_model_context(history_tokens=500)
+        tight.estimate_tokens.side_effect = estimate
+        roomy = history_model_context(history_tokens=1_100)
+        roomy.estimate_tokens.side_effect = estimate
+
+        tight_report, roomy_report = ContextReport(), ContextReport()
+        tight_history, _ = build_conversation_history(thread(turns), tight, report=tight_report)
+        roomy_history, _ = build_conversation_history(thread(turns), roomy, report=roomy_report)
+
+        # Turn 1 alone fits in 500 tokens, but not with the note for turn 2.
+        assert "[Turns 1-2 omitted: too large for the history budget]" in tight_history
+        assert tight_report.dropped_turns == 2
+        assert "--- Turn 1 (Agent) ---\nshort one" in roomy_history
+        assert "[Turn 2 omitted: too large for the history budget]" in roomy_history
+        assert roomy_report.dropped_turns == 1
 
 
 class TestReadFilesReport:
