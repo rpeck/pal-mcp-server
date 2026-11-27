@@ -292,6 +292,9 @@ class SimpleTool(BaseTool):
             self._current_arguments = arguments
             # The prompt.txt text of this call, which handle_prompt_file_with_fallback reads for the stored user turn
             self._prompt_file_text = None
+            # The user's turn of a continuation, which _record_assistant_turn stores just before the answer (issue #49).
+            # On a continuation through server.py, server.py prepared it.
+            self._pending_user_turn = arguments.get("_pending_user_turn")
 
             # Records the files and turns that the model receives or misses, for the response metadata
             self._start_context_report(arguments)
@@ -340,13 +343,10 @@ class SimpleTool(BaseTool):
             images = self.get_request_images(request)
             continuation_id = self.get_request_continuation_id(request)
 
-            # The user's turn of a direct continuation, which is stored once the prompt passes every check
-            pending_user_turn = None
-
             # Handle conversation history and prompt preparation
             if continuation_id:
                 if self._continuation_prepared_by_server():
-                    # server.py stored the user's turn and embedded the history (if the thread has turns) in the
+                    # server.py prepared the user's turn and embedded the history (if the thread has turns) in the
                     # prompt field. Prepare the prompt from it as is: the tool adds the new files of this turn, and
                     # the size check uses _original_user_prompt.
                     prompt = await self.prepare_prompt(request)
@@ -379,9 +379,9 @@ class SimpleTool(BaseTool):
                         user_prompt = user_turn_content(self.get_request_prompt(request), self._prompt_file_text)
                         user_files = self.get_request_files(request)
 
-                        # Add user's new input to conversation, after the context window check below
+                        # Add user's new input to conversation, just before the answer (issue #49)
                         if user_prompt:
-                            pending_user_turn = (user_prompt, user_files)
+                            self._pending_user_turn = (user_prompt, user_files)
 
                         # Combine with conversation history
                         if conversation_history:
@@ -445,12 +445,6 @@ class SimpleTool(BaseTool):
             # The MCP size limit holds only for the text that crossed the transport, so a large prompt.txt gets here:
             # its limit is the model's context window (issue #44)
             self._check_prompt_fits_context_window(system_prompt, prompt, capabilities)
-
-            if pending_user_turn:
-                from utils.conversation_memory import add_turn
-
-                user_prompt, user_files = pending_user_turn
-                add_turn(continuation_id, "user", user_prompt, files=user_files)
 
             # Generate AI response using the provider
             logger.info(f"Sending request to {provider.get_provider_type().value} API for {self.get_name()}")
@@ -784,12 +778,14 @@ class SimpleTool(BaseTool):
     def _record_assistant_turn(
         self, continuation_id: str, response_text: str, request, model_info: Optional[dict]
     ) -> None:
-        """Persist an assistant response in conversation memory."""
+        """Persist an assistant response in conversation memory, after the user's turn that it answers."""
 
         if not continuation_id:
             return
 
         from utils.conversation_memory import add_turn
+
+        self._store_pending_user_turn(continuation_id)
 
         model_provider = None
         model_name = None
@@ -821,6 +817,30 @@ class SimpleTool(BaseTool):
             model_name=model_name,
             model_metadata=model_metadata,
         )
+
+    def _store_pending_user_turn(self, continuation_id: str) -> None:
+        """
+        Store the user's turn of this continuation, just before the assistant turn that answers it (issue #49).
+
+        The turn waits until the tool has an answer: server.py prepares it in `_pending_user_turn`, and a direct
+        continuation prepares it in execute. So a call that the tool rejects (for example the context window check)
+        or that fails (for example a provider or CLI error) stores no turn, and the thread holds a user turn and its
+        answer, or neither. The turn is stored once per call.
+        """
+        pending_user_turn = getattr(self, "_pending_user_turn", None)
+        self._pending_user_turn = None
+        if not pending_user_turn:
+            return
+
+        import logging
+
+        from utils.conversation_memory import add_turn
+
+        user_prompt, user_files = pending_user_turn
+        if not add_turn(continuation_id, "user", user_prompt, files=user_files):
+            logging.getLogger(f"tools.{self.get_name()}").warning(
+                f"Failed to add user turn to thread {continuation_id}"
+            )
 
     # Convenience methods for common tool patterns
 
@@ -884,7 +904,7 @@ Please provide a thoughtful, comprehensive response:"""
         """
         Whether server.py already handled the continuation of this call (issue #32).
 
-        On a continuation, server.reconstruct_thread_context stores the user's turn, puts the conversation history
+        On a continuation, server.reconstruct_thread_context prepares the user's turn, puts the conversation history
         (if the thread has turns) and the follow-up instructions in the prompt field, and keeps the user's own input
         in `_original_user_prompt`. That field marks the call: the history header does not, because a thread with
         no turns gives no history. The chat and clink schemas allow no other properties, so an MCP client cannot

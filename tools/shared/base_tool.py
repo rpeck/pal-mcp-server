@@ -905,9 +905,9 @@ class BaseTool(ABC):
             # New conversation, no files embedded yet
             return []
 
-        # server.py stores the user's turn, files included, in the thread, but builds the history from the turns
-        # before it. So when server.py built the history, the files that the history covers are the ones its
-        # report records, not the files that the thread lists (issue #26).
+        # server.py builds the history from the turns before this call, and the tool stores the user's turn, files
+        # included, only with its answer (issue #49). So when server.py built the history, the files that the history
+        # covers are the ones its report records, not the files that the thread lists (issue #26).
         server_context_report = (getattr(self, "_current_arguments", None) or {}).get("_context_report")
         if isinstance(server_context_report, ContextReport):
             history_files = server_context_report.embedded_files + list(server_context_report.omitted_files)

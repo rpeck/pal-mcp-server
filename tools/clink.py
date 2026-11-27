@@ -169,6 +169,8 @@ class CLinkTool(SimpleTool):
 
     async def execute(self, arguments: dict[str, Any]) -> list[TextContent]:
         self._current_arguments = arguments
+        # The user's turn that server.py prepared, which _record_assistant_turn stores just before the answer (issue #49)
+        self._pending_user_turn = arguments.get("_pending_user_turn")
         # The CLI reads absolute_file_paths itself, so the report covers only the conversation history
         self._start_context_report(arguments)
         request = build_request(self.get_name(), self.get_request_model(), arguments)

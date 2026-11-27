@@ -1208,6 +1208,8 @@ async def reconstruct_thread_context(arguments: dict[str, Any]) -> dict[str, Any
         - File context from previous turns made accessible
         - Cross-tool knowledge transfer enabled
         - _context_report: the files the history embedded or omitted, and the turns it dropped
+        - _pending_user_turn: the user's turn (content, files), when the call has a prompt. This function does not
+          store it: the tool stores it just before its answer, so a rejected or failed call adds no turn (issue #49)
 
     Raises:
         ValueError: When continuation_id is invalid, thread not found, or expired
@@ -1228,7 +1230,7 @@ async def reconstruct_thread_context(arguments: dict[str, Any]) -> dict[str, Any
     """
     from tools.shared.base_tool import read_prompt_file, user_turn_content
     from utils.context_report import ContextReport
-    from utils.conversation_memory import add_turn, build_conversation_history, get_thread
+    from utils.conversation_memory import build_conversation_history, get_thread
 
     continuation_id = arguments["continuation_id"]
 
@@ -1256,14 +1258,15 @@ async def reconstruct_thread_context(arguments: dict[str, Any]) -> dict[str, Any
             f"This will create a new conversation thread that can continue with follow-up exchanges."
         )
 
-    # Add user's new input to the conversation. prompt.txt holds the prompt, not a context file: the turn stores its
-    # text after the prompt and does not list the file (issue #39)
+    # Prepare the user's new turn. prompt.txt holds the prompt, not a context file: the turn stores its text after the
+    # prompt and does not list the file (issue #39). The tool stores the turn just before its answer, so a call that
+    # the tool rejects or that fails leaves no turn in the thread (issue #49).
     prompt_file_text, user_files = read_prompt_file(arguments.get("absolute_file_paths"))
     user_prompt = user_turn_content(arguments.get("prompt", ""), prompt_file_text)
+    pending_user_turn = None
     if user_prompt:
         # Capture files referenced in this turn
         user_files = user_files or []
-        logger.debug(f"[CONVERSATION_DEBUG] Adding user turn to thread {continuation_id}")
         from utils.token_utils import estimate_tokens
 
         user_prompt_tokens = estimate_tokens(user_prompt)
@@ -1271,12 +1274,7 @@ async def reconstruct_thread_context(arguments: dict[str, Any]) -> dict[str, Any
             f"[CONVERSATION_DEBUG] User prompt length: {len(user_prompt)} chars (~{user_prompt_tokens:,} tokens)"
         )
         logger.debug(f"[CONVERSATION_DEBUG] User files: {user_files}")
-        success = add_turn(continuation_id, "user", user_prompt, files=user_files)
-        if not success:
-            logger.warning(f"Failed to add user turn to thread {continuation_id}")
-            logger.debug("[CONVERSATION_DEBUG] Failed to add user turn - thread may be at turn limit or expired")
-        else:
-            logger.debug(f"[CONVERSATION_DEBUG] Successfully added user turn to thread {continuation_id}")
+        pending_user_turn = (user_prompt, user_files)
 
     # Create model context early to use for history building
     from utils.model_context import ModelContext
@@ -1442,6 +1440,10 @@ async def reconstruct_thread_context(arguments: dict[str, Any]) -> dict[str, Any
     enhanced_arguments["_remaining_tokens"] = max(0, remaining_tokens)  # Ensure non-negative
     enhanced_arguments["_model_context"] = model_context  # Pass context for use in tools
     enhanced_arguments["_context_report"] = context_report  # Files and turns the history left out
+    if pending_user_turn:
+        # The user's turn (content, files), which the tool stores just before its answer (issue #49)
+        enhanced_arguments["_pending_user_turn"] = pending_user_turn
+        logger.debug(f"[CONVERSATION_DEBUG] User turn for thread {continuation_id} waits for the tool's answer")
 
     logger.debug("[CONVERSATION_DEBUG] Token budget calculation:")
     logger.debug(f"[CONVERSATION_DEBUG]   Model: {model_context.model_name}")

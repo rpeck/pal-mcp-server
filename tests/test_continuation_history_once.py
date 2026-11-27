@@ -1,7 +1,7 @@
 """
 A continuation sends the conversation history to the model once (issue #26).
 
-On a continuation through the MCP server, server.reconstruct_thread_context stores the user's turn, builds the
+On a continuation through the MCP server, server.reconstruct_thread_context prepares the user's turn, builds the
 conversation history into the prompt and passes it to the tool. SimpleTool must use that prompt as is: before the
 fix, its check for the history header never matched the header that build_conversation_history writes, so the
 tool stored the whole enhanced prompt as a second user turn and built the history again.
