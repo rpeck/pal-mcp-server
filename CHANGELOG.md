@@ -207,6 +207,10 @@
     together.
   - `challenge` and `apilookup` call no model and store no answer, so a continuation through them stores no turn.
   - The workflow tools take a `step`, not a `prompt`, so server.py prepares no user turn for them, as before.
+  - A direct `clink` continuation (no server.py) now stores the user's turn too, with the `prompt.txt` text and
+    without the file. Before, it stored only the answer.
+- A continuation whose `prompt` holds only spaces no longer fails in server.py with `UnboundLocalError`
+  (`estimate_tokens` was imported only when the turn had text).
 
 ### Documentation
 

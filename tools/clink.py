@@ -18,6 +18,7 @@ from config import TEMPERATURE_BALANCED
 from tools.models import ToolModelCategory, ToolOutput
 from tools.shared.argument_errors import build_request
 from tools.shared.base_models import COMMON_FIELD_DESCRIPTIONS
+from tools.shared.base_tool import user_turn_content
 from tools.shared.exceptions import ToolExecutionError
 from tools.simple.base import SchemaBuilder, SimpleTool
 
@@ -169,6 +170,8 @@ class CLinkTool(SimpleTool):
 
     async def execute(self, arguments: dict[str, Any]) -> list[TextContent]:
         self._current_arguments = arguments
+        # The prompt.txt text of this call, which handle_prompt_file_with_fallback reads for the stored user turn
+        self._prompt_file_text = None
         # The user's turn that server.py prepared, which _record_assistant_turn stores just before the answer (issue #49)
         self._pending_user_turn = arguments.get("_pending_user_turn")
         # The CLI reads absolute_file_paths itself, so the report covers only the conversation history
@@ -216,6 +219,13 @@ class CLinkTool(SimpleTool):
                 raise ToolExecutionError(str(exc)[len("MCP_SIZE_CHECK:") :]) from exc
             logger.exception("Failed to prepare clink prompt")
             self._raise_tool_error(f"Failed to prepare prompt: {exc}")
+
+        # A direct continuation (no server.py) prepares the user's turn here, as SimpleTool does: after the prompt
+        # step, which took prompt.txt out of the request files and read its text (issues #39, #49)
+        if continuation_id and not self._pending_user_turn and not self._continuation_prepared_by_server():
+            user_prompt = user_turn_content(self.get_request_prompt(request), self._prompt_file_text)
+            if user_prompt:
+                self._pending_user_turn = (user_prompt, self.get_request_files(request))
 
         agent = create_agent(client_config)
         try:

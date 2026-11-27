@@ -371,3 +371,61 @@ class TestClinkContinuation:
             await call_clink(clink_arguments(thread_id))
 
         assert len(get_thread(thread_id).turns) == 2
+
+    @pytest.mark.asyncio
+    async def test_direct_continuation_stores_one_user_turn_then_the_answer(self, monkeypatch):
+        """A direct clink call (no server.py) on a thread stores the user's turn too, just before the answer."""
+        from tools.clink import CLinkTool
+
+        monkeypatch.setattr("tools.clink.create_agent", lambda client: DummyAgent())
+        thread_id = chat_thread()
+
+        await CLinkTool().execute(clink_arguments(thread_id))
+
+        new_turns = get_thread(thread_id).turns[2:]
+        assert [(turn.role, turn.tool_name) for turn in new_turns] == [("user", None), ("assistant", "clink")]
+        assert new_turns[0].content == SECOND_PROMPT
+
+    @pytest.mark.asyncio
+    async def test_direct_continuation_with_prompt_file_stores_its_text_not_the_file(self, monkeypatch, workspace):
+        from tools.clink import CLinkTool
+
+        monkeypatch.setattr("tools.clink.create_agent", lambda client: DummyAgent())
+        thread_id = chat_thread()
+        prompt_file = write_file(workspace, "prompt.txt", "PROMPT_FILE_MARK: the real question")
+
+        await CLinkTool().execute({**clink_arguments(thread_id), "prompt": "", "absolute_file_paths": [prompt_file]})
+
+        user_turn = get_thread(thread_id).turns[2]
+        assert user_turn.role == "user"
+        assert user_turn.content == "PROMPT_FILE_MARK: the real question"
+        assert not user_turn.files
+
+    @pytest.mark.asyncio
+    async def test_direct_cli_error_stores_no_turn(self, monkeypatch):
+        from tools.clink import CLinkTool
+
+        monkeypatch.setattr("tools.clink.create_agent", lambda client: DummyAgent(CLIAgentError("CLI_DOWN_MARK")))
+        thread_id = chat_thread()
+
+        with pytest.raises(ToolExecutionError):
+            await CLinkTool().execute(clink_arguments(thread_id))
+
+        assert len(get_thread(thread_id).turns) == 2
+
+
+class TestBlankPromptContinuation:
+    @pytest.mark.asyncio
+    async def test_blank_prompt_does_not_crash_reconstruct_thread_context(self):
+        """A prompt of only spaces gives an empty user turn; the server must still prepare the call."""
+        from server import reconstruct_thread_context
+
+        thread_id = chat_thread()
+
+        enhanced = await reconstruct_thread_context(
+            {"prompt": "   ", "continuation_id": thread_id, "model": "gemini-2.5-flash"}
+        )
+
+        assert enhanced["_original_user_prompt"] == "   "
+        assert not enhanced.get("_pending_user_turn")
+        assert len(get_thread(thread_id).turns) == 2

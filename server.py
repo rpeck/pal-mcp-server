@@ -1264,11 +1264,12 @@ async def reconstruct_thread_context(arguments: dict[str, Any]) -> dict[str, Any
     prompt_file_text, user_files = read_prompt_file(arguments.get("absolute_file_paths"))
     user_prompt = user_turn_content(arguments.get("prompt", ""), prompt_file_text)
     pending_user_turn = None
+    # Import outside the branch: the prompt size below also needs it when the turn is empty (a prompt of only spaces)
+    from utils.token_utils import estimate_tokens
+
     if user_prompt:
         # Capture files referenced in this turn
         user_files = user_files or []
-        from utils.token_utils import estimate_tokens
-
         user_prompt_tokens = estimate_tokens(user_prompt)
         logger.debug(
             f"[CONVERSATION_DEBUG] User prompt length: {len(user_prompt)} chars (~{user_prompt_tokens:,} tokens)"
