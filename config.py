@@ -112,10 +112,11 @@ DEFAULT_CONSENSUS_MAX_INSTANCES_PER_COMBINATION = 2
 #
 # What IS limited by this constant:
 # - request.prompt field content (user input from Claude CLI)
-# - prompt.txt file content (alternative user input method)
 # - Any other direct user input fields
 #
 # What is NOT limited by this constant:
+# - prompt.txt file content: PAL reads the file from disk, so it does not cross the transport. The model's
+#   context window limits it (issue #44)
 # - System prompts added internally by tools
 # - File content embedded by tools
 # - Conversation history loaded from storage

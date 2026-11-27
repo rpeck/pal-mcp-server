@@ -1033,8 +1033,12 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
             logger.debug(f"Model option stored in context: '{model_option}'")
 
         # EARLY FILE SIZE VALIDATION AT MCP BOUNDARY
-        # Check file sizes before tool execution using resolved model
-        argument_files = arguments.get("absolute_file_paths")
+        # Check file sizes before tool execution using resolved model. prompt.txt holds the prompt, not a context
+        # file: the file budget does not limit it, the tool checks the whole prompt against the context window
+        # (issue #44)
+        from tools.shared.base_tool import is_prompt_file
+
+        argument_files = [path for path in arguments.get("absolute_file_paths") or [] if not is_prompt_file(path)]
         if argument_files:
             logger.debug(f"Checking file sizes for {len(argument_files)} files with model {model_name}")
             file_size_check = check_total_file_size(argument_files, model_name)
